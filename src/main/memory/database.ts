@@ -2,7 +2,7 @@ import path from "path";
 import { app } from "electron";
 import fs from "fs";
 
-const SCHEMA_VERSION = 2;
+const SCHEMA_VERSION = 4;
 
 // better-sqlite3는 네이티브 모듈이라 동적 require로 로드해야
 // electron-vite 번들링에서 올바르게 외부화됨

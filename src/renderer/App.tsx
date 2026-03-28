@@ -88,8 +88,8 @@ export default function App() {
     if (project) {
       setProject(project.id, project.name);
       // DB에 저장된 에이전트가 있으면 사용, 없으면 기본 3개
-      const agentDefs = project.selectedAgents?.length > 0
-        ? project.selectedAgents.map((a) => ({ id: a.id, displayName: a.displayName, icon: a.icon }))
+      const agentDefs = Array.isArray(project.selectedAgents) && project.selectedAgents.length > 0
+        ? project.selectedAgents.map((a: any) => ({ id: a.id, displayName: a.displayName, icon: a.icon }))
         : [
             { id: "planner", displayName: "Planner", icon: "🔧" },
             { id: "generator", displayName: "Generator", icon: "💻" },
@@ -102,8 +102,8 @@ export default function App() {
       window.harness.project.load(projectId).then((p: Project | null) => {
         if (p) {
           setProject(p.id, p.name);
-          const defs = p.selectedAgents?.length > 0
-            ? p.selectedAgents.map((a) => ({ id: a.id, displayName: a.displayName, icon: a.icon }))
+          const defs = Array.isArray(p.selectedAgents) && p.selectedAgents.length > 0
+            ? p.selectedAgents.map((a: any) => ({ id: a.id, displayName: a.displayName, icon: a.icon }))
             : [
                 { id: "planner", displayName: "Planner", icon: "🔧" },
                 { id: "generator", displayName: "Generator", icon: "💻" },
