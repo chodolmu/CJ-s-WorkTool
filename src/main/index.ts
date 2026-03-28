@@ -301,13 +301,12 @@ function registerIpcHandlers(): void {
   });
 
   // ── Discovery AI Chat ──
-  ipcMain.handle("discovery:chat", async (_event, { messages, specContext }: {
+  ipcMain.handle("discovery:chat", async (_event, { messages, round: clientRound }: {
     messages: { role: string; content: string }[];
-    specContext?: string;
+    round?: number;
   }) => {
-    // 전체 대화 히스토리를 Claude에게 보내서 프로젝트 분석 요청
     const conversationText = messages.map((m) => `${m.role}: ${m.content}`).join("\n");
-    const round = messages.filter((m) => m.role === "user").length;
+    const round = clientRound ?? messages.filter((m) => m.role === "user").length;
 
     const systemPrompt = `당신은 소프트웨어 프로젝트 기획 전문가입니다. 사용자가 만들고 싶은 프로젝트를 대화를 통해 파악하세요.
 

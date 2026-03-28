@@ -203,9 +203,12 @@ function ProjectCard({ project, index, onOpen, onDelete }: {
       transition={{ delay: index * 0.05 }}
       className="group"
     >
-      <button
+      <div
         onClick={onOpen}
         className="w-full text-left p-4 bg-bg-card border border-border-subtle rounded-card hover:border-border-strong hover:bg-bg-hover transition-all cursor-pointer"
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => e.key === "Enter" && onOpen()}
       >
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1 min-w-0">
@@ -243,7 +246,7 @@ function ProjectCard({ project, index, onOpen, onDelete }: {
         {!project.specCard && (
           <div className="text-xs text-text-muted italic">Discovery 진행중...</div>
         )}
-      </button>
+      </div>
     </motion.div>
   );
 }

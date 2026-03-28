@@ -104,7 +104,7 @@ export function DiscoveryChat({ onSpecReady }: DiscoveryChatProps) {
     ];
 
     try {
-      const result = await window.harness.discovery.chat(allMessages);
+      const result = await window.harness.discovery.chat(allMessages, round);
 
       if (result.error || !result.response) {
         // AI 실패 → 로컬 폴백
@@ -141,18 +141,9 @@ export function DiscoveryChat({ onSpecReady }: DiscoveryChatProps) {
           <input
             value={workingDir}
             onChange={(e) => setWorkingDir(e.target.value)}
-            placeholder="C:/Projects/my-project (where code will be created)"
+            placeholder="C:/Projects/my-project (코드가 생성될 폴더)"
             className="flex-1 bg-transparent text-xs text-text-primary placeholder:text-text-muted focus:outline-none"
           />
-          <button
-            onClick={() => {
-              const dir = prompt("프로젝트 폴더 경로를 입력하세요:", workingDir);
-              if (dir) setWorkingDir(dir);
-            }}
-            className="text-[10px] text-accent hover:text-accent-hover cursor-pointer px-2 py-1 rounded hover:bg-accent/10 transition-all shrink-0"
-          >
-            찾아보기
-          </button>
         </div>
       </div>
 

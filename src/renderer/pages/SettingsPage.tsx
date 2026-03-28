@@ -55,9 +55,10 @@ export function SettingsPage() {
           />
           <button
             onClick={() => {
-              // Electron dialog는 Main에서 처리해야 하지만 간단히 prompt로 대체
-              const dir = prompt("Enter working directory path:", settings.workingDir);
-              if (dir) update("workingDir", dir);
+              // input 필드에 포커스 (직접 경로 입력)
+              const input = document.querySelector<HTMLInputElement>('input[placeholder="C:/Projects"]');
+              input?.focus();
+              input?.select();
             }}
             className="px-3 py-2 bg-bg-card border border-border-subtle rounded-lg text-xs text-text-secondary hover:border-border-strong hover:bg-bg-hover cursor-pointer transition-all"
           >

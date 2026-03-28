@@ -23,8 +23,8 @@ const api = {
       ipcRenderer.invoke("discovery:answer", { questionId, answer }),
     complete: (projectName: string, presetId: string, specCard: unknown, workingDir?: string, agents?: unknown[]) =>
       ipcRenderer.invoke("discovery:complete", { projectName, presetId, specCard, workingDir, agents }),
-    chat: (messages: { role: string; content: string }[]) =>
-      ipcRenderer.invoke("discovery:chat", { messages }),
+    chat: (messages: { role: string; content: string }[], round: number) =>
+      ipcRenderer.invoke("discovery:chat", { messages, round }),
   },
 
   // ── Pipeline ──
