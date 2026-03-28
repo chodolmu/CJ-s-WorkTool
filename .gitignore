@@ -1,0 +1,13 @@
+node_modules/
+out/
+dist/
+harness_data/
+*.db
+.env
+.env.local
+.DS_Store
+*.log
+.playwright-mcp/
+screenshot-*.png
+Thumbs.db
+Desktop.ini

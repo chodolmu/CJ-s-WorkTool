@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WorkTool - User Guide</title>
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --bg-card: #141414;
+      --bg-hover: #1e1e1e;
+      --border: #1e1e1e;
+      --text: #ececec;
+      --text-secondary: #8a8a8a;
+      --text-muted: #505050;
+      --accent: #8b5cf6;
+      --success: #22c55e;
+      --warning: #eab308;
+      --error: #ef4444;
+      --info: #3b82f6;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+
+    h1, h2, h3 { font-weight: 600; }
+    h1 { font-size: 2em; margin-bottom: 8px; }
+    h2 { font-size: 1.4em; margin-top: 48px; margin-bottom: 16px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+    h3 { font-size: 1.1em; margin-top: 24px; margin-bottom: 8px; }
+
+    p { margin-bottom: 12px; color: var(--text-secondary); }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    code {
+      background: var(--bg-hover);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 0.9em;
+    }
+
+    pre {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      overflow-x: auto;
+      margin: 12px 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .hero {
+      text-align: center;
+      padding: 60px 0 40px;
+    }
+
+    .hero-logo {
+      width: 80px; height: 80px;
+      background: rgba(139, 92, 246, 0.1);
+      border: 2px solid rgba(139, 92, 246, 0.2);
+      border-radius: 20px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+
+    .hero p { color: var(--text-muted); max-width: 500px; margin: 0 auto; }
+    .hero h1 { font-size: 2.5em; }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .badge-purple { background: rgba(139,92,246,0.15); color: var(--accent); }
+    .badge-green { background: rgba(34,197,94,0.15); color: var(--success); }
+    .badge-blue { background: rgba(59,130,246,0.15); color: var(--info); }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin: 12px 0;
+    }
+
+    .card h3 { margin-top: 0; }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .flow-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .flow-number {
+      width: 32px; height: 32px;
+      background: var(--accent);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .flow-content { flex: 1; }
+    .flow-content h3 { margin-top: 0; margin-bottom: 4px; }
+    .flow-content p { font-size: 14px; margin-bottom: 0; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0;
+      font-size: 14px;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th { color: var(--text-muted); font-weight: 500; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+    td { color: var(--text-secondary); }
+
+    .shortcut {
+      display: inline-block;
+      background: var(--bg-hover);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-family: monospace;
+      font-size: 12px;
+      color: var(--text);
+    }
+
+    .warning {
+      background: rgba(234,179,8,0.08);
+      border: 1px solid rgba(234,179,8,0.2);
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin: 12px 0;
+      color: var(--warning);
+      font-size: 14px;
+    }
+
+    .info {
+      background: rgba(59,130,246,0.08);
+      border: 1px solid rgba(59,130,246,0.2);
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin: 12px 0;
+      color: var(--info);
+      font-size: 14px;
+    }
+
+    ul { padding-left: 20px; margin-bottom: 12px; }
+    li { margin-bottom: 6px; color: var(--text-secondary); font-size: 14px; }
+    li strong { color: var(--text); }
+
+    @media (max-width: 640px) {
+      .grid-2 { grid-template-columns: 1fr; }
+      body { padding: 20px 16px 60px; }
+      .hero h1 { font-size: 2em; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-logo">W</div>
+  <h1>WorkTool</h1>
+  <p style="margin-bottom: 12px;">AI Agent Team Management Desktop App</p>
+  <p>
+    <span class="badge badge-purple">Electron</span>
+    <span class="badge badge-green">React + TypeScript</span>
+    <span class="badge badge-blue">Claude Code CLI</span>
+  </p>
+</div>
+
+<!-- Overview -->
+<h2>Overview</h2>
+<p>
+  WorkTool은 <strong>비개발자/반개발자</strong>가 AI 에이전트 팀을 시각적으로 관리하며 소프트웨어 프로젝트를 개발할 수 있는 데스크톱 앱입니다.
+  자연어로 프로젝트를 설명하면, AI가 자동으로 기획 → 코드 생성 → 검증까지 수행합니다.
+</p>
+
+<div class="grid-2">
+  <div class="card">
+    <h3>핵심 컨셉</h3>
+    <ul>
+      <li><strong>대화형 Discovery</strong> — 질문지가 아닌 자유 대화로 프로젝트 정의</li>
+      <li><strong>AI 에이전트 팀</strong> — Planner, Generator, Evaluator + 커스텀 에이전트</li>
+      <li><strong>3-Tier 실행 모드</strong> — 작업 크기에 따라 Direct / Light / Full 자동 선택</li>
+      <li><strong>자동 학습</strong> — Evaluator 피드백을 축적하여 점점 나아지는 코드</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>기술 스택</h3>
+    <ul>
+      <li><strong>Electron</strong> + electron-vite</li>
+      <li><strong>React 18</strong> + TypeScript</li>
+      <li><strong>Tailwind CSS 3</strong> + Framer Motion</li>
+      <li><strong>SQLite</strong> (better-sqlite3)</li>
+      <li><strong>Claude Code CLI</strong> (AI 엔진)</li>
+      <li><strong>Zustand</strong> (상태 관리)</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Installation -->
+<h2>Installation</h2>
+
+<h3>사전 요구사항</h3>
+<ul>
+  <li><strong>Node.js 18+</strong></li>
+  <li><strong>Claude Code CLI</strong> — <a href="https://docs.anthropic.com/en/docs/claude-code" target="_blank">설치 가이드</a></li>
+  <li>Claude Code가 로그인된 상태 (<code>claude --version</code>으로 확인)</li>
+</ul>
+
+<h3>설치 및 실행</h3>
+<pre>
+git clone https://github.com/chodolmu/CJ-s-WorkTool.git
+cd CJ-s-WorkTool
+
+npm install
+npx electron-rebuild -f -w better-sqlite3   # 필수!
+
+npm run dev                                   # 개발 모드 실행
+</pre>
+
+<div class="warning">
+  <strong>&#9888; 중요:</strong> <code>npm install</code> 후 반드시 <code>npx electron-rebuild -f -w better-sqlite3</code>를 실행해야 합니다.
+  안 하면 Electron과 Node.js의 모듈 버전 불일치로 에러가 발생합니다.
+</div>
+
+<h3>패키징 (Windows exe)</h3>
+<pre>npm run package</pre>
+<p><code>dist/</code> 폴더에 설치파일이 생성됩니다.</p>
+
+<!-- User Flow -->
+<h2>사용 플로우</h2>
+
+<div class="flow-step">
+  <div class="flow-number">1</div>
+  <div class="flow-content">
+    <h3>프로젝트 생성 — Discovery Chat</h3>
+    <p>Dashboard에서 <strong>"+ New Project"</strong> 클릭 → AI와 대화하며 프로젝트를 설명합니다. "RPG 게임을 만들고 싶어" 같이 자연어로 말하면 됩니다. 상단에서 <strong>프로젝트 폴더 경로</strong>도 지정합니다.</p>
+  </div>
+</div>
+
+<div class="flow-step">
+  <div class="flow-number">2</div>
+  <div class="flow-content">
+    <h3>Spec Review</h3>
+    <p>AI가 대화 내용을 분석하여 <strong>Spec Card</strong>를 자동 생성합니다. 프로젝트 유형, 핵심 결정사항, 기술 스택, 확장 기능을 확인하고 수정할 수 있습니다.</p>
+  </div>
+</div>
+
+<div class="flow-step">
+  <div class="flow-number">3</div>
+  <div class="flow-content">
+    <h3>Agent Team Setup</h3>
+    <p>프로젝트 특성에 맞는 에이전트를 <strong>자동 추천</strong>받고, 필요한 에이전트만 골라서 팀을 구성합니다. 커스텀 에이전트도 직접 추가할 수 있습니다.</p>
+  </div>
+</div>
+
+<div class="flow-step">
+  <div class="flow-number">4</div>
+  <div class="flow-content">
+    <h3>개발 — Chat 또는 Pipeline</h3>
+    <p><strong>Chat 탭</strong>에서 자연어로 작업을 요청하거나, <strong>Overview</strong>에서 "Start Pipeline" 버튼으로 전체 파이프라인을 실행합니다.</p>
+  </div>
+</div>
+
+<div class="flow-step">
+  <div class="flow-number">5</div>
+  <div class="flow-content">
+    <h3>모니터링</h3>
+    <p><strong>Pipeline 탭</strong>에서 에이전트 플로우 시각화, <strong>Logs 탭</strong>에서 전체 활동 로그, <strong>Specs 탭</strong>에서 스펙 카드와 기능 진행률을 확인합니다.</p>
+  </div>
+</div>
+
+<!-- Execution Modes -->
+<h2>실행 모드 (3-Tier)</h2>
+<p>Chat에서 메시지를 보낼 때, 작업 크기에 따라 자동으로 모드가 결정됩니다.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>모드</th>
+      <th>AI 호출</th>
+      <th>적합한 작업</th>
+      <th>예시</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>&#9889; Direct</strong></td>
+      <td>1회</td>
+      <td>사소한 수정, 질문</td>
+      <td>"버튼 색상 바꿔줘", "이 코드 설명해줘"</td>
+    </tr>
+    <tr>
+      <td><strong>&#128295; Light</strong></td>
+      <td>2회</td>
+      <td>중간 크기 기능</td>
+      <td>"비밀번호 확인 필드 추가", "페이지네이션"</td>
+    </tr>
+    <tr>
+      <td><strong>&#128640; Full</strong></td>
+      <td>3+회</td>
+      <td>큰 기능/시스템</td>
+      <td>"소셜 로그인 시스템", "결제 모듈"</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>입력 바 왼쪽의 모드 버튼을 클릭하면 수동으로 모드를 전환할 수도 있습니다.</p>
+
+<!-- Navigation -->
+<h2>화면 구조</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>탭</th>
+      <th>설명</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Dashboard</strong></td>
+      <td>전체 프로젝트 목록 (Cards / Timeline 뷰 전환). 프로젝트 생성/삭제/열기.</td>
+    </tr>
+    <tr>
+      <td><strong>Project</strong></td>
+      <td>선택한 프로젝트의 상세 뷰. 아래 서브탭 포함:</td>
+    </tr>
+    <tr>
+      <td style="padding-left: 32px;">Overview</td>
+      <td>에이전트 상태, 진행률, Pipeline 시작 버튼</td>
+    </tr>
+    <tr>
+      <td style="padding-left: 32px;">Chat</td>
+      <td>AI와 대화 (모드 자동 선택, 마크다운 렌더링)</td>
+    </tr>
+    <tr>
+      <td style="padding-left: 32px;">Agents</td>
+      <td>에이전트 카드 + 상세 정보</td>
+    </tr>
+    <tr>
+      <td style="padding-left: 32px;">Pipeline</td>
+      <td>Planner→Generator→Evaluator 플로우 시각화</td>
+    </tr>
+    <tr>
+      <td style="padding-left: 32px;">Specs</td>
+      <td>Spec Card, Core Decisions, 기능 목록</td>
+    </tr>
+    <tr>
+      <td style="padding-left: 32px;">Logs</td>
+      <td>전체 활동 로그 (검색, 필터)</td>
+    </tr>
+    <tr>
+      <td><strong>Presets</strong></td>
+      <td>에이전트 프리셋 관리 (편집, AI 가이드라인 자동 생성)</td>
+    </tr>
+    <tr>
+      <td><strong>Settings</strong></td>
+      <td>작업 디렉토리, Claude Code 상태, 모델 설정, 키보드 단축키</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- Agents -->
+<h2>에이전트 시스템</h2>
+
+<h3>Core Agents (필수)</h3>
+<table>
+  <thead><tr><th>에이전트</th><th>역할</th><th>모델</th></tr></thead>
+  <tbody>
+    <tr><td>&#128295; Planner</td><td>스펙을 기능 단위로 분해</td><td>Opus</td></tr>
+    <tr><td>&#128187; Generator</td><td>기능별 코드 구현</td><td>Sonnet</td></tr>
+    <tr><td>&#128269; Evaluator</td><td>코드 품질 검증 + 통과/반려</td><td>Opus</td></tr>
+  </tbody>
+</table>
+
+<h3>Recommended Agents (프로젝트별 추천)</h3>
+<p>프로젝트 유형에 따라 자동 추천됩니다:</p>
+<ul>
+  <li><strong>게임</strong>: Balance Tester, UX Reviewer, Story Writer, Asset Planner, Performance Checker, Sound Planner</li>
+  <li><strong>웹앱</strong>: API Designer, Auth Specialist, Accessibility Checker, Responsive Checker, DB Architect</li>
+</ul>
+
+<h3>커스텀 에이전트</h3>
+<p>Agent Team Setup에서 <strong>"+ Add Custom Agent"</strong>로 직접 만들 수 있습니다. 이름, 아이콘, 역할을 지정하면 바로 팀에 추가됩니다.</p>
+
+<!-- Smart Features -->
+<h2>스마트 기능</h2>
+
+<div class="grid-2">
+  <div class="card">
+    <h3>&#129504; Agent Learning</h3>
+    <p>Evaluator가 반려할 때마다 피드백 패턴을 자동 추출하고 저장합니다. 다음 Generator 호출 시 축적된 교훈이 프롬프트에 자동 주입되어 같은 실수를 반복하지 않습니다.</p>
+  </div>
+  <div class="card">
+    <h3>&#128260; Auto-Skill Detection</h3>
+    <p>Generator가 만든 코드 패턴을 분석하여 반복되는 패턴(Page 컴포넌트, CRUD, Form 등)을 자동으로 감지하고 재사용 가능한 스킬로 등록합니다.</p>
+  </div>
+  <div class="card">
+    <h3>&#128221; Prompt Translator</h3>
+    <p>사용자의 자연어 입력("버튼 색상 바꿔줘")을 AI 에이전트가 이해하기 좋은 구조화된 프롬프트로 자동 변환합니다. 의도 감지, 컨텍스트 주입, 출력 가이드를 포함합니다.</p>
+  </div>
+  <div class="card">
+    <h3>&#127919; Smart Orchestrator</h3>
+    <p>어떤 에이전트가 이 작업을 맡을지 자동 판단하고, 에이전트 간 결과를 전달하며, 실패 시 복구 전략을 결정합니다.</p>
+  </div>
+</div>
+
+<!-- Project Phases -->
+<h2>프로젝트 단계</h2>
+<p>6단계 프로젝트 라이프사이클을 관리합니다. 각 단계별 체크리스트와 게이트 조건이 있습니다.</p>
+
+<table>
+  <thead><tr><th>단계</th><th>설명</th><th>게이트 조건</th></tr></thead>
+  <tbody>
+    <tr><td>&#128300; Research</td><td>기술 조사, 아키텍처 탐색</td><td>기술 스택 확정, 리스크 파악</td></tr>
+    <tr><td>&#128208; Design</td><td>스펙 상세화, 데이터 모델</td><td>기능 목록 확정, 데이터 구조 설계</td></tr>
+    <tr><td>&#129514; Prototype</td><td>핵심 기능만 빠르게 구현</td><td>핵심 기능 동작, 방향 검증</td></tr>
+    <tr><td>&#128296; Implement</td><td>전체 기능 개발</td><td>모든 기능 구현, 빌드 통과</td></tr>
+    <tr><td>&#129514; Test</td><td>검증, 버그 수정</td><td>주요 버그 수정, 안정성 확인</td></tr>
+    <tr><td>&#10024; Polish</td><td>UX 개선, 최적화</td><td>릴리즈 준비 완료</td></tr>
+  </tbody>
+</table>
+
+<!-- Keyboard Shortcuts -->
+<h2>키보드 단축키</h2>
+<table>
+  <thead><tr><th>단축키</th><th>동작</th></tr></thead>
+  <tbody>
+    <tr><td><span class="shortcut">Ctrl</span> + <span class="shortcut">N</span></td><td>새 프로젝트 생성</td></tr>
+    <tr><td><span class="shortcut">Ctrl</span> + <span class="shortcut">1~4</span></td><td>탭 이동 (Dashboard/Project/Presets/Settings)</td></tr>
+    <tr><td><span class="shortcut">Esc</span></td><td>패널 닫기 / 취소</td></tr>
+    <tr><td><span class="shortcut">Enter</span></td><td>채팅 메시지 전송</td></tr>
+    <tr><td><span class="shortcut">Shift</span> + <span class="shortcut">Enter</span></td><td>채팅 줄바꿈</td></tr>
+  </tbody>
+</table>
+
+<!-- Architecture -->
+<h2>아키텍처</h2>
+
+<pre>
+src/
+  main/                     # Electron Main Process
+    index.ts                # IPC 핸들러 + 앱 진입점
+    orchestrator/
+      pipeline.ts           # Planner→Generator→Evaluator 루프
+      smart-orchestrator.ts # 에이전트 라우팅 + 병렬 실행
+      task-router.ts        # Direct/Light/Full 모드 분류
+      research-agent.ts     # R&D 리서치 에이전트
+      skill-detector.ts     # 반복 패턴 자동 감지
+    agent-runner/
+      cli-bridge.ts         # Claude Code CLI spawn + 스트리밍
+      prompt-assembler.ts   # 6-layer 프롬프트 조립
+      prompt-translator.ts  # 자연어 → 구조화 프롬프트
+    memory/
+      database.ts           # SQLite 스키마
+      memory-manager.ts     # 전체 CRUD
+      learning-manager.ts   # 에이전트 학습 관리
+      session-manager.ts    # 세션 라이프사이클
+    preset/
+      preset-manager.ts     # YAML 프리셋 관리
+    tools/
+      git-manager.ts        # Git 연동 (Advanced)
+
+  renderer/                 # React UI
+    App.tsx                 # 루트 (Dashboard/Project/Presets/Settings)
+    pages/
+      DashboardPage.tsx     # 전체 프로젝트 목록 (Cards/Timeline)
+      ProjectView.tsx       # 프로젝트 상세 (서브탭)
+      ChatPage.tsx          # 채팅 UI (모드 선택, 마크다운)
+      SpecsPage.tsx         # Spec Card + 기능 목록
+      OrchestrationPage.tsx # 파이프라인 시각화
+      LogsPage.tsx          # 활동 로그 검색/필터
+      Discovery/            # 대화형 Discovery 플로우
+    components/
+      Toast.tsx             # 인앱 토스트 알림
+      MarkdownRenderer.tsx  # 마크다운 렌더링 + 코드 복사
+      PhaseTracker.tsx      # 프로젝트 단계 관리
+      SkillsLibrary.tsx     # 자동 감지 스킬 목록
+      ErrorBoundary.tsx     # 에러 복구 화면
+
+  shared/
+    types.ts                # 공유 타입 정의
+    phase-definitions.ts    # 6단계 정의 + 체크리스트
+
+  preload/
+    index.ts                # IPC 보안 브릿지
+</pre>
+
+<!-- Known Issues -->
+<h2>알려진 제한사항</h2>
+<ul>
+  <li><strong>Claude Code CLI 필수</strong> — AI 기능은 Claude Code가 설치되어 있어야 동작합니다.</li>
+  <li><code>npm install</code> 후 반드시 <code>npx electron-rebuild -f -w better-sqlite3</code> 실행 필요</li>
+  <li>모든 <code>.tsx</code> 파일에 <code>import React from "react"</code> 필요 (electron-vite 제약)</li>
+  <li><code>database.ts</code>에서 <code>require("better-sqlite3")</code> 사용 — static import로 변경 금지</li>
+  <li>앱 아이콘은 placeholder (16x16)</li>
+</ul>
+
+<div style="text-align: center; margin-top: 60px; color: var(--text-muted); font-size: 12px;">
+  Built with Claude Code &middot; WorkTool v0.1.0
+</div>
+
+</body>
+</html>
