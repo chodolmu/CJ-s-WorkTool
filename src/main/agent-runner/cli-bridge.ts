@@ -39,6 +39,7 @@ export class CLIBridge {
   spawn(prompt: string, options: CLIBridgeOptions): CLISession {
     const args: string[] = [
       "--print",
+      "--bare",  // 훅, 플러그인, CLAUDE.md 스킵 — 순수 AI 응답만
     ];
 
     if (options.outputFormat !== "text") {

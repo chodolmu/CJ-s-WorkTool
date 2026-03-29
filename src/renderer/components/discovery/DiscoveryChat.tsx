@@ -138,12 +138,14 @@ export function DiscoveryChat({ onSpecReady }: DiscoveryChatProps) {
             }`}>
               {msg.role === "user" ? "👤" : "✦"}
             </div>
-            <div className={`max-w-[80%] p-3 rounded-lg border ${
+            <div className={`max-w-[80%] p-3 rounded-lg border overflow-hidden ${
               msg.role === "user"
                 ? "bg-accent/8 border-accent/15"
                 : "bg-bg-card border-border-subtle"
             }`}>
-              <MarkdownRenderer content={msg.content} />
+              <div className="overflow-x-auto">
+                <MarkdownRenderer content={msg.content} />
+              </div>
             </div>
           </div>
         ))}

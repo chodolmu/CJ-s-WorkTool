@@ -346,13 +346,15 @@ function MessageBubble({ message, style }: { message: ChatMessage; style?: React
     <div className="flex gap-3 animate-fade-in" style={style}>
       <Avatar role={message.role} />
       <div className="flex-1 min-w-0 max-w-[85%]">
-        <div className={`p-3 rounded-lg border ${
+        <div className={`p-3 rounded-lg border overflow-hidden ${
           isUser ? "bg-accent/8 border-accent/15" : "bg-bg-card border-border-subtle"
         }`}>
           {isUser ? (
             <p className="text-sm text-text-primary whitespace-pre-wrap select-text">{message.content}</p>
           ) : (
-            <MarkdownRenderer content={message.content} />
+            <div className="overflow-x-auto">
+              <MarkdownRenderer content={message.content} />
+            </div>
           )}
         </div>
         <div className="text-[10px] text-text-muted mt-1 px-1">
