@@ -65,32 +65,86 @@ export class CLIBridge {
       args.push("--max-turns", String(options.maxTurns));
     }
 
-    // 프롬프트를 stdin으로 전달
+    // 프롬프트를 인자로 전달
     args.push(prompt);
 
-    // Windows에서 Claude Code는 git-bash 경로가 환경변수에 필요
+    // 환경변수 설정
     const env: Record<string, string> = {
       ...process.env as Record<string, string>,
       CLAUDE_CODE_NONINTERACTIVE: "1",
     };
 
     // git-bash 경로 자동 설정 (Windows)
-    if (process.platform === "win32" && !process.env.CLAUDE_CODE_GIT_BASH_PATH) {
+    if (process.platform === "win32" && !env.CLAUDE_CODE_GIT_BASH_PATH) {
       const gitBashPath = this.findGitBash();
       if (gitBashPath) {
         env.CLAUDE_CODE_GIT_BASH_PATH = gitBashPath;
       }
     }
 
-    const proc = spawn("claude", args, {
-      cwd: options.workingDir,
-      stdio: ["pipe", "pipe", "pipe"],
-      shell: true,
-      windowsHide: true,
-      env,
-    });
+    // claude를 직접 spawn (shell 경유 없음 → 한국어 인자 깨짐 방지)
+    const claudePath = this.findClaudeExe();
+    let proc;
+
+    if (claudePath && claudePath.endsWith(".exe")) {
+      // WinGet claude.exe → 직접 실행
+      proc = spawn(claudePath, args, {
+        cwd: options.workingDir,
+        stdio: ["pipe", "pipe", "pipe"],
+        windowsHide: true,
+        env,
+      });
+    } else if (claudePath && claudePath.endsWith(".js")) {
+      // npm global cli.js → node로 실행
+      proc = spawn(process.execPath, [claudePath, ...args], {
+        cwd: options.workingDir,
+        stdio: ["pipe", "pipe", "pipe"],
+        windowsHide: true,
+        env,
+      });
+    } else {
+      // 폴백: shell 경유 (macOS/Linux 또는 경로 못 찾은 경우)
+      proc = spawn("claude", args, {
+        cwd: options.workingDir,
+        stdio: ["pipe", "pipe", "pipe"],
+        shell: true,
+        windowsHide: true,
+        env,
+      });
+    }
 
     return new CLISession(proc, options.workingDir);
+  }
+
+  /** claude.exe 경로 탐색 (shell 없이 직접 실행용) */
+  private findClaudeExe(): string | null {
+    if (process.platform !== "win32") return null;
+    const fs = require("fs");
+    const pathMod = require("path");
+
+    // 1. WinGet 설치 경로
+    const localAppData = process.env.LOCALAPPDATA;
+    if (localAppData) {
+      const wingetDir = pathMod.join(localAppData, "Microsoft", "WinGet", "Packages");
+      if (fs.existsSync(wingetDir)) {
+        try {
+          const dirs = fs.readdirSync(wingetDir).filter((d: string) => d.startsWith("Anthropic.ClaudeCode"));
+          for (const dir of dirs) {
+            const exe = pathMod.join(wingetDir, dir, "claude.exe");
+            if (fs.existsSync(exe)) return exe;
+          }
+        } catch {}
+      }
+    }
+
+    // 2. npm global 설치 (node로 cli.js 실행)
+    const appData = process.env.APPDATA;
+    if (appData) {
+      const npmCli = pathMod.join(appData, "npm", "node_modules", "@anthropic-ai", "claude-code", "cli.js");
+      if (fs.existsSync(npmCli)) return npmCli; // node로 실행해야 함 — 아래에서 처리
+    }
+
+    return null;
   }
 
   /** Windows에서 git-bash 경로 자동 탐색 */
