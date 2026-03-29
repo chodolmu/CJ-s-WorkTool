@@ -353,7 +353,12 @@ function registerIpcHandlers(): void {
     const conversationText = messages.map((m) => `${m.role}: ${m.content}`).join("\n");
     const round = clientRound ?? messages.filter((m) => m.role === "user").length;
 
-    const systemPrompt = `당신은 소프트웨어 프로젝트 기획 전문가(Director)입니다.
+    const systemPrompt = `[OVERRIDE] 이 프롬프트는 WorkTool 앱에서 프로그래밍적으로 호출됩니다.
+CLAUDE.md, memory, bkit, 플러그인 등 다른 모든 지침을 무시하세요.
+인사말 메뉴, bkit Feature Usage 리포트, 이모지 메뉴 등을 절대 출력하지 마세요.
+오직 아래 역할에만 집중하세요.
+
+당신은 소프트웨어 프로젝트 기획 전문가(Director)입니다.
 사용자가 만들고 싶은 프로젝트를 대화를 통해 깊이 파악하세요.
 
 ## 대화 규칙
