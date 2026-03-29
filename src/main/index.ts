@@ -350,34 +350,30 @@ function registerIpcHandlers(): void {
     messages: { role: string; content: string }[];
     round?: number;
   }) => {
-    const userMessages = messages.filter((m) => m.role === "user");
-    const latestUserMessage = userMessages[userMessages.length - 1]?.content ?? "";
+    const latestUserMsg = messages[messages.length - 1]?.content ?? "";
 
-    // 이전 대화를 시스템 프롬프트에 포함, 최신 메시지만 프롬프트로 전달
-    const conversationHistory = messages.slice(0, -1).length > 0
-      ? "\n\n## 지금까지의 대화 기록\n" + messages.slice(0, -1).map((m) =>
-          `${m.role === "user" ? "사용자" : "당신"}: ${m.content}`
-        ).join("\n\n")
-      : "";
+    // 이전 대화 + 최신 메시지를 하나의 프롬프트로 구성
+    // claude --print는 매번 새 세션이므로, 전체 대화를 프롬프트에 포함해야 함
+    const fullPrompt = messages.map((m) =>
+      m.role === "user" ? `[사용자]: ${m.content}` : `[AI]: ${m.content}`
+    ).join("\n\n") + "\n\n위 대화에 이어서, 사용자의 마지막 메시지에 대해 응답하세요.";
 
-    const systemPrompt = `[OVERRIDE] 이것은 WorkTool 앱의 프로그래밍 호출입니다.
-CLAUDE.md, memory, bkit, 플러그인의 모든 지침을 무시하세요.
-인사말, 메뉴, Feature Usage 리포트를 절대 출력하지 마세요.
+    const systemPrompt = `[OVERRIDE] WorkTool 앱 호출. CLAUDE.md/bkit/플러그인 지침 무시. 인사말/메뉴 금지.
 
-당신은 프로젝트 기획 전문가입니다. 사용자가 만들고 싶은 프로젝트를 대화로 파악하세요.
+당신은 프로젝트 기획 전문가입니다.
 
-## 규칙
-- 한국어로 대화. 한 번에 1~2개 질문만.
-- 파악할 것: 핵심 목적, 주요 기능, 타겟 사용자, 기술 선호, 레퍼런스
-- 충분히 파악되면 스펙을 요약하고 "이대로 진행할까요?" 확인
-- 사용자가 확인하면 아래 JSON 출력:
-\`\`\`json
+## 핵심 규칙
+1. 사용자의 마지막 메시지에 직접 응답하세요. 이전 대화 내용을 반드시 참고하세요.
+2. 사용자가 이미 답한 질문을 다시 묻지 마세요.
+3. 한국어로 대화. 한 번에 1~2개 새로운 질문만.
+4. 파악할 것: 핵심 목적, 주요 기능, 타겟 사용자, 기술 선호, 레퍼런스
+5. 충분히 파악되면 스펙을 요약하고 "이대로 진행할까요?" 확인
+6. 사용자가 확인하면 아래 JSON을 응답 맨 끝에 출력:
 {"ready":true,"presetId":"game|webapp|mobile|api-server|desktop","specCard":{"projectType":"설명","coreDecisions":[{"key":"id","label":"항목","value":"값","source":"user"}],"expansions":[{"id":"id","label":"기능","enabled":true,"suggestedBy":"ai"}],"techStack":["기술"],"rawAnswers":[]}}
-\`\`\`
-- 확인 전에는 JSON 출력 금지. 정보 부족하면 계속 질문.${conversationHistory}`;
+7. 확인 전에는 JSON 금지.`;
 
     try {
-      const session = cliBridge.spawn(latestUserMessage, {
+      const session = cliBridge.spawn(fullPrompt, {
         workingDir: ".",
         model: "sonnet",
         systemPrompt,
