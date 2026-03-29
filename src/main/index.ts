@@ -429,13 +429,13 @@ function registerIpcHandlers(): void {
         .trim();
 
       return {
-        response: cleanResponse || "프로젝트를 정리했습니다! 다음 화면에서 확인해주세요.",
+        response: cleanResponse || (specCard ? "스펙을 정리했습니다. 에이전트 팀을 구성합니다..." : "응답을 처리하지 못했습니다. 다시 시도해주세요."),
         specCard,
         presetId,
       };
     } catch (err) {
       return {
-        response: null,
+        response: `AI 연결 오류: ${String(err).slice(0, 200)}\n\nClaude Code CLI가 정상 동작하는지 확인해주세요.\n터미널에서 \`claude --version\`을 실행해보세요.`,
         error: String(err),
       };
     }

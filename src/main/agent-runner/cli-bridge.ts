@@ -56,19 +56,49 @@ export class CLIBridge {
     // 프롬프트를 stdin으로 전달
     args.push(prompt);
 
-    // 패키징 환경에서도 PATH가 올바르게 전달되도록 shell: true 사용
-    const proc = spawn("claude", args, {
-      cwd: options.workingDir,
-      stdio: ["pipe", "pipe", "pipe"],
-      shell: true,
-      windowsHide: true,
-      env: {
-        ...process.env,
-        CLAUDE_CODE_NONINTERACTIVE: "1",
-      },
-    });
+    // Windows에서 Claude Code는 git-bash가 필요
+    const isWindows = process.platform === "win32";
+    const gitBashPath = process.env.CLAUDE_CODE_GIT_BASH_PATH
+      || this.findGitBash();
+
+    const proc = isWindows && gitBashPath
+      ? spawn(gitBashPath, ["-c", `claude ${args.map((a) => `'${a.replace(/'/g, "'\\''")}'`).join(" ")}`], {
+          cwd: options.workingDir,
+          stdio: ["pipe", "pipe", "pipe"],
+          windowsHide: true,
+          env: {
+            ...process.env,
+            CLAUDE_CODE_NONINTERACTIVE: "1",
+          },
+        })
+      : spawn("claude", args, {
+          cwd: options.workingDir,
+          stdio: ["pipe", "pipe", "pipe"],
+          shell: true,
+          windowsHide: true,
+          env: {
+            ...process.env,
+            CLAUDE_CODE_NONINTERACTIVE: "1",
+          },
+        });
 
     return new CLISession(proc, options.workingDir);
+  }
+
+  /** Windows에서 git-bash 경로 자동 탐색 */
+  private findGitBash(): string | null {
+    if (process.platform !== "win32") return null;
+    const fs = require("fs");
+    const candidates = [
+      "C:\\Program Files\\Git\\bin\\bash.exe",
+      "C:\\Program Files (x86)\\Git\\bin\\bash.exe",
+      "D:\\Git\\bin\\bash.exe",
+      "D:\\Git\\usr\\bin\\bash.exe",
+    ];
+    for (const p of candidates) {
+      if (fs.existsSync(p)) return p;
+    }
+    return null;
   }
 
   private resolveModel(short: "opus" | "sonnet" | "haiku"): string {
@@ -86,6 +116,7 @@ export class CLISession extends EventEmitter {
   private process: ChildProcess;
   private workingDir: string;
   private outputBuffer: string = "";
+  private fullOutput: string = "";  // 전체 출력 누적
   private _status: "running" | "completed" | "failed" = "running";
   private _result: CLIResult | null = null;
 
@@ -107,6 +138,7 @@ export class CLISession extends EventEmitter {
     this.process.stdout?.on("data", (chunk: Buffer) => {
       const text = chunk.toString();
       this.outputBuffer += text;
+      this.fullOutput += text;  // 전체 출력 누적
 
       // 줄 단위로 JSON 파싱 시도
       const lines = this.outputBuffer.split("\n");
@@ -145,7 +177,7 @@ export class CLISession extends EventEmitter {
       this._status = code === 0 ? "completed" : "failed";
       this._result = {
         success: code === 0,
-        output: this.outputBuffer,
+        output: this.fullOutput,  // 전체 누적 출력 사용
         error: code !== 0 ? `Process exited with code ${code}` : undefined,
         filesChanged: this.extractFilesChanged(),
         tokenUsage: this.extractTokenUsage(),
