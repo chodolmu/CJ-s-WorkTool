@@ -1,0 +1,68 @@
+id: webapp
+name: "웹 앱"
+description: "풀스택 웹 애플리케이션 — SaaS, 대시보드, 포털 등"
+discoveryQuestions:
+  - id: auth
+    question: "로그인/인증이 필요한가요?"
+    options:
+      - { label: "이메일/비밀번호", value: "email" }
+      - { label: "소셜 로그인 (Google/GitHub)", value: "social" }
+      - { label: "필요 없음", value: "none" }
+    allowFreeText: false
+    order: 1
+  - id: core-feature
+    question: "핵심 기능은 무엇인가요?"
+    options:
+      - { label: "CRUD 데이터 관리", value: "crud" }
+      - { label: "대시보드/차트", value: "dashboard" }
+      - { label: "실시간 채팅/알림", value: "realtime" }
+      - { label: "파일 업로드/관리", value: "file-management" }
+    allowFreeText: true
+    order: 2
+  - id: database
+    question: "데이터 저장이 필요한가요?"
+    options:
+      - { label: "관계형 DB (PostgreSQL)", value: "postgresql" }
+      - { label: "NoSQL (MongoDB)", value: "mongodb" }
+      - { label: "BaaS (Supabase/Firebase)", value: "baas" }
+      - { label: "로컬 저장소만", value: "local" }
+    allowFreeText: false
+    order: 3
+  - id: responsive
+    question: "반응형 디자인이 필요한가요?"
+    options:
+      - { label: "모바일 + 데스크톱", value: "full-responsive" }
+      - { label: "데스크톱만", value: "desktop-only" }
+      - { label: "모바일 우선", value: "mobile-first" }
+    allowFreeText: false
+    order: 4
+  - id: api
+    question: "외부 API 연동이 필요한가요?"
+    options:
+      - { label: "REST API", value: "rest" }
+      - { label: "GraphQL", value: "graphql" }
+      - { label: "필요 없음", value: "none" }
+    allowFreeText: true
+    order: 5
+  - id: target
+    question: "주 사용자는 누구인가요?"
+    options:
+      - { label: "일반 사용자", value: "consumer" }
+      - { label: "비즈니스 사용자", value: "business" }
+      - { label: "개발자", value: "developer" }
+      - { label: "관리자", value: "admin" }
+    allowFreeText: false
+    order: 6
+evaluatorCriteria:
+  - "빌드 에러 없이 실행 가능"
+  - "주요 라우트가 정상 동작"
+  - "반응형 레이아웃 기본 동작"
+  - "API 연결 정상 (해당 시)"
+  - "인증 플로우 동작 (해당 시)"
+baseGuidelines: |
+  이 프로젝트는 웹 애플리케이션입니다. 핵심 원칙:
+  - 컴포넌트 기반 아키텍처 (React/Vue/Svelte)
+  - API 호출은 서비스 레이어로 분리
+  - 에러 핸들링과 로딩 상태 필수
+  - 접근성(a11y) 기본 준수
+  - 환경 변수로 설정 관리

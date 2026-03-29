@@ -131,6 +131,27 @@ const api = {
     diff: (workingDir: string) => ipcRenderer.invoke("git:diff", { workingDir }),
   },
 
+  // ── Plan (계획 문서) ──
+  plan: {
+    get: (projectId: string) => ipcRenderer.invoke("plan:get", { projectId }),
+    getMatchRate: (projectId: string) => ipcRenderer.invoke("plan:match-rate", { projectId }),
+  },
+
+  // ── Dialog ──
+  dialog: {
+    selectFolder: () => ipcRenderer.invoke("dialog:select-folder"),
+  },
+
+  // ── Schedule (일정) ──
+  schedule: {
+    list: (projectId?: string) =>
+      ipcRenderer.invoke("schedule:list", { projectId }),
+    update: (featureId: string, schedule: unknown) =>
+      ipcRenderer.invoke("schedule:update", { featureId, schedule }),
+    bulkSet: (items: unknown[]) =>
+      ipcRenderer.invoke("schedule:bulk-set", { items }),
+  },
+
   // ── System Check ──
   system: {
     checkClaudeCode: () => ipcRenderer.invoke("system:check-claude-code"),

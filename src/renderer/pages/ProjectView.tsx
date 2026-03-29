@@ -7,13 +7,15 @@ import { ChatPage } from "./ChatPage";
 import { SpecsPage } from "./SpecsPage";
 import { LogsPage } from "./LogsPage";
 import { OrchestrationPage } from "./OrchestrationPage";
+import { PlanPage } from "./PlanPage";
 import { toast } from "../components/Toast";
 import type { SpecCard } from "@shared/types";
 
-type ProjectTab = "overview" | "chat" | "agents" | "pipeline" | "specs" | "logs";
+type ProjectTab = "overview" | "plan" | "chat" | "agents" | "pipeline" | "specs" | "logs";
 
 const tabs: { id: ProjectTab; label: string; icon: string }[] = [
   { id: "overview", label: "개요", icon: "📊" },
+  { id: "plan", label: "계획", icon: "📝" },
   { id: "chat", label: "채팅", icon: "💬" },
   { id: "agents", label: "에이전트", icon: "🤖" },
   { id: "pipeline", label: "파이프라인", icon: "🔄" },
@@ -79,6 +81,9 @@ export function ProjectView({ projectId }: ProjectViewProps) {
         <div className="flex-1 overflow-y-auto">
           {activeTab === "overview" && (
             <OverviewTab specCard={specCard} />
+          )}
+          {activeTab === "plan" && (
+            <PlanPage projectId={projectId} />
           )}
           {activeTab === "chat" && (
             <ChatPage />

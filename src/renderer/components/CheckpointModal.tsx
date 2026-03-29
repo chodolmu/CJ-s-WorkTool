@@ -11,6 +11,8 @@ interface CheckpointModalProps {
       featureName?: string;
       featureIndex?: number;
       totalFeatures?: number;
+      specMatchRate?: number;
+      missingFromSpec?: string[];
     };
   };
   onRespond: (action: "approve" | "cancel") => void;
@@ -88,6 +90,33 @@ export function CheckpointModal({ checkpoint, onRespond }: CheckpointModalProps)
                   </div>
                 </motion.div>
               ))}
+            </div>
+          )}
+
+          {/* 스펙-기능 교차 검증 경고 (P0-03) */}
+          {data.missingFromSpec && data.missingFromSpec.length > 0 && (
+            <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg mb-4">
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <span className="text-sm">&#9888;&#65039;</span>
+                <span className="text-xs font-medium text-yellow-400">
+                  스펙에서 누락 가능성 ({data.missingFromSpec.length}개)
+                </span>
+                {data.specMatchRate != null && (
+                  <span className="text-[10px] text-yellow-400/60 ml-auto">
+                    일치도 {data.specMatchRate}%
+                  </span>
+                )}
+              </div>
+              <div className="space-y-1">
+                {data.missingFromSpec.map((m, i) => (
+                  <div key={i} className="text-[11px] text-yellow-300/80 pl-1">
+                    - {m}
+                  </div>
+                ))}
+              </div>
+              <p className="text-[10px] text-yellow-400/50 mt-1.5">
+                위 항목이 Discovery에서 언급되었지만 기능 목록에 포함되지 않았습니다.
+              </p>
             </div>
           )}
 

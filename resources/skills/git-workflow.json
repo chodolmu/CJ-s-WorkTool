@@ -1,0 +1,1 @@
+{"id":"git-workflow","name":"Git 자동화","description":"기능별 브랜치 생성, 커밋, PR 자동화를 지원합니다.","pattern":"기능 시작/완료 시 트리거","template":"Git 작업을 수행하세요:\n\n기능: {featureName}\n상태: {status}\n\n작업:\n- 시작 시: feature/{featureName} 브랜치 생성\n- 완료 시: 변경사항 커밋 + PR 생성\n- 커밋 메시지: feat({featureName}): {summary}","category":"vcs","trigger":"feature_start_complete","isBuiltin":true}

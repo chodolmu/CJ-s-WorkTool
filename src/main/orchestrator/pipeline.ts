@@ -4,6 +4,7 @@ import { PromptAssembler } from "../agent-runner/prompt-assembler";
 import { MemoryManager } from "../memory/memory-manager";
 import { PresetManager } from "../preset/preset-manager";
 import { LearningManager } from "../memory/learning-manager";
+import { PlanManager } from "../memory/plan-manager";
 import { withRetry, classifyError } from "../agent-runner/error-handler";
 import type { AgentDefinition, Feature, SpecCard } from "@shared/types";
 
@@ -37,6 +38,7 @@ export class Pipeline extends EventEmitter {
   private _status: PipelineStatus = "idle";
   private checkpointResolve: ((action: string) => void) | null = null;
   private learningManager: LearningManager;
+  private planManager: PlanManager;
 
   constructor(
     cliBridge: CLIBridge,
@@ -44,6 +46,7 @@ export class Pipeline extends EventEmitter {
     memoryManager: MemoryManager,
     presetManager: PresetManager,
     config: PipelineConfig,
+    planManager: PlanManager,
   ) {
     super();
     this.cliBridge = cliBridge;
@@ -52,6 +55,7 @@ export class Pipeline extends EventEmitter {
     this.presetManager = presetManager;
     this.config = config;
     this.learningManager = new LearningManager(memoryManager);
+    this.planManager = planManager;
   }
 
   get status() {
@@ -64,17 +68,28 @@ export class Pipeline extends EventEmitter {
     this.emit("status", this._status);
 
     try {
+      // Phase → design (설계 단계)
+      this.advancePhase("design");
+
       // 1. Planner 실행
       this.emit("activity", { agentId: "planner", eventType: "system", message: "Planner starting..." });
       const features = await this.runPlanner();
 
-      // 2. 사용자 확인
+      // Phase → implement (구현 단계)
+      this.advancePhase("implement");
+
+      // 2. 스펙-기능 교차 검증 (P0-03)
+      const matchResult = this.planManager.getSpecMatchRate(this.config.projectId);
+
+      // 3. 사용자 확인
       const plannerAction = await this.requestCheckpoint({
         id: `cp-planner-${Date.now()}`,
         type: "planner_complete",
         data: {
           message: `${features.length}개 기능을 계획했습니다. 이 순서로 진행할까요?`,
           features: features.map((f) => ({ name: f.name, description: f.description })),
+          specMatchRate: matchResult.rate,
+          missingFromSpec: matchResult.missing,
         },
       });
 
@@ -88,15 +103,22 @@ export class Pipeline extends EventEmitter {
       for (let i = 0; i < features.length; i++) {
         const feature = features[i];
         this.memoryManager.updateFeatureStatus(feature.id, "in_progress");
+        // 실제 시작 시간 기록
+        this.memoryManager.updateFeatureSchedule(feature.id, { actualStart: new Date().toISOString() });
         this.emit("progress", { completed: i, total: features.length, current: feature.name });
 
         const success = await this.runFeatureLoop(feature);
 
         if (success) {
           this.memoryManager.updateFeatureStatus(feature.id, "completed");
+          this.planManager.updateFeatureStatus(this.config.projectId, feature.id, "completed");
         } else {
           this.memoryManager.updateFeatureStatus(feature.id, "failed");
+          this.planManager.updateFeatureStatus(this.config.projectId, feature.id, "failed");
         }
+        // 실제 종료 시간 기록
+        this.memoryManager.updateFeatureSchedule(feature.id, { actualEnd: new Date().toISOString() });
+        this.emit("schedule_updated");
 
         // 기능 완료 체크포인트
         await this.requestCheckpoint({
@@ -113,8 +135,12 @@ export class Pipeline extends EventEmitter {
         });
       }
 
+      // Phase → test (테스트/검증 단계)
+      this.advancePhase("test");
+
       // 4. 완료
       this.memoryManager.updateProjectStatus(this.config.projectId, "completed");
+      this.advancePhase("polish");
       this._status = "completed";
       this.emit("status", this._status);
       this.emit("progress", { completed: features.length, total: features.length, current: null });
@@ -165,6 +191,27 @@ Output a JSON array of features with name, description, and order.`,
       );
       savedFeatures.push(feature);
     }
+
+    // Plan 문서에 Feature 목록 동기화
+    this.planManager.syncFeatures(this.config.projectId, savedFeatures);
+
+    // 일정 자동 설정: 각 피처에 순차적 예상 일정 배분
+    const now = new Date();
+    const scheduleItems = savedFeatures.map((f, i) => {
+      const start = new Date(now);
+      start.setDate(start.getDate() + i * 2); // 피처당 2일 간격 기본 추정
+      const end = new Date(start);
+      end.setDate(end.getDate() + 1);
+      return {
+        featureId: f.id,
+        estimatedStart: start.toISOString(),
+        estimatedEnd: end.toISOString(),
+        assignedAgent: "generator",
+        priority: savedFeatures.length - i, // 순서대로 우선순위
+      };
+    });
+    this.memoryManager.bulkSetFeatureSchedule(scheduleItems);
+    this.emit("schedule_updated");
 
     this.memoryManager.updateProjectStatus(this.config.projectId, "building");
     return savedFeatures;
@@ -337,6 +384,32 @@ Files changed: ${genResult.filesChanged.join(", ") || "unknown"}`,
       this.checkpointResolve = null;
       this._status = "running";
       this.emit("status", this._status);
+    }
+  }
+
+  /** Phase 자동 전환 (P0-04) */
+  private advancePhase(phase: string): void {
+    try {
+      const state = this.memoryManager.getProjectPhaseState(this.config.projectId) as any;
+      if (!state) return;
+
+      // 이전 Phase 완료 처리
+      if (state.phases[state.currentPhase]) {
+        state.phases[state.currentPhase].status = "completed";
+        state.phases[state.currentPhase].completedAt = new Date().toISOString();
+      }
+
+      // 새 Phase 활성화
+      state.currentPhase = phase;
+      if (state.phases[phase]) {
+        state.phases[phase].status = "active";
+        state.phases[phase].startedAt = new Date().toISOString();
+      }
+
+      this.memoryManager.updateProjectPhaseState(this.config.projectId, state);
+      this.emit("phase_updated", state);
+    } catch {
+      // Phase 업데이트 실패는 무시 (파이프라인 동작에 영향 없음)
     }
   }
 

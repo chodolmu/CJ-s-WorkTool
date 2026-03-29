@@ -1,0 +1,1 @@
+{"id":"handoff","name":"인수인계","description":"에이전트 간 작업 인수인계 + 컨텍스트 전달. 이전 에이전트의 결과를 요약하여 다음 에이전트에게 전달합니다.","pattern":"에이전트 전환 시 자동 트리거","template":"이전 에이전트({previousAgent})의 작업 결과:\n{summary}\n\n변경된 파일: {files}\n\n다음 작업을 이어서 진행하세요.","category":"workflow","trigger":"agent_transition","isBuiltin":true}

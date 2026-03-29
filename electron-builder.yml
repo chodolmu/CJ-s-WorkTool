@@ -21,6 +21,10 @@ extraResources:
     to: presets
     filter:
       - "**/*"
+  - from: resources/skills
+    to: skills
+    filter:
+      - "**/*"
 
 win:
   target:

@@ -1,0 +1,1 @@
+{"id":"spec-validation","name":"스펙 검증","description":"스펙 카드와 실제 구현의 일치 여부를 검증합니다. 누락된 기능을 감지합니다.","pattern":"Evaluator 단계에서 트리거","template":"스펙 카드와 구현을 비교 검증하세요:\n\n스펙 카드 요구사항: {specRequirements}\n구현된 기능: {implementedFeatures}\n\n확인 사항:\n1. 스펙에 있지만 구현되지 않은 기능\n2. 스펙에 없지만 구현된 기능\n3. 부분적으로 구현된 기능\n4. 일치도 (%)","category":"planning","trigger":"evaluator_phase","isBuiltin":true}

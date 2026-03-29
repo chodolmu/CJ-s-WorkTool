@@ -144,6 +144,16 @@ export function DiscoveryChat({ onSpecReady }: DiscoveryChatProps) {
             placeholder="C:/Projects/my-project (코드가 생성될 폴더)"
             className="flex-1 bg-transparent text-xs text-text-primary placeholder:text-text-muted focus:outline-none"
           />
+          <button
+            onClick={async () => {
+              if (!window.harness) return;
+              const folder = await (window.harness as any).dialog.selectFolder();
+              if (folder) setWorkingDir(folder);
+            }}
+            className="shrink-0 px-2.5 py-1 text-[10px] bg-accent/15 text-accent rounded hover:bg-accent/25 cursor-pointer transition-all"
+          >
+            찾아보기
+          </button>
         </div>
       </div>
 

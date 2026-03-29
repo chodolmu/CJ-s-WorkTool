@@ -11,6 +11,7 @@ import type {
   AgentStatus,
   ActivityEventType,
   Finding,
+  ScheduleItem,
 } from "@shared/types";
 
 export class MemoryManager {
@@ -123,6 +124,12 @@ export class MemoryManager {
       status: "pending",
       createdAt: now,
       updatedAt: now,
+      estimatedStart: null,
+      estimatedEnd: null,
+      actualStart: null,
+      actualEnd: null,
+      assignedAgent: null,
+      priority: 0,
     };
 
     this.db
@@ -151,7 +158,11 @@ export class MemoryManager {
       )
       .all(projectId) as Record<string, unknown>[];
 
-    return rows.map((r) => ({
+    return rows.map((r) => this.rowToFeature(r));
+  }
+
+  private rowToFeature(r: Record<string, unknown>): Feature {
+    return {
       id: r.id as string,
       projectId: r.project_id as string,
       name: r.name as string,
@@ -160,7 +171,13 @@ export class MemoryManager {
       status: r.status as FeatureStatus,
       createdAt: r.created_at as string,
       updatedAt: r.updated_at as string,
-    }));
+      estimatedStart: (r.estimated_start as string) ?? null,
+      estimatedEnd: (r.estimated_end as string) ?? null,
+      actualStart: (r.actual_start as string) ?? null,
+      actualEnd: (r.actual_end as string) ?? null,
+      assignedAgent: (r.assigned_agent as string) ?? null,
+      priority: (r.priority as number) ?? 0,
+    };
   }
 
   updateFeatureStatus(id: string, status: FeatureStatus): void {
@@ -508,6 +525,26 @@ export class MemoryManager {
     this.db.prepare("DELETE FROM project_skills WHERE id = ?").run(skillId);
   }
 
+  /** 기본 스킬 시드 (프로젝트 생성 시 호출) */
+  seedDefaultSkills(projectId: string, skillsDir: string): void {
+    const existing = this.getSkills(projectId);
+    if (existing.length > 0) return;
+
+    try {
+      const fs = require("fs");
+      const path = require("path");
+      if (!fs.existsSync(skillsDir)) return;
+
+      for (const file of fs.readdirSync(skillsDir)) {
+        if (!file.endsWith(".json")) continue;
+        const skill = JSON.parse(fs.readFileSync(path.join(skillsDir, file), "utf-8"));
+        this.addSkill(projectId, skill.name, skill.description, skill.pattern, skill.template);
+      }
+    } catch {
+      // 스킬 시드 실패는 무시 (앱 동작에 영향 없음)
+    }
+  }
+
   /** 가장 최근에 업데이트된 프로젝트 가져오기 */
   getLastProject(): Project | null {
     const row = this.db
@@ -516,5 +553,112 @@ export class MemoryManager {
 
     if (!row) return null;
     return this.rowToProject(row);
+  }
+
+  // ════════════════════════════════════
+  // Schedule (일정)
+  // ════════════════════════════════════
+
+  updateFeatureSchedule(
+    featureId: string,
+    schedule: {
+      estimatedStart?: string | null;
+      estimatedEnd?: string | null;
+      actualStart?: string | null;
+      actualEnd?: string | null;
+      assignedAgent?: string | null;
+      priority?: number;
+    },
+  ): void {
+    const sets: string[] = [];
+    const vals: unknown[] = [];
+
+    if (schedule.estimatedStart !== undefined) { sets.push("estimated_start = ?"); vals.push(schedule.estimatedStart); }
+    if (schedule.estimatedEnd !== undefined) { sets.push("estimated_end = ?"); vals.push(schedule.estimatedEnd); }
+    if (schedule.actualStart !== undefined) { sets.push("actual_start = ?"); vals.push(schedule.actualStart); }
+    if (schedule.actualEnd !== undefined) { sets.push("actual_end = ?"); vals.push(schedule.actualEnd); }
+    if (schedule.assignedAgent !== undefined) { sets.push("assigned_agent = ?"); vals.push(schedule.assignedAgent); }
+    if (schedule.priority !== undefined) { sets.push("priority = ?"); vals.push(schedule.priority); }
+
+    if (sets.length === 0) return;
+
+    sets.push("updated_at = ?");
+    vals.push(new Date().toISOString());
+    vals.push(featureId);
+
+    this.db.prepare(`UPDATE features SET ${sets.join(", ")} WHERE id = ?`).run(...vals);
+  }
+
+  /** 전체 프로젝트의 일정 아이템 가져오기 (캘린더/간트 뷰용) */
+  getAllScheduleItems(): ScheduleItem[] {
+    const rows = this.db
+      .prepare(
+        `SELECT f.*, p.name as project_name
+         FROM features f
+         JOIN projects p ON f.project_id = p.id
+         WHERE f.estimated_start IS NOT NULL
+         ORDER BY f.estimated_start ASC`,
+      )
+      .all() as Record<string, unknown>[];
+
+    return rows.map((r) => ({
+      id: r.id as string,
+      featureId: r.id as string,
+      projectId: r.project_id as string,
+      projectName: r.project_name as string,
+      featureName: r.name as string,
+      estimatedStart: r.estimated_start as string,
+      estimatedEnd: r.estimated_end as string,
+      actualStart: (r.actual_start as string) ?? null,
+      actualEnd: (r.actual_end as string) ?? null,
+      status: r.status as FeatureStatus,
+      assignedAgent: (r.assigned_agent as string) ?? null,
+      priority: (r.priority as number) ?? 0,
+    }));
+  }
+
+  /** 특정 프로젝트의 일정 아이템 */
+  getProjectScheduleItems(projectId: string): ScheduleItem[] {
+    const rows = this.db
+      .prepare(
+        `SELECT f.*, p.name as project_name
+         FROM features f
+         JOIN projects p ON f.project_id = p.id
+         WHERE f.project_id = ? AND f.estimated_start IS NOT NULL
+         ORDER BY f.estimated_start ASC`,
+      )
+      .all(projectId) as Record<string, unknown>[];
+
+    return rows.map((r) => ({
+      id: r.id as string,
+      featureId: r.id as string,
+      projectId: r.project_id as string,
+      projectName: r.project_name as string,
+      featureName: r.name as string,
+      estimatedStart: r.estimated_start as string,
+      estimatedEnd: r.estimated_end as string,
+      actualStart: (r.actual_start as string) ?? null,
+      actualEnd: (r.actual_end as string) ?? null,
+      status: r.status as FeatureStatus,
+      assignedAgent: (r.assigned_agent as string) ?? null,
+      priority: (r.priority as number) ?? 0,
+    }));
+  }
+
+  /** PM이 일정을 일괄 설정 (Planner 결과에서 자동 호출) */
+  bulkSetFeatureSchedule(
+    items: { featureId: string; estimatedStart: string; estimatedEnd: string; assignedAgent?: string; priority?: number }[],
+  ): void {
+    const stmt = this.db.prepare(
+      `UPDATE features SET estimated_start = ?, estimated_end = ?, assigned_agent = COALESCE(?, assigned_agent), priority = COALESCE(?, priority), updated_at = ? WHERE id = ?`,
+    );
+
+    const now = new Date().toISOString();
+    const transaction = this.db.transaction(() => {
+      for (const item of items) {
+        stmt.run(item.estimatedStart, item.estimatedEnd, item.assignedAgent ?? null, item.priority ?? null, now, item.featureId);
+      }
+    });
+    transaction();
   }
 }

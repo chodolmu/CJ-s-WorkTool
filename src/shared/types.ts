@@ -64,6 +64,29 @@ export interface Feature {
   status: FeatureStatus;
   createdAt: string;
   updatedAt: string;
+  // 일정 관련
+  estimatedStart: string | null;
+  estimatedEnd: string | null;
+  actualStart: string | null;
+  actualEnd: string | null;
+  assignedAgent: string | null;
+  priority: number;
+}
+
+/** 캘린더/간트 뷰용 일정 아이템 */
+export interface ScheduleItem {
+  id: string;
+  featureId: string;
+  projectId: string;
+  projectName: string;
+  featureName: string;
+  estimatedStart: string;
+  estimatedEnd: string;
+  actualStart: string | null;
+  actualEnd: string | null;
+  status: FeatureStatus;
+  assignedAgent: string | null;
+  priority: number;
 }
 
 export type FeatureStatus =
@@ -223,6 +246,40 @@ export interface ProjectPhaseState {
     completedAt: string | null;
     checklist: PhaseCheckItem[];
   }>;
+}
+
+// ============================================
+// 프로젝트 계획 문서
+// ============================================
+export interface PlanDocument {
+  overview: string;
+  specSummary: {
+    projectType: string;
+    coreDecisions: { key: string; label: string; value: string }[];
+    techStack: string[];
+    expansions: { label: string; enabled: boolean }[];
+  };
+  features: PlanFeatureEntry[];
+  agentTeam: { id: string; displayName: string; icon: string; role: string }[];
+  changeLog: PlanChangeLog[];
+}
+
+export interface PlanFeatureEntry {
+  featureId: string;
+  name: string;
+  description: string;
+  status: FeatureStatus;
+  estimatedStart: string | null;
+  estimatedEnd: string | null;
+  assignedAgent: string | null;
+}
+
+export interface PlanChangeLog {
+  date: string;
+  action: "plan_created" | "feature_added" | "feature_removed" | "feature_status_changed"
+    | "feature_completed" | "schedule_updated" | "agent_changed" | "feature_requested";
+  detail: string;
+  trigger: "system" | "pipeline" | "user";
 }
 
 // ============================================

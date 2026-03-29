@@ -2,7 +2,7 @@ import path from "path";
 import { app } from "electron";
 import fs from "fs";
 
-const SCHEMA_VERSION = 4;
+const SCHEMA_VERSION = 6;
 
 // better-sqlite3는 네이티브 모듈이라 동적 require로 로드해야
 // electron-vite 번들링에서 올바르게 외부화됨
@@ -172,6 +172,37 @@ function initSchema(db: ReturnType<typeof createDatabase>): void {
     `);
 
     db.pragma(`user_version = 4`);
+  }
+
+  if (version < 5) {
+    db.exec(`
+      -- 피처 일정 컬럼 (PM 일정 자동 반영)
+      ALTER TABLE features ADD COLUMN estimated_start TEXT;
+      ALTER TABLE features ADD COLUMN estimated_end TEXT;
+      ALTER TABLE features ADD COLUMN actual_start TEXT;
+      ALTER TABLE features ADD COLUMN actual_end TEXT;
+      ALTER TABLE features ADD COLUMN assigned_agent TEXT;
+      ALTER TABLE features ADD COLUMN priority INTEGER DEFAULT 0;
+    `);
+
+    db.pragma(`user_version = 5`);
+  }
+
+  if (version < 6) {
+    db.exec(`
+      -- 프로젝트 계획 문서 자동 관리
+      CREATE TABLE IF NOT EXISTS project_plans (
+        id TEXT PRIMARY KEY,
+        project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+        version INTEGER NOT NULL DEFAULT 1,
+        content_json TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_plans_project ON project_plans(project_id);
+    `);
+
+    db.pragma(`user_version = 6`);
   }
 }
 

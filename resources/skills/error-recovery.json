@@ -1,0 +1,1 @@
+{"id":"error-recovery","name":"오류 복구","description":"에이전트 실패 시 자동 복구 전략을 제시합니다. 에러 분류 + 재시도 가이드.","pattern":"에이전트 에러 발생 시 자동 트리거","template":"에이전트 오류가 발생했습니다:\n\n에이전트: {agentId}\n에러: {error}\n\n복구 전략:\n1. 에러 원인 분석\n2. 자동 재시도 가능 여부 판단\n3. 프롬프트 수정 제안\n4. 수동 개입 필요 시 사용자에게 안내","category":"reliability","trigger":"agent_error","isBuiltin":true}

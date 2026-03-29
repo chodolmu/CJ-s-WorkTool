@@ -370,6 +370,10 @@ npm run dev                                   # 개발 모드 실행
       <td>에이전트 상태, 진행률, Pipeline 시작 버튼</td>
     </tr>
     <tr>
+      <td style="padding-left: 32px;">Plan</td>
+      <td>프로젝트 계획 문서 (자동 생성/업데이트, 스펙 일치도, 변경 이력)</td>
+    </tr>
+    <tr>
       <td style="padding-left: 32px;">Chat</td>
       <td>AI와 대화 (모드 자동 선택, 마크다운 렌더링)</td>
     </tr>
@@ -390,8 +394,12 @@ npm run dev                                   # 개발 모드 실행
       <td>전체 활동 로그 (검색, 필터)</td>
     </tr>
     <tr>
+      <td><strong>Schedule</strong></td>
+      <td>전체 프로젝트 일정 관리. 캘린더 / 간트 차트 뷰 전환. PM이 생성한 일정 자동 반영.</td>
+    </tr>
+    <tr>
       <td><strong>Presets</strong></td>
-      <td>에이전트 프리셋 관리 (편집, AI 가이드라인 자동 생성)</td>
+      <td>에이전트 프리셋 관리 (5종 내장: 게임/웹앱/모바일/API/데스크톱)</td>
     </tr>
     <tr>
       <td><strong>Settings</strong></td>
@@ -413,12 +421,18 @@ npm run dev                                   # 개발 모드 실행
   </tbody>
 </table>
 
-<h3>Recommended Agents (프로젝트별 추천)</h3>
-<p>프로젝트 유형에 따라 자동 추천됩니다:</p>
-<ul>
-  <li><strong>게임</strong>: Balance Tester, UX Reviewer, Story Writer, Asset Planner, Performance Checker, Sound Planner</li>
-  <li><strong>웹앱</strong>: API Designer, Auth Specialist, Accessibility Checker, Responsive Checker, DB Architect</li>
-</ul>
+<h3>기본 프리셋 (5종 내장)</h3>
+<p>프로젝트 유형에 맞는 프리셋이 기본 제공됩니다. 각 프리셋에 Discovery 질문 세트 + 전문 에이전트가 포함되어 있습니다.</p>
+<table>
+  <thead><tr><th>프리셋</th><th>전문 에이전트</th><th>Discovery 질문</th></tr></thead>
+  <tbody>
+    <tr><td><strong>게임</strong></td><td>Balance Tester, UX Reviewer</td><td>장르, 게임루프, 조작, 그래픽, 레퍼런스, 타겟, 사운드</td></tr>
+    <tr><td><strong>웹 앱</strong></td><td>API Designer, A11y Checker</td><td>인증, 핵심기능, DB, 반응형, API, 타겟</td></tr>
+    <tr><td><strong>모바일 앱</strong></td><td>Platform Adapter, Offline Handler</td><td>플랫폼, 프레임워크, 오프라인, 네이티브기능, 타겟</td></tr>
+    <tr><td><strong>API 서버</strong></td><td>Security Auditor, Doc Generator</td><td>인증, 엔드포인트, DB, 실시간, 문서화</td></tr>
+    <tr><td><strong>데스크톱 앱</strong></td><td>Native Integrator, Installer Builder</td><td>프레임워크, OS, 네이티브기능, 업데이트, 패키징</td></tr>
+  </tbody>
+</table>
 
 <h3>커스텀 에이전트</h3>
 <p>Agent Team Setup에서 <strong>"+ Add Custom Agent"</strong>로 직접 만들 수 있습니다. 이름, 아이콘, 역할을 지정하면 바로 팀에 추가됩니다.</p>
@@ -445,6 +459,68 @@ npm run dev                                   # 개발 모드 실행
   </div>
 </div>
 
+<!-- Built-in Skills -->
+<h2>기본 스킬 (10종 내장)</h2>
+<p>프로젝트 생성 시 자동으로 활성화되는 보편적 개발 스킬입니다.</p>
+
+<div class="grid-2">
+  <div class="card">
+    <h3>Workflow &amp; Quality</h3>
+    <ul>
+      <li><strong>인수인계</strong> — 에이전트 간 작업 인수인계 + 컨텍스트 전달</li>
+      <li><strong>코드 리뷰</strong> — 생성 코드의 품질/보안/성능 리뷰</li>
+      <li><strong>테스트 생성</strong> — 단위/통합 테스트 자동 생성</li>
+      <li><strong>스펙 검증</strong> — 스펙 카드 ↔ 구현 일치 검증</li>
+      <li><strong>오류 복구</strong> — 에이전트 실패 시 자동 복구 전략</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>DevOps &amp; Reporting</h3>
+    <ul>
+      <li><strong>배포 가이드</strong> — 빌드+패키징+배포 방법 안내</li>
+      <li><strong>문서 생성</strong> — README, API 문서, 사용자 가이드</li>
+      <li><strong>토큰 최적화</strong> — 프롬프트 압축으로 토큰 비용 절감</li>
+      <li><strong>Git 자동화</strong> — 브랜치+커밋+PR 자동 관리</li>
+      <li><strong>진행 보고</strong> — 프로젝트 진행 현황 자동 요약</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Schedule -->
+<h2>일정 관리</h2>
+<p>전체 프로젝트의 작업 일정을 시각적으로 관리합니다. PM(Planner)이 기능을 생성하면 일정이 자동 배분됩니다.</p>
+
+<div class="grid-2">
+  <div class="card">
+    <h3>캘린더 뷰</h3>
+    <p>월별 달력에서 각 일자별 작업을 확인합니다. 오늘 하이라이트, 월 이동, 상태별 색상 표시.</p>
+  </div>
+  <div class="card">
+    <h3>간트 차트 뷰</h3>
+    <p>프로젝트별 피처 타임라인을 가로 바 차트로 표시합니다. 예정 바 vs 실제 진행 바를 비교할 수 있습니다.</p>
+  </div>
+</div>
+
+<div class="info">
+  <strong>자동 반영:</strong> Pipeline 실행 시 각 Feature의 <em>예정 일정</em>이 자동 배분되고, 실제 진행 시 <em>시작/종료 시간</em>이 자동 기록됩니다.
+</div>
+
+<!-- Plan Auto-Management -->
+<h2>프로젝트 계획 자동 관리</h2>
+<p>Discovery 완료 시 <strong>Plan 문서</strong>가 자동 생성되고, 이후 모든 변경사항이 자동 추적됩니다.</p>
+
+<ul>
+  <li><strong>자동 생성</strong> — Discovery 완료 → Spec Card 기반으로 Plan v1 생성</li>
+  <li><strong>Feature 동기화</strong> — Planner가 Feature 목록을 만들면 Plan에 자동 반영</li>
+  <li><strong>상태 추적</strong> — Feature 상태 변경(대기→진행→완료) 시 Plan 자동 업데이트</li>
+  <li><strong>변경 이력</strong> — 모든 변경을 changeLog에 시간순 기록</li>
+  <li><strong>스펙 일치도</strong> — Discovery에서 언급한 기능이 실제 Feature 목록에 포함됐는지 % 표시</li>
+</ul>
+
+<div class="warning">
+  <strong>스펙-기능 교차 검증:</strong> Planner가 기능 목록을 만든 후, 스펙에서 언급됐지만 누락된 기능이 있으면 자동으로 경고가 표시됩니다. "일정 관리 만들겠다고 했잖아" 같은 문제를 방지합니다.
+</div>
+
 <!-- Project Phases -->
 <h2>프로젝트 단계</h2>
 <p>6단계 프로젝트 라이프사이클을 관리합니다. 각 단계별 체크리스트와 게이트 조건이 있습니다.</p>
@@ -467,7 +543,7 @@ npm run dev                                   # 개발 모드 실행
   <thead><tr><th>단축키</th><th>동작</th></tr></thead>
   <tbody>
     <tr><td><span class="shortcut">Ctrl</span> + <span class="shortcut">N</span></td><td>새 프로젝트 생성</td></tr>
-    <tr><td><span class="shortcut">Ctrl</span> + <span class="shortcut">1~4</span></td><td>탭 이동 (Dashboard/Project/Presets/Settings)</td></tr>
+    <tr><td><span class="shortcut">Ctrl</span> + <span class="shortcut">1~5</span></td><td>탭 이동 (Dashboard/Project/Schedule/Presets/Settings)</td></tr>
     <tr><td><span class="shortcut">Esc</span></td><td>패널 닫기 / 취소</td></tr>
     <tr><td><span class="shortcut">Enter</span></td><td>채팅 메시지 전송</td></tr>
     <tr><td><span class="shortcut">Shift</span> + <span class="shortcut">Enter</span></td><td>채팅 줄바꿈</td></tr>
@@ -492,20 +568,23 @@ src/
       prompt-assembler.ts   # 6-layer 프롬프트 조립
       prompt-translator.ts  # 자연어 → 구조화 프롬프트
     memory/
-      database.ts           # SQLite 스키마
-      memory-manager.ts     # 전체 CRUD
+      database.ts           # SQLite 스키마 (v6)
+      memory-manager.ts     # 전체 CRUD + seedDefaultSkills
+      plan-manager.ts       # Plan 문서 자동 관리
       learning-manager.ts   # 에이전트 학습 관리
       session-manager.ts    # 세션 라이프사이클
     preset/
-      preset-manager.ts     # YAML 프리셋 관리
+      preset-manager.ts     # YAML 프리셋 관리 (builtin + custom)
     tools/
       git-manager.ts        # Git 연동 (Advanced)
 
   renderer/                 # React UI
-    App.tsx                 # 루트 (Dashboard/Project/Presets/Settings)
+    App.tsx                 # 루트 (Dashboard/Project/Schedule/Presets/Settings)
     pages/
       DashboardPage.tsx     # 전체 프로젝트 목록 (Cards/Timeline)
-      ProjectView.tsx       # 프로젝트 상세 (서브탭)
+      ProjectView.tsx       # 프로젝트 상세 (7 서브탭)
+      PlanPage.tsx          # 계획 문서 뷰 (자동 생성/변경 추적)
+      SchedulePage.tsx      # 일정 관리 (캘린더/간트 차트)
       ChatPage.tsx          # 채팅 UI (모드 선택, 마크다운)
       SpecsPage.tsx         # Spec Card + 기능 목록
       OrchestrationPage.tsx # 파이프라인 시각화
@@ -513,17 +592,23 @@ src/
       Discovery/            # 대화형 Discovery 플로우
     components/
       Toast.tsx             # 인앱 토스트 알림
+      CheckpointModal.tsx   # 체크포인트 + 스펙-기능 교차검증 경고
       MarkdownRenderer.tsx  # 마크다운 렌더링 + 코드 복사
-      PhaseTracker.tsx      # 프로젝트 단계 관리
+      PhaseTracker.tsx      # 프로젝트 단계 관리 (Pipeline 연동)
       SkillsLibrary.tsx     # 자동 감지 스킬 목록
       ErrorBoundary.tsx     # 에러 복구 화면
 
   shared/
-    types.ts                # 공유 타입 정의
+    types.ts                # 공유 타입 정의 (Plan, Schedule 포함)
     phase-definitions.ts    # 6단계 정의 + 체크리스트
 
   preload/
-    index.ts                # IPC 보안 브릿지
+    index.ts                # IPC 보안 브릿지 (50+ API)
+
+resources/
+  presets/                  # 내장 프리셋 5종 (YAML)
+    game/ webapp/ mobile/ api-server/ desktop/
+  skills/                   # 내장 스킬 10종 (JSON)
 </pre>
 
 <!-- Known Issues -->
@@ -534,10 +619,11 @@ src/
   <li>모든 <code>.tsx</code> 파일에 <code>import React from "react"</code> 필요 (electron-vite 제약)</li>
   <li><code>database.ts</code>에서 <code>require("better-sqlite3")</code> 사용 — static import로 변경 금지</li>
   <li>앱 아이콘은 placeholder (16x16)</li>
+  <li>AI 엔진 E2E 테스트 미완 — Claude CLI 설치 환경에서 수동 검증 필요</li>
 </ul>
 
 <div style="text-align: center; margin-top: 60px; color: var(--text-muted); font-size: 12px;">
-  Built with Claude Code &middot; WorkTool v0.1.0
+  Built with Claude Code &middot; WorkTool v0.2.0
 </div>
 
 </body>

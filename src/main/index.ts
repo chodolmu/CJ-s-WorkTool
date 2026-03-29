@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from "electron";
+import { app, BrowserWindow, ipcMain, dialog } from "electron";
 import path from "path";
 import { PresetManager } from "./preset/preset-manager";
 import { createDatabase, getDataDir } from "./memory/database";
@@ -11,6 +11,7 @@ import { GuidelineGenerator } from "./agent-runner/guideline-generator";
 import { classifyTask, type ExecutionMode } from "./orchestrator/task-router";
 import { SmartOrchestrator } from "./orchestrator/smart-orchestrator";
 import { GitManager } from "./tools/git-manager";
+import { PlanManager } from "./memory/plan-manager";
 
 let mainWindow: BrowserWindow | null = null;
 let presetManager: PresetManager;
@@ -21,6 +22,7 @@ let activePipeline: Pipeline | null = null;
 let sessionManager: SessionManager;
 let guidelineGenerator: GuidelineGenerator;
 let orchestrator: SmartOrchestrator;
+let planManager: PlanManager;
 
 function createWindow(): void {
   mainWindow = new BrowserWindow({
@@ -66,6 +68,7 @@ function initServices(): void {
   // Database + Memory Manager
   const db = createDatabase();
   memoryManager = new MemoryManager(db);
+  planManager = new PlanManager(db);
 
   // Agent Runner
   cliBridge = new CLIBridge();
@@ -84,6 +87,26 @@ function initServices(): void {
 function registerIpcHandlers(): void {
   // ── App ──
   ipcMain.handle("app:get-version", () => app.getVersion());
+
+  // ── Plan (계획 문서) ──
+  ipcMain.handle("plan:get", (_event, { projectId }: { projectId: string }) => {
+    return planManager.getPlan(projectId);
+  });
+
+  ipcMain.handle("plan:match-rate", (_event, { projectId }: { projectId: string }) => {
+    return planManager.getSpecMatchRate(projectId);
+  });
+
+  // ── Dialog ──
+  ipcMain.handle("dialog:select-folder", async () => {
+    if (!mainWindow) return null;
+    const result = await dialog.showOpenDialog(mainWindow, {
+      properties: ["openDirectory", "createDirectory"],
+      title: "프로젝트 폴더 선택",
+    });
+    if (result.canceled || result.filePaths.length === 0) return null;
+    return result.filePaths[0];
+  });
 
   // ── System Check ──
   ipcMain.handle("system:check-claude-code", async () => {
@@ -141,6 +164,18 @@ function registerIpcHandlers(): void {
     const project = memoryManager.createProject(projectName, presetId, workingDir, agents);
     memoryManager.updateProjectSpecCard(project.id, specCard as Parameters<typeof memoryManager.updateProjectSpecCard>[1]);
     memoryManager.updateProjectStatus(project.id, "planning");
+
+    // 기본 스킬 시드
+    const skillsDir = app.isPackaged
+      ? path.join(process.resourcesPath, "skills")
+      : path.join(__dirname, "../../resources/skills");
+    memoryManager.seedDefaultSkills(project.id, skillsDir);
+
+    // Plan 문서 자동 생성
+    if (specCard && agents) {
+      planManager.createFromSpecCard(project.id, specCard as any, agents as any[]);
+    }
+
     return project;
   });
 
@@ -232,6 +267,7 @@ function registerIpcHandlers(): void {
         specCard: project.specCard,
         maxRetries: 3,
       },
+      planManager,
     );
 
     // 이벤트를 Renderer로 전달
@@ -253,6 +289,14 @@ function registerIpcHandlers(): void {
 
     activePipeline.on("checkpoint", (data: unknown) => {
       mainWindow?.webContents.send("checkpoint:request", data);
+    });
+
+    activePipeline.on("schedule_updated", () => {
+      mainWindow?.webContents.send("schedule:updated");
+    });
+
+    activePipeline.on("phase_updated", (state: unknown) => {
+      mainWindow?.webContents.send("phase:updated", state);
     });
 
     // 비동기 실행 시작
@@ -414,6 +458,26 @@ ${round >= 3 ? `사용자가 충분한 정보를 주었습니다. 다음 JSON �
 
   ipcMain.handle("skill:delete", (_event, { skillId }: { skillId: string }) => {
     memoryManager.deleteSkill(skillId);
+    return { ok: true };
+  });
+
+  // ── Schedule (일정) ──
+  ipcMain.handle("schedule:list", (_event, { projectId }: { projectId?: string }) => {
+    if (projectId) {
+      return memoryManager.getProjectScheduleItems(projectId);
+    }
+    return memoryManager.getAllScheduleItems();
+  });
+
+  ipcMain.handle("schedule:update", (_event, { featureId, schedule }: { featureId: string; schedule: Record<string, unknown> }) => {
+    memoryManager.updateFeatureSchedule(featureId, schedule as any);
+    mainWindow?.webContents.send("schedule:updated");
+    return { ok: true };
+  });
+
+  ipcMain.handle("schedule:bulk-set", (_event, { items }: { items: { featureId: string; estimatedStart: string; estimatedEnd: string; assignedAgent?: string; priority?: number }[] }) => {
+    memoryManager.bulkSetFeatureSchedule(items);
+    mainWindow?.webContents.send("schedule:updated");
     return { ok: true };
   });
 

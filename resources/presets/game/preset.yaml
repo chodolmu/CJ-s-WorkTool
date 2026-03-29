@@ -1,134 +1,75 @@
 id: game
-name: "Game"
-description: "2D/3D 게임 프로젝트"
-
+name: "게임"
+description: "2D/3D 게임 개발 — 플랫포머, RPG, 퍼즐, 액션 등"
 discoveryQuestions:
   - id: genre
     question: "어떤 장르의 게임을 만드시나요?"
+    options:
+      - { label: "플랫포머", value: "platformer", description: "점프와 이동 중심의 횡스크롤 게임" }
+      - { label: "RPG", value: "rpg", description: "캐릭터 성장과 스토리 중심" }
+      - { label: "퍼즐", value: "puzzle", description: "논리적 문제 해결" }
+      - { label: "액션", value: "action", description: "빠른 전투와 반사 신경" }
+    allowFreeText: true
     order: 1
-    allowFreeText: true
+  - id: game-loop
+    question: "게임의 핵심 루프는 무엇인가요?"
     options:
-      - label: "플랫포머"
-        value: platformer
-        description: "점프하고 달리는 횡스크롤 게임 (마리오, 셀레스트)"
-      - label: "퍼즐"
-        value: puzzle
-        description: "두뇌를 쓰는 퍼즐 게임 (테트리스, 2048)"
-      - label: "RPG"
-        value: rpg
-        description: "캐릭터 성장과 스토리 중심 (젤다, 포켓몬)"
-      - label: "슈팅"
-        value: shooting
-        description: "적을 쏘고 피하는 게임 (갤러가, 뱀서)"
-
-  - id: game_loop
-    question: "게임의 핵심 루프는 무엇인가요? (플레이어가 반복하는 핵심 행동)"
+      - { label: "점프로 적 피하기", value: "jump-avoid" }
+      - { label: "전투로 적 처치", value: "combat" }
+      - { label: "퍼즐 풀기", value: "solve-puzzle" }
+      - { label: "아이템 수집", value: "collect" }
+    allowFreeText: true
     order: 2
-    allowFreeText: true
-    options:
-      - label: "이동 + 장애물 피하기"
-        value: move_avoid
-        description: "점프, 달리기로 장애물과 적을 피하며 목표에 도달"
-      - label: "퍼즐 풀기"
-        value: solve_puzzle
-        description: "블록 맞추기, 패턴 찾기 등 문제 해결"
-      - label: "전투 + 성장"
-        value: combat_grow
-        description: "적과 싸우고, 경험치/아이템으로 캐릭터 성장"
-      - label: "생존"
-        value: survive
-        description: "최대한 오래 살아남기, 점수 경쟁"
-
   - id: controls
-    question: "어떤 조작 방식을 사용할까요?"
+    question: "조작 방식은?"
+    options:
+      - { label: "키보드", value: "keyboard" }
+      - { label: "마우스", value: "mouse" }
+      - { label: "터치", value: "touch" }
+      - { label: "게임패드", value: "gamepad" }
+    allowFreeText: false
     order: 3
-    allowFreeText: false
+  - id: graphics
+    question: "그래픽 스타일은?"
     options:
-      - label: "키보드"
-        value: keyboard
-        description: "방향키/WASD + 스페이스바"
-      - label: "마우스"
-        value: mouse
-        description: "클릭, 드래그로 조작"
-      - label: "키보드 + 마우스"
-        value: both
-        description: "이동은 키보드, 조준/클릭은 마우스"
-      - label: "터치 (모바일)"
-        value: touch
-        description: "화면 터치/스와이프"
-
-  - id: art_style
-    question: "어떤 비주얼 스타일을 원하시나요?"
+      - { label: "픽셀 아트", value: "pixel" }
+      - { label: "벡터/미니멀", value: "vector" }
+      - { label: "3D 로우폴리", value: "3d-lowpoly" }
+      - { label: "만화/일러스트", value: "cartoon" }
+    allowFreeText: true
     order: 4
-    allowFreeText: true
-    options:
-      - label: "픽셀 아트"
-        value: pixel
-        description: "레트로 도트 그래픽"
-      - label: "미니멀/심플"
-        value: minimal
-        description: "단순한 도형과 색상"
-      - label: "카툰/일러스트"
-        value: cartoon
-        description: "만화풍 캐릭터와 배경"
-
-  - id: play_time
-    question: "한 판(세션)의 플레이 시간은 어느 정도인가요?"
-    order: 5
-    allowFreeText: false
-    options:
-      - label: "1~3분 (캐주얼)"
-        value: casual
-        description: "짧고 반복적인 세션"
-      - label: "5~15분 (미디엄)"
-        value: medium
-        description: "적당한 길이의 한 판"
-      - label: "30분+ (하드코어)"
-        value: hardcore
-        description: "긴 세션, 깊은 몰입"
-
   - id: reference
-    question: "참고하고 싶은 게임이 있나요? (레퍼런스)"
+    question: "참고할 게임이 있나요?"
+    options: []
+    allowFreeText: true
+    order: 5
+  - id: target
+    question: "타겟 플레이어는?"
+    options:
+      - { label: "캐주얼 게이머", value: "casual" }
+      - { label: "하드코어 게이머", value: "hardcore" }
+      - { label: "어린이", value: "kids" }
+      - { label: "모든 연령", value: "all-ages" }
+    allowFreeText: false
     order: 6
-    allowFreeText: true
+  - id: sound
+    question: "사운드/음악이 필요한가요?"
     options:
-      - label: "특별히 없음"
-        value: none
-        description: "AI가 장르에 맞게 알아서 제안"
-      - label: "있음 (직접 입력)"
-        value: custom
-        description: "참고할 게임 이름을 적어주세요"
-
-  - id: must_have
-    question: "이것만큼은 꼭 있어야 한다! 하는 게 있나요?"
+      - { label: "BGM + 효과음", value: "full" }
+      - { label: "효과음만", value: "sfx-only" }
+      - { label: "없음", value: "none" }
+    allowFreeText: false
     order: 7
-    allowFreeText: true
-    options:
-      - label: "쾌적한 조작감"
-        value: controls_feel
-        description: "반응 빠르고 기분 좋은 조작"
-      - label: "중독성 있는 루프"
-        value: addictive_loop
-        description: "한 판 더! 하게 만드는 게임 루프"
-      - label: "예쁜 비주얼"
-        value: visuals
-        description: "눈이 즐거운 그래픽과 이펙트"
-      - label: "스토리/분위기"
-        value: story_mood
-        description: "몰입할 수 있는 분위기와 서사"
-
 evaluatorCriteria:
-  - "빌드(npm run build)가 에러 없이 통과하는가"
-  - "게임이 브라우저에서 정상 실행되는가"
-  - "핵심 게임 루프(이동/상호작용/목표달성)가 작동하는가"
-  - "조작이 반응하는가 (입력 → 캐릭터 행동)"
-  - "게임 오버/클리어 조건이 존재하는가"
-
+  - "빌드 에러 없이 실행 가능"
+  - "게임 루프가 정상 동작 (시작→플레이→종료)"
+  - "사용자 입력에 반응 (키보드/마우스/터치)"
+  - "기본 그래픽 렌더링 정상"
+  - "충돌 감지 기본 동작"
 baseGuidelines: |
-  # 게임 개발 규칙
-  - Canvas API 또는 DOM 기반 렌더링 사용
-  - requestAnimationFrame 기반 게임 루프 구현
-  - 60fps 유지를 목표로 최적화
-  - 에셋은 코드로 생성하거나 무료 에셋 사용 (외부 URL 의존 금지)
-  - 사운드는 Web Audio API 사용 (선택사항)
-  - 모바일 반응형은 후순위
+  이 프로젝트는 게임입니다. 게임 개발 핵심 원칙:
+  - 게임 루프(update → render)를 명확히 분리
+  - 프레임 독립적 움직임 (deltaTime 사용)
+  - 충돌 감지는 AABB부터 시작
+  - 에셋은 placeholder로 시작, 나중에 교체
+  - 성능을 고려한 렌더링 (requestAnimationFrame)

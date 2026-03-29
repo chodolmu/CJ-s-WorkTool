@@ -7,6 +7,7 @@ import { ProjectView } from "./pages/ProjectView";
 import { DiscoveryPage } from "./pages/Discovery/DiscoveryPage";
 import { PresetsPage } from "./pages/Presets/PresetsPage";
 import { SettingsPage } from "./pages/SettingsPage";
+import { SchedulePage } from "./pages/SchedulePage";
 import { CheckpointModal } from "./components/CheckpointModal";
 import { DecisionModal } from "./components/DecisionModal";
 import { ToastContainer } from "./components/Toast";
@@ -15,8 +16,8 @@ import { useIpcEvents } from "./hooks/useIpcEvents";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import type { SpecCard, Project, AgentDefinition } from "@shared/types";
 
-// 최상위 페이지: Dashboard(전체) | Project(상세) | Presets | Settings
-export type TopPage = "dashboard" | "project" | "presets" | "settings";
+// 최상위 페이지: Dashboard(전체) | Project(상세) | Schedule(일정) | Presets | Settings
+export type TopPage = "dashboard" | "project" | "schedule" | "presets" | "settings";
 
 export default function App() {
   const [topPage, setTopPage] = useState<TopPage>("dashboard");
@@ -42,8 +43,8 @@ export default function App() {
 
   useKeyboardShortcuts({
     onNavigate: (page) => {
-      // Ctrl+1 = dashboard, Ctrl+2 = project, Ctrl+3 = presets, Ctrl+4 = settings
-      const map: Record<string, TopPage> = { "1": "dashboard", "2": "project", "3": "presets", "4": "settings" };
+      // Ctrl+1 = dashboard, Ctrl+2 = project, Ctrl+3 = schedule, Ctrl+4 = presets, Ctrl+5 = settings
+      const map: Record<string, TopPage> = { "1": "dashboard", "2": "project", "3": "schedule", "4": "presets", "5": "settings" };
       if (map[page as string]) setTopPage(map[page as string]);
     },
     onNewProject: () => setShowDiscovery(true),
@@ -240,6 +241,7 @@ export default function App() {
             </div>
           )}
 
+          {topPage === "schedule" && <SchedulePage />}
           {topPage === "presets" && <div className="p-4 overflow-y-auto h-full"><PresetsPage /></div>}
           {topPage === "settings" && <div className="p-4 overflow-y-auto h-full"><SettingsPage /></div>}
         </main>

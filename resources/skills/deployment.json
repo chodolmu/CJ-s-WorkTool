@@ -1,0 +1,1 @@
+{"id":"deployment","name":"배포 가이드","description":"프로젝트 빌드, 패키징, 배포 방법을 자동으로 안내합니다.","pattern":"프로젝트 완료 시 트리거","template":"프로젝트 배포 가이드를 생성하세요:\n\n프로젝트 타입: {projectType}\n기술 스택: {techStack}\n\n포함 사항:\n1. 빌드 명령어\n2. 환경 변수 설정\n3. 배포 플랫폼별 가이드\n4. 주의사항","category":"devops","trigger":"project_complete","isBuiltin":true}
