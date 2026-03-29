@@ -7,6 +7,7 @@ export interface CLIBridgeOptions {
   model?: "opus" | "sonnet" | "haiku";
   systemPrompt?: string;
   maxTurns?: number;
+  outputFormat?: "json" | "text";
 }
 
 export interface CLIStreamEvent {
@@ -38,8 +39,11 @@ export class CLIBridge {
   spawn(prompt: string, options: CLIBridgeOptions): CLISession {
     const args: string[] = [
       "--print",
-      "--output-format", "json",
     ];
+
+    if (options.outputFormat !== "text") {
+      args.push("--output-format", "json");
+    }
 
     if (options.model) {
       args.push("--model", this.resolveModel(options.model));

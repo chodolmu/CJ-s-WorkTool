@@ -397,15 +397,11 @@ function registerIpcHandlers(): void {
         workingDir: ".",
         model: "sonnet",
         systemPrompt,
-      });
-
-      let output = "";
-      session.on("event", (event: { type: string; content: string }) => {
-        if (event.type === "text") output += event.content;
+        outputFormat: "text",
       });
 
       const result = await session.waitForCompletion();
-      const response = output || result.output;
+      const response = result.output;
 
       // JSON 스펙 카드 추출 시도
       let specCard = null;
