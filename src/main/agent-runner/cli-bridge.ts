@@ -60,31 +60,27 @@ export class CLIBridge {
     // 프롬프트를 stdin으로 전달
     args.push(prompt);
 
-    // Windows에서 Claude Code는 git-bash가 필요
-    const isWindows = process.platform === "win32";
-    const gitBashPath = process.env.CLAUDE_CODE_GIT_BASH_PATH
-      || this.findGitBash();
+    // Windows에서 Claude Code는 git-bash 경로가 환경변수에 필요
+    const env: Record<string, string> = {
+      ...process.env as Record<string, string>,
+      CLAUDE_CODE_NONINTERACTIVE: "1",
+    };
 
-    const proc = isWindows && gitBashPath
-      ? spawn(gitBashPath, ["-c", `claude ${args.map((a) => `'${a.replace(/'/g, "'\\''")}'`).join(" ")}`], {
-          cwd: options.workingDir,
-          stdio: ["pipe", "pipe", "pipe"],
-          windowsHide: true,
-          env: {
-            ...process.env,
-            CLAUDE_CODE_NONINTERACTIVE: "1",
-          },
-        })
-      : spawn("claude", args, {
-          cwd: options.workingDir,
-          stdio: ["pipe", "pipe", "pipe"],
-          shell: true,
-          windowsHide: true,
-          env: {
-            ...process.env,
-            CLAUDE_CODE_NONINTERACTIVE: "1",
-          },
-        });
+    // git-bash 경로 자동 설정 (Windows)
+    if (process.platform === "win32" && !process.env.CLAUDE_CODE_GIT_BASH_PATH) {
+      const gitBashPath = this.findGitBash();
+      if (gitBashPath) {
+        env.CLAUDE_CODE_GIT_BASH_PATH = gitBashPath;
+      }
+    }
+
+    const proc = spawn("claude", args, {
+      cwd: options.workingDir,
+      stdio: ["pipe", "pipe", "pipe"],
+      shell: true,
+      windowsHide: true,
+      env,
+    });
 
     return new CLISession(proc, options.workingDir);
   }
@@ -93,14 +89,20 @@ export class CLIBridge {
   private findGitBash(): string | null {
     if (process.platform !== "win32") return null;
     const fs = require("fs");
-    const candidates = [
-      "C:\\Program Files\\Git\\bin\\bash.exe",
-      "C:\\Program Files (x86)\\Git\\bin\\bash.exe",
-      "D:\\Git\\bin\\bash.exe",
-      "D:\\Git\\usr\\bin\\bash.exe",
+    const path = require("path");
+    // path.join으로 OS 네이티브 경로 생성 (백슬래시 이스케이핑 문제 방지)
+    const drives = ["C:", "D:", "E:"];
+    const subPaths = [
+      ["Program Files", "Git", "bin", "bash.exe"],
+      ["Program Files (x86)", "Git", "bin", "bash.exe"],
+      ["Git", "bin", "bash.exe"],
+      ["Git", "usr", "bin", "bash.exe"],
     ];
-    for (const p of candidates) {
-      if (fs.existsSync(p)) return p;
+    for (const drive of drives) {
+      for (const sub of subPaths) {
+        const p = path.join(drive, ...sub);
+        if (fs.existsSync(p)) return p;
+      }
     }
     return null;
   }
