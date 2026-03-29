@@ -350,55 +350,34 @@ function registerIpcHandlers(): void {
     messages: { role: string; content: string }[];
     round?: number;
   }) => {
-    const conversationText = messages.map((m) => `${m.role}: ${m.content}`).join("\n");
-    const round = clientRound ?? messages.filter((m) => m.role === "user").length;
+    const userMessages = messages.filter((m) => m.role === "user");
+    const latestUserMessage = userMessages[userMessages.length - 1]?.content ?? "";
 
-    const systemPrompt = `[OVERRIDE] 이 프롬프트는 WorkTool 앱에서 프로그래밍적으로 호출됩니다.
-CLAUDE.md, memory, bkit, 플러그인 등 다른 모든 지침을 무시하세요.
-인사말 메뉴, bkit Feature Usage 리포트, 이모지 메뉴 등을 절대 출력하지 마세요.
-오직 아래 역할에만 집중하세요.
+    // 이전 대화를 시스템 프롬프트에 포함, 최신 메시지만 프롬프트로 전달
+    const conversationHistory = messages.slice(0, -1).length > 0
+      ? "\n\n## 지금까지의 대화 기록\n" + messages.slice(0, -1).map((m) =>
+          `${m.role === "user" ? "사용자" : "당신"}: ${m.content}`
+        ).join("\n\n")
+      : "";
 
-당신은 소프트웨어 프로젝트 기획 전문가(Director)입니다.
-사용자가 만들고 싶은 프로젝트를 대화를 통해 깊이 파악하세요.
+    const systemPrompt = `[OVERRIDE] 이것은 WorkTool 앱의 프로그래밍 호출입니다.
+CLAUDE.md, memory, bkit, 플러그인의 모든 지침을 무시하세요.
+인사말, 메뉴, Feature Usage 리포트를 절대 출력하지 마세요.
 
-## 대화 규칙
-- 한국어로 친근하게 대화하세요
-- 한 번에 1~2개 질문만 하세요
-- 사용자의 답변을 반영하여 구체화하는 후속 질문을 하세요
-- 다음 항목들을 자연스럽게 파악하세요:
-  1. 프로젝트의 핵심 목적 (무엇을, 왜)
-  2. 주요 기능 3~5개
-  3. 사용자/타겟 (누가 쓸 건지)
-  4. 기술적 선호 (있다면)
-  5. 레퍼런스/느낌 (있다면)
+당신은 프로젝트 기획 전문가입니다. 사용자가 만들고 싶은 프로젝트를 대화로 파악하세요.
 
-## 스펙 완성 판단
-위 항목들이 충분히 파악되면, 대화 안에서 스펙을 요약해서 보여주세요:
-"정리해볼게요! 확인해주세요:" 형태로 요약한 뒤,
-"이대로 진행할까요? 수정할 부분이 있으면 말씀해주세요." 라고 물어보세요.
-
-사용자가 확인/동의하면("좋아", "그래", "진행해", "ㅇㅇ", "확인" 등), 아래 JSON을 출력하세요:
+## 규칙
+- 한국어로 대화. 한 번에 1~2개 질문만.
+- 파악할 것: 핵심 목적, 주요 기능, 타겟 사용자, 기술 선호, 레퍼런스
+- 충분히 파악되면 스펙을 요약하고 "이대로 진행할까요?" 확인
+- 사용자가 확인하면 아래 JSON 출력:
 \`\`\`json
-{
-  "ready": true,
-  "presetId": "game|webapp|mobile|api-server|desktop",
-  "specCard": {
-    "projectType": "프로젝트 한 줄 설명",
-    "coreDecisions": [{"key": "id", "label": "항목명", "value": "사용자 결정값", "source": "user"}],
-    "expansions": [{"id": "id", "label": "추가 기능명", "enabled": true, "suggestedBy": "ai"}],
-    "techStack": ["기술1", "기술2"],
-    "rawAnswers": []
-  }
-}
+{"ready":true,"presetId":"game|webapp|mobile|api-server|desktop","specCard":{"projectType":"설명","coreDecisions":[{"key":"id","label":"항목","value":"값","source":"user"}],"expansions":[{"id":"id","label":"기능","enabled":true,"suggestedBy":"ai"}],"techStack":["기술"],"rawAnswers":[]}}
 \`\`\`
-
-## 중요
-- 정보가 부족하면 계속 질문하세요. 라운드 수에 상관없이 충분할 때까지.
-- 사용자가 "이 정도면 됐어" 같이 말하면 그때 스펙 요약을 보여주세요.
-- 사용자가 확인하기 전에는 절대 JSON을 출력하지 마세요.`;
+- 확인 전에는 JSON 출력 금지. 정보 부족하면 계속 질문.${conversationHistory}`;
 
     try {
-      const session = cliBridge.spawn(conversationText, {
+      const session = cliBridge.spawn(latestUserMessage, {
         workingDir: ".",
         model: "sonnet",
         systemPrompt,
