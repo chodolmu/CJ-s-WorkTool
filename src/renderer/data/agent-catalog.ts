@@ -10,8 +10,18 @@ export interface CatalogAgent extends AgentDefinition {
   matchTags: string[]; // 프로젝트 특성과 매칭할 태그
 }
 
-// ── 핵심 3에이전트 (모든 프로젝트 공통, 항상 활성) ──
+// ── 핵심 4에이전트 (모든 프로젝트 공통, 항상 활성) ──
 const CORE_AGENTS: CatalogAgent[] = [
+  {
+    id: "director", displayName: "Director", icon: "🎬",
+    role: "프로젝트 디렉터 + PM", goal: "프로젝트 방향 구체화, 작업 분배, 일정 관리",
+    constraints: ["코드 작성 금지", "사용자 의도를 기술적 방향으로 번역"],
+    model: "opus", trigger: "manual",
+    guidelines: ["모든 요청을 분석하고 적절한 에이전트에게 배정", "일정과 우선순위 관리"],
+    outputFormat: "",
+    category: "core", reason: "모든 요청의 진입점. 방향을 결정하고 작업을 총괄합니다.",
+    matchTags: [],
+  },
   {
     id: "planner", displayName: "Planner", icon: "🔧",
     role: "기술 설계자", goal: "스펙을 기능 단위로 분해",

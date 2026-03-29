@@ -77,9 +77,9 @@ export class Pipeline extends EventEmitter {
       // Phase → design (설계 단계)
       this.advancePhase("design");
 
-      // 1. Planner 실행
-      this.emit("activity", { agentId: "planner", eventType: "system", message: "Planner starting..." });
-      const features = await this.runPlanner();
+      // 1. Director → Planner → Director 검토
+      this.emit("activity", { agentId: "director", eventType: "system", message: "Director: 프로젝트 방향 수립 + Planner 실행..." });
+      const { features, review: directorReview } = await this.runDirectorAndPlanner();
 
       // Phase → implement (구현 단계)
       this.advancePhase("implement");
@@ -162,8 +162,8 @@ export class Pipeline extends EventEmitter {
     }
   }
 
-  /** Planner 에이전트 실행 → 기능 목록 생성 */
-  private async runPlanner(): Promise<Feature[]> {
+  /** Director 방향 수립 → Planner 기능 분해 → Director 검토/일정 수립 */
+  private async runDirectorAndPlanner(): Promise<{ features: Feature[]; review: DirectorReview }> {
     const plannerDef = this.getAgent("planner");
     if (!plannerDef) throw new Error("Planner agent not found in preset");
 
@@ -203,7 +203,7 @@ Output a JSON array of features with name, description, and order.`,
     this.emit("schedule_updated");
 
     this.memoryManager.updateProjectStatus(this.config.projectId, "building");
-    return savedFeatures;
+    return { features: savedFeatures, review: directorReview };
   }
 
   /** Generator → Evaluator 루프 (한 기능) */

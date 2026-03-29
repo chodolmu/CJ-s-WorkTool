@@ -92,6 +92,7 @@ export default function App() {
       const agentDefs = Array.isArray(project.selectedAgents) && project.selectedAgents.length > 0
         ? project.selectedAgents.map((a: any) => ({ id: a.id, displayName: a.displayName, icon: a.icon }))
         : [
+            { id: "director", displayName: "Director", icon: "🎬" },
             { id: "planner", displayName: "Planner", icon: "🔧" },
             { id: "generator", displayName: "Generator", icon: "💻" },
             { id: "evaluator", displayName: "Evaluator", icon: "🔍" },
