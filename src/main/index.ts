@@ -33,6 +33,7 @@ function createWindow(): void {
     backgroundColor: "#0a0a0a",
     titleBarStyle: "hiddenInset",
     frame: process.platform === "darwin" ? false : true,
+    autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, "../preload/index.js"),
       sandbox: false,
@@ -352,28 +353,44 @@ function registerIpcHandlers(): void {
     const conversationText = messages.map((m) => `${m.role}: ${m.content}`).join("\n");
     const round = clientRound ?? messages.filter((m) => m.role === "user").length;
 
-    const systemPrompt = `당신은 소프트웨어 프로젝트 기획 전문가입니다. 사용자가 만들고 싶은 프로젝트를 대화를 통해 파악하세요.
+    const systemPrompt = `당신은 소프트웨어 프로젝트 기획 전문가(Director)입니다.
+사용자가 만들고 싶은 프로젝트를 대화를 통해 깊이 파악하세요.
 
-규칙:
-- 한국어로 대화하세요
-- 친근하고 구체적으로 질문하세요
+## 대화 규칙
+- 한국어로 친근하게 대화하세요
 - 한 번에 1~2개 질문만 하세요
-- 사용자가 충분한 정보를 제공했다고 판단되면 (보통 3~4번 대화 후) JSON 형태의 스펙 카드를 생성하세요
+- 사용자의 답변을 반영하여 구체화하는 후속 질문을 하세요
+- 다음 항목들을 자연스럽게 파악하세요:
+  1. 프로젝트의 핵심 목적 (무엇을, 왜)
+  2. 주요 기능 3~5개
+  3. 사용자/타겟 (누가 쓸 건지)
+  4. 기술적 선호 (있다면)
+  5. 레퍼런스/느낌 (있다면)
 
-${round >= 3 ? `사용자가 충분한 정보를 주었습니다. 다음 JSON 형식으로 스펙 카드를 생성하세요:
+## 스펙 완성 판단
+위 항목들이 충분히 파악되면, 대화 안에서 스펙을 요약해서 보여주세요:
+"정리해볼게요! 확인해주세요:" 형태로 요약한 뒤,
+"이대로 진행할까요? 수정할 부분이 있으면 말씀해주세요." 라고 물어보세요.
+
+사용자가 확인/동의하면("좋아", "그래", "진행해", "ㅇㅇ", "확인" 등), 아래 JSON을 출력하세요:
 \`\`\`json
 {
   "ready": true,
-  "presetId": "game" 또는 "webapp",
+  "presetId": "game|webapp|mobile|api-server|desktop",
   "specCard": {
-    "projectType": "프로젝트 유형",
-    "coreDecisions": [{"key": "id", "label": "질문", "value": "답변", "source": "user"}],
-    "expansions": [{"id": "id", "label": "기능명", "enabled": true/false, "suggestedBy": "ai"}],
-    "techStack": ["기술1", "기술2"]
+    "projectType": "프로젝트 한 줄 설명",
+    "coreDecisions": [{"key": "id", "label": "항목명", "value": "사용자 결정값", "source": "user"}],
+    "expansions": [{"id": "id", "label": "추가 기능명", "enabled": true, "suggestedBy": "ai"}],
+    "techStack": ["기술1", "기술2"],
+    "rawAnswers": []
   }
 }
 \`\`\`
-스펙 카드 JSON과 함께 "프로젝트를 정리했습니다!" 라는 메시지를 포함하세요.` : "아직 정보가 부족합니다. 추가 질문을 하세요."}`;
+
+## 중요
+- 정보가 부족하면 계속 질문하세요. 라운드 수에 상관없이 충분할 때까지.
+- 사용자가 "이 정도면 됐어" 같이 말하면 그때 스펙 요약을 보여주세요.
+- 사용자가 확인하기 전에는 절대 JSON을 출력하지 마세요.`;
 
     try {
       const session = cliBridge.spawn(conversationText, {

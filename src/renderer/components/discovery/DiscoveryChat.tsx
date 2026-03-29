@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useDiscoveryStore } from "../../stores/discovery-store";
 import { MarkdownRenderer } from "../MarkdownRenderer";
-import type { SpecCard, CoreDecision, Expansion } from "@shared/types";
+import type { SpecCard } from "@shared/types";
 
 interface DiscoveryChatProps {
   onSpecReady: () => void;
@@ -47,53 +47,26 @@ export function DiscoveryChat({ onSpecReady }: DiscoveryChatProps) {
     const round = conversationRound + 1;
     setConversationRound(round);
 
-    // AI를 쓸 수 있으면 AI로, 아니면 로컬 파싱
+    // Claude Code CLI를 통해 대화 처리
     if (window.harness?.discovery?.chat) {
       try {
-        // AI에게 대화 기록 + 사용자 메시지를 보내서 분석 요청
-        // 간단히 classify 비슷한 방식으로 처리
         await processWithAI(msg, round);
       } catch {
-        processLocally(msg, round);
+        addAssistantMessage(
+          "AI 연결에 문제가 발생했습니다. Claude Code CLI가 정상 동작하는지 확인해주세요.\n\n" +
+          "터미널에서 `claude --version`을 실행해보세요.",
+        );
       }
     } else {
-      processLocally(msg, round);
+      addAssistantMessage(
+        "**Claude Code CLI가 필요합니다.**\n\n" +
+        "이 앱은 Claude Code CLI를 통해 AI와 대화합니다.\n" +
+        "설치 후 로그인해주세요: [Claude Code 설치 가이드](https://docs.anthropic.com/en/docs/claude-code)\n\n" +
+        "```\nnpm install -g @anthropic-ai/claude-code\nclaude\n```",
+      );
     }
 
     setThinking(false);
-  };
-
-  /** AI 없이 로컬에서 대화 처리 */
-  const processLocally = (msg: string, round: number) => {
-    const allUserMessages = [...chatMessages.filter((m) => m.role === "user").map((m) => m.content), msg];
-    const combined = allUserMessages.join(" ");
-
-    if (round === 1) {
-      // 첫 메시지: 프로젝트 유형 파악 + 추가 질문
-      const detected = detectProjectType(combined);
-      addAssistantMessage(
-        `${detected.summary}\n\n좀 더 구체적으로 알려주세요:\n` +
-        `- **핵심 기능**은 무엇인가요? (가장 중요한 1-2가지)\n` +
-        `- **사용자**는 누구인가요? (본인, 팀, 일반 사용자)\n` +
-        `- 참고하고 싶은 **레퍼런스**가 있나요?`,
-      );
-    } else if (round === 2) {
-      // 두 번째 메시지: 기술적 부분 질문
-      addAssistantMessage(
-        "좋습니다! 마지막으로 몇 가지만 더:\n\n" +
-        "- **비주얼 스타일** 선호가 있나요? (미니멀, 화려한, 레트로 등)\n" +
-        "- **꼭 있어야 하는 것**이 있다면?\n\n" +
-        "아니면 \"이 정도면 됐어\" 라고 해주시면 바로 정리해드릴게요.",
-      );
-    } else {
-      // 세 번째 이상: 스펙 카드 생성
-      const spec = buildSpecFromConversation(allUserMessages);
-      setSpecFromChat(spec.specCard, spec.presetId);
-      addAssistantMessage(
-        "프로젝트를 정리했습니다! 다음 화면에서 확인하고 수정할 수 있어요.",
-      );
-      onSpecReady();
-    }
   };
 
   /** AI로 대화 처리 (Claude CLI 사용) */
@@ -103,25 +76,21 @@ export function DiscoveryChat({ onSpecReady }: DiscoveryChatProps) {
       { role: "user", content: msg },
     ];
 
-    try {
-      const result = await window.harness.discovery.chat(allMessages, round);
+    const result = await window.harness.discovery.chat(allMessages, round);
 
-      if (result.error || !result.response) {
-        // AI 실패 → 로컬 폴백
-        processLocally(msg, round);
-        return;
-      }
+    if (result.error || !result.response) {
+      throw new Error(result.error || "No response");
+    }
 
-      // AI 응답 표시
-      addAssistantMessage(result.response);
+    // AI 응답 표시
+    addAssistantMessage(result.response);
 
-      // 스펙 카드가 생성되었으면 review 단계로
-      if (result.specCard) {
+    // AI가 스펙 카드를 생성했으면 (사용자 확인 후) Review 단계로
+    if (result.specCard) {
+      setTimeout(() => {
         setSpecFromChat(result.specCard, result.presetId ?? "game");
         onSpecReady();
-      }
-    } catch {
-      processLocally(msg, round);
+      }, 1000);
     }
   };
 
@@ -220,100 +189,10 @@ export function DiscoveryChat({ onSpecReady }: DiscoveryChatProps) {
           </button>
         </div>
         <div className="text-center mt-1.5">
-          <span className="text-[10px] text-text-muted">Enter로 전송 · 3번 정도 대화하면 프로젝트가 정리됩니다</span>
+          <span className="text-[10px] text-text-muted">Enter로 전송 · AI와 대화하며 프로젝트를 정의합니다</span>
         </div>
       </div>
     </div>
   );
 }
 
-// ── 로컬 파싱 헬퍼 ──
-
-function detectProjectType(text: string): { type: "game" | "webapp"; summary: string } {
-  const t = text.toLowerCase();
-  const gameKeywords = ["게임", "game", "rpg", "플랫포머", "슈팅", "퍼즐", "2d", "3d", "캐릭터", "스테이지", "레벨"];
-  const webKeywords = ["웹", "web", "대시보드", "dashboard", "관리", "admin", "sns", "쇼핑", "ecommerce", "saas", "앱", "app"];
-
-  const gameScore = gameKeywords.filter((k) => t.includes(k)).length;
-  const webScore = webKeywords.filter((k) => t.includes(k)).length;
-
-  if (gameScore > webScore) {
-    return { type: "game", summary: "게임 프로젝트로 이해했습니다! 🎮" };
-  }
-  return { type: "webapp", summary: "웹 애플리케이션 프로젝트로 이해했습니다! 🌐" };
-}
-
-function buildSpecFromConversation(messages: string[]): { specCard: SpecCard; presetId: string } {
-  const combined = messages.join(" ");
-  const detected = detectProjectType(combined);
-
-  // 핵심 결정 추출 (키워드 기반)
-  const decisions: CoreDecision[] = [];
-
-  // 프로젝트 유형
-  decisions.push({ key: "type", label: "프로젝트 유형", value: detected.type === "game" ? "게임" : "웹 애플리케이션", source: "user" });
-
-  // 장르/카테고리 추출
-  const genres: Record<string, string> = {
-    rpg: "RPG", platformer: "플랫포머", "플랫포머": "플랫포머", puzzle: "퍼즐", "퍼즐": "퍼즐",
-    shooting: "슈팅", "슈팅": "슈팅", "횡스크롤": "횡스크롤", "대시보드": "대시보드",
-    dashboard: "대시보드", sns: "SNS", social: "SNS", "쇼핑": "이커머스", ecommerce: "이커머스",
-    saas: "SaaS", "관리": "관리 도구",
-  };
-  for (const [keyword, label] of Object.entries(genres)) {
-    if (combined.toLowerCase().includes(keyword)) {
-      decisions.push({ key: "genre", label: "장르/카테고리", value: label, source: "user" });
-      break;
-    }
-  }
-
-  // 나머지는 대화 내용에서 추출 시도
-  const extractions = [
-    { key: "target", label: "대상 사용자", patterns: [/(?:사용자|유저|타겟|대상|target)[\s:은는]?\s*(.{2,30})/i] },
-    { key: "core-feature", label: "핵심 기능", patterns: [/(?:핵심|중요|메인|core|main|기능)[\s:은는]?\s*(.{2,50})/i] },
-    { key: "style", label: "스타일", patterns: [/(?:스타일|비주얼|디자인|style)[\s:은는]?\s*(.{2,30})/i] },
-    { key: "reference", label: "레퍼런스", patterns: [/(?:참고|레퍼런스|reference|처럼|같은)[\s:은는]?\s*(.{2,30})/i] },
-  ];
-
-  for (const ext of extractions) {
-    for (const pattern of ext.patterns) {
-      const match = combined.match(pattern);
-      if (match) {
-        decisions.push({ key: ext.key, label: ext.label, value: match[1].trim(), source: "user" });
-        break;
-      }
-    }
-  }
-
-  // 확장 기능 제안
-  const expansions: Expansion[] = detected.type === "game"
-    ? [
-        { id: "scoring", label: "점수 시스템", enabled: true, suggestedBy: "ai" },
-        { id: "levels", label: "스테이지/레벨 시스템", enabled: true, suggestedBy: "ai" },
-        { id: "sound", label: "사운드 이펙트", enabled: false, suggestedBy: "ai" },
-        { id: "save", label: "세이브/로드", enabled: false, suggestedBy: "ai" },
-      ]
-    : [
-        { id: "auth", label: "로그인/회원가입", enabled: true, suggestedBy: "ai" },
-        { id: "responsive", label: "반응형 디자인", enabled: true, suggestedBy: "ai" },
-        { id: "dark-mode", label: "다크 모드", enabled: false, suggestedBy: "ai" },
-        { id: "notifications", label: "알림 시스템", enabled: false, suggestedBy: "ai" },
-      ];
-
-  const techStack = detected.type === "game"
-    ? ["React", "TypeScript", "Canvas API"]
-    : ["React", "TypeScript", "Next.js", "Tailwind CSS"];
-
-  return {
-    presetId: detected.type,
-    specCard: {
-      projectType: decisions.find((d) => d.key === "genre")?.value
-        ? `${decisions.find((d) => d.key === "genre")!.value} ${detected.type === "game" ? "게임" : "웹앱"}`
-        : detected.type === "game" ? "게임 프로젝트" : "웹 애플리케이션",
-      coreDecisions: decisions,
-      expansions,
-      techStack,
-      rawAnswers: [],
-    },
-  };
-}
