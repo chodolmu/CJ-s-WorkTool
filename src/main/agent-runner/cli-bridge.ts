@@ -50,7 +50,15 @@ export class CLIBridge {
     }
 
     if (options.systemPrompt) {
-      args.push("--system-prompt", options.systemPrompt);
+      // 시스템 프롬프트를 임시 파일로 저장 (shell 이스케이핑 문제 방지)
+      const fs = require("fs");
+      const os = require("os");
+      const pathMod = require("path");
+      const tmpFile = pathMod.join(os.tmpdir(), `worktool-sysprompt-${Date.now()}.txt`);
+      fs.writeFileSync(tmpFile, options.systemPrompt, "utf-8");
+      args.push("--system-prompt-file", tmpFile);
+      // 프로세스 종료 후 정리
+      setTimeout(() => { try { fs.unlinkSync(tmpFile); } catch {} }, 60000);
     }
 
     if (options.maxTurns) {
