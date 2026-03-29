@@ -418,10 +418,16 @@ function registerIpcHandlers(): void {
         }
       } catch { /* JSON 파싱 실패 — 일반 대화 응답 */ }
 
-      // 응답에서 JSON 블록 제거 (사용자에게는 대화만 보여줌)
+      // 응답 정리: JSON 블록 + bkit/플러그인 출력 제거
       const cleanResponse = response
         .replace(/```json[\s\S]*?```/g, "")
         .replace(/\{[\s\S]*"ready"\s*:\s*true[\s\S]*\}/g, "")
+        .replace(/─{5,}[\s\S]*?─{5,}/g, "")  // bkit 구분선 블록 제거
+        .replace(/📊\s*bkit[\s\S]*?─{5,}/g, "")  // bkit Feature Usage 블록 제거
+        .replace(/✅\s*Used:.*$/gm, "")
+        .replace(/⏭️\s*Not Used:.*$/gm, "")
+        .replace(/💡\s*Recommended:.*$/gm, "")
+        .replace(/\n{3,}/g, "\n\n")  // 과도한 빈 줄 정리
         .trim();
 
       return {
