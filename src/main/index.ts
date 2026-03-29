@@ -345,12 +345,19 @@ function registerIpcHandlers(): void {
     return memoryManager.getChatMessages(projectId, limit ?? 100, offset ?? 0);
   });
 
+  // ── Debug Log (renderer로 전달) ──
+  const debugLog = (...args: unknown[]) => {
+    const msg = args.map(a => typeof a === "object" ? JSON.stringify(a) : String(a)).join(" ");
+    mainWindow?.webContents.executeJavaScript(`console.log("[WorkTool]", ${JSON.stringify(msg)})`).catch(() => {});
+  };
+
   // ── Discovery AI Chat ──
   ipcMain.handle("discovery:chat", async (_event, { messages, round: clientRound }: {
     messages: { role: string; content: string }[];
     round?: number;
   }) => {
     const latestUserMsg = messages[messages.length - 1]?.content ?? "";
+    debugLog("discovery:chat called, messages:", messages.length, "latest:", latestUserMsg.slice(0, 50));
 
     // 이전 대화 + 최신 메시지를 하나의 프롬프트로 구성
     // claude --print는 매번 새 세션이므로, 전체 대화를 프롬프트에 포함해야 함
@@ -373,6 +380,8 @@ function registerIpcHandlers(): void {
 7. 확인 전에는 JSON 금지.`;
 
     try {
+      debugLog("spawning claude, prompt len:", fullPrompt.length, "sysprompt len:", systemPrompt.length);
+
       const session = cliBridge.spawn(fullPrompt, {
         workingDir: ".",
         model: "sonnet",
@@ -380,8 +389,24 @@ function registerIpcHandlers(): void {
         outputFormat: "text",
       });
 
-      const result = await session.waitForCompletion();
+      debugLog("spawn done, waiting for completion...");
+
+      session.on("event", (evt: any) => {
+        debugLog("event:", evt.type, evt.content?.slice(0, 100));
+      });
+      session.on("error", (err: any) => {
+        debugLog("error event:", String(err).slice(0, 200));
+      });
+
+      // 60초 타임아웃
+      const timeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("Claude 응답 타임아웃 (60초)")), 60000),
+      );
+
+      const result = await Promise.race([session.waitForCompletion(), timeout]);
       const response = result.output;
+
+      debugLog("completed, success:", result.success, "output len:", response.length, "error:", result.error?.slice(0, 100));
 
       // JSON 스펙 카드 추출 시도
       let specCard = null;

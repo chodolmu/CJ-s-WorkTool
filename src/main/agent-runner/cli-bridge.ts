@@ -84,6 +84,18 @@ export class CLIBridge {
 
     // claude를 직접 spawn (shell 경유 없음 → 한국어 인자 깨짐 방지)
     const claudePath = this.findClaudeExe();
+    // 디버그 로그를 stderr에 출력 (Electron DevTools에서 안 보이지만 로그 파일에 남음)
+    const _log = (msg: string) => {
+      try {
+        const fs = require("fs");
+        const os = require("os");
+        const pathMod = require("path");
+        fs.appendFileSync(pathMod.join(os.tmpdir(), "worktool-debug.log"), `${new Date().toISOString()} ${msg}\n`);
+      } catch {}
+    };
+    _log(`claudePath: ${claudePath}`);
+    _log(`gitBash: ${env.CLAUDE_CODE_GIT_BASH_PATH}`);
+    _log(`args count: ${args.length}, prompt len: ${prompt.length}`);
     let proc;
 
     if (claudePath && claudePath.endsWith(".exe")) {
@@ -224,6 +236,12 @@ export class CLISession extends EventEmitter {
     // stderr (에러/경고)
     this.process.stderr?.on("data", (chunk: Buffer) => {
       const text = chunk.toString();
+      try {
+        const fs = require("fs");
+        const os = require("os");
+        const pathMod = require("path");
+        fs.appendFileSync(pathMod.join(os.tmpdir(), "worktool-debug.log"), `${new Date().toISOString()} STDERR: ${text.slice(0, 500)}\n`);
+      } catch {}
       // stderr에서 유의미한 에러만 이벤트로
       if (text.includes("Error") || text.includes("error")) {
         this.emit("event", {
@@ -236,6 +254,7 @@ export class CLISession extends EventEmitter {
 
     // 프로세스 종료
     this.process.on("close", (code) => {
+      console.log("[CLIBridge] process closed, code:", code, "fullOutput len:", this.fullOutput.length);
       // 남은 버퍼 처리
       if (this.outputBuffer.trim()) {
         const event = this.parseLine(this.outputBuffer.trim());

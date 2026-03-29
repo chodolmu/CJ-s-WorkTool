@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-03-29T07:03:22.498Z",
+  "lastUpdated": "2026-03-29T13:20:39.053Z",
   "activeFeatures": [
     "Tool",
     "main",
@@ -42,7 +42,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-28T12:32:02.864Z",
-        "lastUpdated": "2026-03-29T07:03:22.497Z"
+        "lastUpdated": "2026-03-29T13:20:18.883Z"
       },
       "lastFile": "C:\\GameMaking\\Tool\\src\\main\\index.ts"
     },
@@ -68,9 +68,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-28T12:32:53.399Z",
-        "lastUpdated": "2026-03-29T02:21:49.477Z"
+        "lastUpdated": "2026-03-29T12:14:09.975Z"
       },
-      "lastFile": "C:\\GameMaking\\Tool\\src\\renderer\\components\\CheckpointModal.tsx"
+      "lastFile": "C:\\GameMaking\\Tool\\src\\renderer\\App.tsx"
     },
     "layout": {
       "phase": "do",
@@ -133,7 +133,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-28T12:41:18.436Z",
-        "lastUpdated": "2026-03-29T02:14:57.166Z"
+        "lastUpdated": "2026-03-29T11:16:20.331Z"
       },
       "lastFile": "C:\\GameMaking\\Tool\\src\\renderer\\components\\discovery\\DiscoveryChat.tsx"
     },
@@ -159,9 +159,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-28T12:46:23.522Z",
-        "lastUpdated": "2026-03-28T17:41:51.210Z"
+        "lastUpdated": "2026-03-29T13:20:39.053Z"
       },
-      "lastFile": "C:/GameMaking/Tool/src/main/agent-runner/prompt-translator.ts"
+      "lastFile": "C:\\GameMaking\\Tool\\src\\main\\agent-runner\\cli-bridge.ts"
     },
     "orchestrator": {
       "phase": "do",
@@ -172,9 +172,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-28T12:48:01.017Z",
-        "lastUpdated": "2026-03-29T07:02:26.334Z"
+        "lastUpdated": "2026-03-29T12:14:52.645Z"
       },
-      "lastFile": "C:\\GameMaking\\Tool\\src\\main\\orchestrator\\smart-orchestrator.ts"
+      "lastFile": "C:\\GameMaking\\Tool\\src\\main\\orchestrator\\pipeline.ts"
     },
     "Presets": {
       "phase": "do",
@@ -198,9 +198,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-28T17:03:53.553Z",
-        "lastUpdated": "2026-03-28T17:03:53.553Z"
+        "lastUpdated": "2026-03-29T12:13:49.559Z"
       },
-      "lastFile": "C:/GameMaking/Tool/src/renderer/data/agent-catalog.ts"
+      "lastFile": "C:\\GameMaking\\Tool\\src\\renderer\\data\\agent-catalog.ts"
     },
     "tools": {
       "phase": "do",
@@ -224,7 +224,7 @@
   "session": {
     "startedAt": "2026-03-28T11:16:21.206Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-03-29T07:03:22.498Z"
+    "lastActivity": "2026-03-29T13:20:39.053Z"
   },
   "history": [
     {
@@ -3506,6 +3506,312 @@
     {
       "timestamp": "2026-03-29T07:03:22.497Z",
       "feature": "main",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T10:40:01.538Z",
+      "feature": "main",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T10:41:11.849Z",
+      "feature": "discovery",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T10:41:19.645Z",
+      "feature": "discovery",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T10:44:32.962Z",
+      "feature": "main",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T10:45:00.617Z",
+      "feature": "discovery",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T10:47:17.640Z",
+      "feature": "discovery",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T10:49:31.366Z",
+      "feature": "discovery",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T10:50:20.437Z",
+      "feature": "discovery",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T10:50:28.469Z",
+      "feature": "discovery",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T10:50:53.496Z",
+      "feature": "discovery",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T10:50:58.345Z",
+      "feature": "discovery",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T10:58:30.671Z",
+      "feature": "main",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T10:59:50.946Z",
+      "feature": "agent-runner",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T10:59:59.924Z",
+      "feature": "agent-runner",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T11:00:06.895Z",
+      "feature": "agent-runner",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T11:00:51.036Z",
+      "feature": "agent-runner",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T11:00:58.876Z",
+      "feature": "agent-runner",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T11:04:01.499Z",
+      "feature": "agent-runner",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T11:04:13.888Z",
+      "feature": "agent-runner",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T11:04:24.858Z",
+      "feature": "main",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T11:09:41.416Z",
+      "feature": "agent-runner",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T11:10:01.339Z",
+      "feature": "agent-runner",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T11:16:06.967Z",
+      "feature": "agent-runner",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T11:16:20.331Z",
+      "feature": "discovery",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T11:16:39.563Z",
+      "feature": "renderer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T11:20:24.458Z",
+      "feature": "agent-runner",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T11:20:37.584Z",
+      "feature": "main",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T11:25:23.629Z",
+      "feature": "main",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T11:27:01.178Z",
+      "feature": "main",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T11:31:26.718Z",
+      "feature": "agent-runner",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T11:41:00.684Z",
+      "feature": "main",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T12:13:49.559Z",
+      "feature": "data",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T12:14:09.975Z",
+      "feature": "renderer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T12:14:41.782Z",
+      "feature": "orchestrator",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T12:14:47.693Z",
+      "feature": "orchestrator",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T12:14:52.645Z",
+      "feature": "orchestrator",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T12:24:38.824Z",
+      "feature": "agent-runner",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T12:24:45.814Z",
+      "feature": "agent-runner",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T12:31:49.886Z",
+      "feature": "agent-runner",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T12:31:57.065Z",
+      "feature": "agent-runner",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T13:05:54.771Z",
+      "feature": "agent-runner",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T13:06:05.873Z",
+      "feature": "agent-runner",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T13:06:15.665Z",
+      "feature": "agent-runner",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T13:13:09.757Z",
+      "feature": "agent-runner",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T13:13:27.124Z",
+      "feature": "agent-runner",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T13:13:39.982Z",
+      "feature": "agent-runner",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T13:17:45.998Z",
+      "feature": "main",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T13:18:04.368Z",
+      "feature": "main",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T13:20:18.883Z",
+      "feature": "main",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T13:20:31.188Z",
+      "feature": "agent-runner",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T13:20:39.053Z",
+      "feature": "agent-runner",
       "phase": "do",
       "action": "updated"
     }
