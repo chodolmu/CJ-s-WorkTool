@@ -32,6 +32,7 @@ win:
       arch:
         - x64
   icon: build/icon.ico
+  signAndEditExecutable: false
 
 nsis:
   oneClick: false

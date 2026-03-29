@@ -5,6 +5,7 @@ import { MemoryManager } from "../memory/memory-manager";
 import { PresetManager } from "../preset/preset-manager";
 import { LearningManager } from "../memory/learning-manager";
 import { PlanManager } from "../memory/plan-manager";
+import { DirectorAgent, type DirectorReview } from "./director-agent";
 import { withRetry, classifyError } from "../agent-runner/error-handler";
 import type { AgentDefinition, Feature, SpecCard } from "@shared/types";
 
@@ -39,6 +40,7 @@ export class Pipeline extends EventEmitter {
   private checkpointResolve: ((action: string) => void) | null = null;
   private learningManager: LearningManager;
   private planManager: PlanManager;
+  private director: DirectorAgent;
 
   constructor(
     cliBridge: CLIBridge,
@@ -56,6 +58,10 @@ export class Pipeline extends EventEmitter {
     this.config = config;
     this.learningManager = new LearningManager(memoryManager);
     this.planManager = planManager;
+    this.director = new DirectorAgent(cliBridge, promptAssembler, memoryManager, planManager);
+
+    // Director 이벤트를 Pipeline으로 전파
+    this.director.on("activity", (data) => this.emit("activity", data));
   }
 
   get status() {
@@ -78,18 +84,15 @@ export class Pipeline extends EventEmitter {
       // Phase → implement (구현 단계)
       this.advancePhase("implement");
 
-      // 2. 스펙-기능 교차 검증 (P0-03)
-      const matchResult = this.planManager.getSpecMatchRate(this.config.projectId);
-
-      // 3. 사용자 확인
+      // 2. 사용자 확인 (Director 검토 결과 포함)
       const plannerAction = await this.requestCheckpoint({
         id: `cp-planner-${Date.now()}`,
         type: "planner_complete",
         data: {
-          message: `${features.length}개 기능을 계획했습니다. 이 순서로 진행할까요?`,
+          message: `Director가 ${features.length}개 기능을 검토하고 일정을 수립했습니다. 이 순서로 진행할까요?`,
           features: features.map((f) => ({ name: f.name, description: f.description })),
-          specMatchRate: matchResult.rate,
-          missingFromSpec: matchResult.missing,
+          specMatchRate: directorReview.specMatchRate,
+          missingFromSpec: directorReview.missingFromSpec,
         },
       });
 
@@ -103,21 +106,19 @@ export class Pipeline extends EventEmitter {
       for (let i = 0; i < features.length; i++) {
         const feature = features[i];
         this.memoryManager.updateFeatureStatus(feature.id, "in_progress");
-        // 실제 시작 시간 기록
-        this.memoryManager.updateFeatureSchedule(feature.id, { actualStart: new Date().toISOString() });
+        // Director가 진행 추적 (PM 역할 — 실제 시작 시간 기록)
+        this.director.trackFeatureProgress(this.config.projectId, feature.id, "in_progress");
         this.emit("progress", { completed: i, total: features.length, current: feature.name });
 
         const success = await this.runFeatureLoop(feature);
 
         if (success) {
           this.memoryManager.updateFeatureStatus(feature.id, "completed");
-          this.planManager.updateFeatureStatus(this.config.projectId, feature.id, "completed");
+          this.director.trackFeatureProgress(this.config.projectId, feature.id, "completed");
         } else {
           this.memoryManager.updateFeatureStatus(feature.id, "failed");
-          this.planManager.updateFeatureStatus(this.config.projectId, feature.id, "failed");
+          this.director.trackFeatureProgress(this.config.projectId, feature.id, "failed");
         }
-        // 실제 종료 시간 기록
-        this.memoryManager.updateFeatureSchedule(feature.id, { actualEnd: new Date().toISOString() });
         this.emit("schedule_updated");
 
         // 기능 완료 체크포인트
@@ -192,25 +193,13 @@ Output a JSON array of features with name, description, and order.`,
       savedFeatures.push(feature);
     }
 
-    // Plan 문서에 Feature 목록 동기화
-    this.planManager.syncFeatures(this.config.projectId, savedFeatures);
-
-    // 일정 자동 설정: 각 피처에 순차적 예상 일정 배분
-    const now = new Date();
-    const scheduleItems = savedFeatures.map((f, i) => {
-      const start = new Date(now);
-      start.setDate(start.getDate() + i * 2); // 피처당 2일 간격 기본 추정
-      const end = new Date(start);
-      end.setDate(end.getDate() + 1);
-      return {
-        featureId: f.id,
-        estimatedStart: start.toISOString(),
-        estimatedEnd: end.toISOString(),
-        assignedAgent: "generator",
-        priority: savedFeatures.length - i, // 순서대로 우선순위
-      };
+    // Director가 Planner 결과를 검토하고 일정 수립 (PD+PM 역할)
+    const directorReview = await this.director.reviewPlannerOutput({
+      projectId: this.config.projectId,
+      features: savedFeatures,
+      specCard: this.config.specCard,
+      workingDir: this.config.workingDir,
     });
-    this.memoryManager.bulkSetFeatureSchedule(scheduleItems);
     this.emit("schedule_updated");
 
     this.memoryManager.updateProjectStatus(this.config.projectId, "building");

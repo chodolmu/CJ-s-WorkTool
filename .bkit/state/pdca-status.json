@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-03-28T23:12:38.201Z",
+  "lastUpdated": "2026-03-29T07:03:22.498Z",
   "activeFeatures": [
     "Tool",
     "main",
@@ -29,9 +29,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-28T12:31:29.090Z",
-        "lastUpdated": "2026-03-28T17:50:56.211Z"
+        "lastUpdated": "2026-03-29T02:18:41.933Z"
       },
-      "lastFile": "C:/GameMaking/Tool/src/shared/types.ts"
+      "lastFile": "C:\\GameMaking\\Tool\\src\\shared\\types.ts"
     },
     "main": {
       "phase": "do",
@@ -42,9 +42,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-28T12:32:02.864Z",
-        "lastUpdated": "2026-03-28T23:11:48.649Z"
+        "lastUpdated": "2026-03-29T07:03:22.497Z"
       },
-      "lastFile": "C:/GameMaking/Tool/src/main/index.ts"
+      "lastFile": "C:\\GameMaking\\Tool\\src\\main\\index.ts"
     },
     "preload": {
       "phase": "do",
@@ -55,9 +55,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-28T12:32:20.610Z",
-        "lastUpdated": "2026-03-28T23:11:40.299Z"
+        "lastUpdated": "2026-03-29T02:19:44.431Z"
       },
-      "lastFile": "C:/GameMaking/Tool/src/preload/index.ts"
+      "lastFile": "C:\\GameMaking\\Tool\\src\\preload\\index.ts"
     },
     "renderer": {
       "phase": "do",
@@ -68,9 +68,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-28T12:32:53.399Z",
-        "lastUpdated": "2026-03-28T23:12:38.200Z"
+        "lastUpdated": "2026-03-29T02:21:49.477Z"
       },
-      "lastFile": "C:/GameMaking/Tool/src/renderer/pages/SettingsPage.tsx"
+      "lastFile": "C:\\GameMaking\\Tool\\src\\renderer\\components\\CheckpointModal.tsx"
     },
     "layout": {
       "phase": "do",
@@ -81,9 +81,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-28T12:33:28.860Z",
-        "lastUpdated": "2026-03-28T18:31:30.714Z"
+        "lastUpdated": "2026-03-28T23:22:01.021Z"
       },
-      "lastFile": "C:/GameMaking/Tool/src/renderer/components/layout/Titlebar.tsx"
+      "lastFile": "C:\\GameMaking\\Tool\\src\\renderer\\components\\layout\\Sidebar.tsx"
     },
     "memory": {
       "phase": "do",
@@ -94,9 +94,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-28T12:36:41.257Z",
-        "lastUpdated": "2026-03-28T18:50:19.907Z"
+        "lastUpdated": "2026-03-29T02:19:03.263Z"
       },
-      "lastFile": "C:/GameMaking/Tool/src/main/memory/database.ts"
+      "lastFile": "C:\\GameMaking\\Tool\\src\\main\\memory\\plan-manager.ts"
     },
     "preset": {
       "phase": "do",
@@ -133,9 +133,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-28T12:41:18.436Z",
-        "lastUpdated": "2026-03-28T23:11:54.388Z"
+        "lastUpdated": "2026-03-29T02:14:57.166Z"
       },
-      "lastFile": "C:/GameMaking/Tool/src/renderer/components/discovery/DiscoveryChat.tsx"
+      "lastFile": "C:\\GameMaking\\Tool\\src\\renderer\\components\\discovery\\DiscoveryChat.tsx"
     },
     "Discovery": {
       "phase": "do",
@@ -172,9 +172,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-28T12:48:01.017Z",
-        "lastUpdated": "2026-03-28T18:10:46.561Z"
+        "lastUpdated": "2026-03-29T07:02:26.334Z"
       },
-      "lastFile": "C:/GameMaking/Tool/src/main/orchestrator/smart-orchestrator.ts"
+      "lastFile": "C:\\GameMaking\\Tool\\src\\main\\orchestrator\\smart-orchestrator.ts"
     },
     "Presets": {
       "phase": "do",
@@ -224,7 +224,7 @@
   "session": {
     "startedAt": "2026-03-28T11:16:21.206Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-03-28T23:12:38.201Z"
+    "lastActivity": "2026-03-29T07:03:22.498Z"
   },
   "history": [
     {
@@ -3122,6 +3122,390 @@
     {
       "timestamp": "2026-03-28T23:12:38.200Z",
       "feature": "renderer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-28T23:20:42.206Z",
+      "feature": "memory",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-28T23:20:49.010Z",
+      "feature": "memory",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-28T23:20:55.511Z",
+      "feature": "Tool",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-28T23:21:01.134Z",
+      "feature": "memory",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-28T23:21:07.590Z",
+      "feature": "memory",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-28T23:21:25.198Z",
+      "feature": "memory",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-28T23:21:30.810Z",
+      "feature": "memory",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-28T23:21:40.773Z",
+      "feature": "renderer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-28T23:21:44.406Z",
+      "feature": "renderer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-28T23:21:50.359Z",
+      "feature": "renderer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-28T23:21:55.658Z",
+      "feature": "renderer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-28T23:22:01.021Z",
+      "feature": "layout",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-28T23:23:21.392Z",
+      "feature": "renderer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-28T23:23:31.838Z",
+      "feature": "preload",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-28T23:23:45.910Z",
+      "feature": "main",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-28T23:23:56.250Z",
+      "feature": "orchestrator",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-28T23:24:04.261Z",
+      "feature": "orchestrator",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-28T23:24:13.711Z",
+      "feature": "main",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T02:14:04.553Z",
+      "feature": "main",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T02:14:14.743Z",
+      "feature": "main",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T02:14:22.154Z",
+      "feature": "preload",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T02:14:57.167Z",
+      "feature": "discovery",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T02:17:53.701Z",
+      "feature": "memory",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T02:18:03.928Z",
+      "feature": "main",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T02:18:20.787Z",
+      "feature": "memory",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T02:18:27.512Z",
+      "feature": "memory",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T02:18:41.934Z",
+      "feature": "Tool",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T02:19:03.263Z",
+      "feature": "memory",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T02:19:10.802Z",
+      "feature": "main",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T02:19:14.960Z",
+      "feature": "main",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T02:19:24.745Z",
+      "feature": "main",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T02:19:31.665Z",
+      "feature": "main",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T02:19:37.367Z",
+      "feature": "main",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T02:19:44.431Z",
+      "feature": "preload",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T02:19:52.973Z",
+      "feature": "orchestrator",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T02:19:59.298Z",
+      "feature": "orchestrator",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T02:20:05.559Z",
+      "feature": "orchestrator",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T02:20:12.813Z",
+      "feature": "orchestrator",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T02:20:25.810Z",
+      "feature": "main",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T02:20:58.209Z",
+      "feature": "renderer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T02:21:06.836Z",
+      "feature": "renderer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T02:21:15.830Z",
+      "feature": "renderer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T02:21:31.654Z",
+      "feature": "orchestrator",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T02:21:40.205Z",
+      "feature": "renderer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T02:21:49.477Z",
+      "feature": "renderer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T02:22:21.785Z",
+      "feature": "orchestrator",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T02:22:31.925Z",
+      "feature": "orchestrator",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T02:22:43.519Z",
+      "feature": "orchestrator",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T02:29:38.795Z",
+      "feature": "main",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T05:03:03.811Z",
+      "feature": "orchestrator",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T05:03:26.497Z",
+      "feature": "orchestrator",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T05:03:36.158Z",
+      "feature": "orchestrator",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T05:03:45.500Z",
+      "feature": "orchestrator",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T05:03:52.942Z",
+      "feature": "orchestrator",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T05:04:04.504Z",
+      "feature": "orchestrator",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T05:04:15.288Z",
+      "feature": "orchestrator",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T05:04:27.053Z",
+      "feature": "orchestrator",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T05:04:36.755Z",
+      "feature": "main",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T07:00:54.165Z",
+      "feature": "orchestrator",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T07:01:34.416Z",
+      "feature": "orchestrator",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T07:01:39.490Z",
+      "feature": "orchestrator",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T07:02:26.334Z",
+      "feature": "orchestrator",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T07:02:47.915Z",
+      "feature": "main",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-29T07:03:22.497Z",
+      "feature": "main",
       "phase": "do",
       "action": "updated"
     }
