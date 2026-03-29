@@ -48,7 +48,7 @@ body {
   background: var(--wt-bg-base);
   color: var(--wt-text-primary);
   overflow: hidden;
-  user-select: none;
+  user-select: text;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
@@ -60,11 +60,9 @@ body {
   color: white;
 }
 
-/* Allow text selection in specific areas */
-.select-text,
-pre, code, textarea, input,
-[contenteditable] {
-  user-select: text;
+/* Disable text selection on interactive elements */
+button, nav, [role="button"], .no-select {
+  user-select: none;
 }
 
 /* ── Focus visible ── */
