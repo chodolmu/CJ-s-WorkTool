@@ -90,12 +90,12 @@ export default function App() {
       setProject(project.id, project.name);
       // DB에 저장된 에이전트가 있으면 사용, 없으면 기본 3개
       const agentDefs = Array.isArray(project.selectedAgents) && project.selectedAgents.length > 0
-        ? project.selectedAgents.map((a: any) => ({ id: a.id, displayName: a.displayName, icon: a.icon }))
+        ? project.selectedAgents.map((a: any) => ({ id: a.id, displayName: a.displayName, icon: a.icon, trigger: a.trigger }))
         : [
-            { id: "director", displayName: "Director", icon: "🎬" },
-            { id: "planner", displayName: "Planner", icon: "🔧" },
-            { id: "generator", displayName: "Generator", icon: "💻" },
-            { id: "evaluator", displayName: "Evaluator", icon: "🔍" },
+            { id: "director", displayName: "Director", icon: "🎬", trigger: "manual" },
+            { id: "planner", displayName: "Planner", icon: "🔧", trigger: "manual" },
+            { id: "generator", displayName: "Generator", icon: "💻", trigger: "after_planner" },
+            { id: "evaluator", displayName: "Evaluator", icon: "🔍", trigger: "after_generator" },
           ];
       initAgents(agentDefs);
       window.harness?.session.start(project.id);
@@ -105,11 +105,12 @@ export default function App() {
         if (p) {
           setProject(p.id, p.name);
           const defs = Array.isArray(p.selectedAgents) && p.selectedAgents.length > 0
-            ? p.selectedAgents.map((a: any) => ({ id: a.id, displayName: a.displayName, icon: a.icon }))
+            ? p.selectedAgents.map((a: any) => ({ id: a.id, displayName: a.displayName, icon: a.icon, trigger: a.trigger }))
             : [
-                { id: "planner", displayName: "Planner", icon: "🔧" },
-                { id: "generator", displayName: "Generator", icon: "💻" },
-                { id: "evaluator", displayName: "Evaluator", icon: "🔍" },
+                { id: "director", displayName: "Director", icon: "🎬", trigger: "manual" },
+                { id: "planner", displayName: "Planner", icon: "🔧", trigger: "manual" },
+                { id: "generator", displayName: "Generator", icon: "💻", trigger: "after_planner" },
+                { id: "evaluator", displayName: "Evaluator", icon: "🔍", trigger: "after_generator" },
               ];
           initAgents(defs);
           window.harness?.session.start(p.id);
@@ -125,6 +126,7 @@ export default function App() {
       id: a.id,
       displayName: a.displayName,
       icon: a.icon,
+      trigger: a.trigger,
     }));
 
     if (!window.harness) {

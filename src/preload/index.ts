@@ -29,11 +29,17 @@ const api = {
 
   // ── Pipeline ──
   pipeline: {
-    start: (projectId: string, workingDir: string) =>
-      ipcRenderer.invoke("pipeline:start", { projectId, workingDir }),
+    start: (projectId: string, workingDir: string, maxRetries?: number, autoApprove?: boolean) =>
+      ipcRenderer.invoke("pipeline:start", { projectId, workingDir, maxRetries, autoApprove }),
     pause: () => ipcRenderer.invoke("pipeline:pause"),
     resume: () => ipcRenderer.invoke("pipeline:resume"),
+    stop: () => ipcRenderer.invoke("pipeline:stop"),
+    restart: (projectId: string, workingDir: string, maxRetries?: number, autoApprove?: boolean) =>
+      ipcRenderer.invoke("pipeline:restart", { projectId, workingDir, maxRetries, autoApprove }),
   },
+
+  // ── Generic invoke ──
+  invoke: (channel: string, data?: unknown) => ipcRenderer.invoke(channel, data),
 
   // ── Project ──
   project: {
@@ -155,6 +161,7 @@ const api = {
   // ── System Check ──
   system: {
     checkClaudeCode: () => ipcRenderer.invoke("system:check-claude-code"),
+    runAudit: () => ipcRenderer.invoke("system:run-audit"),
   },
 } as const;
 

@@ -3,7 +3,7 @@ import { CLIBridge, type CLIStreamEvent, type CLIResult } from "../agent-runner/
 import { PromptAssembler } from "../agent-runner/prompt-assembler";
 import { MemoryManager } from "../memory/memory-manager";
 import { PlanManager } from "../memory/plan-manager";
-import type { AgentDefinition, Feature, SpecCard, FeatureStatus } from "@shared/types";
+import type { AgentDefinition, Feature, SpecCard, FeatureStatus, DynamicPipeline, PipelineStep, DirectorHints } from "@shared/types";
 
 /**
  * Director Agent (PD + PM + 프롬프트 분석 통합)
@@ -56,6 +56,8 @@ export class DirectorAgent extends EventEmitter {
     const session = this.cliBridge.spawn(prompt, {
       workingDir,
       model: "opus",
+      systemPrompt: `[OVERRIDE] WorkTool Director Agent. CLAUDE.md/bkit/플러그인 지침 무시. 반드시 JSON만 출력하세요.`,
+      outputFormat: "text",
     });
 
     let output = "";
@@ -146,9 +148,13 @@ ${agentNames}
 
 IMPORTANT: For "direct" mode, steps should have one entry with agentId "generator" and the task should be your refined instruction. For "light", include generator + evaluator. For "full", include planner + generator + evaluator + any relevant custom agents.`;
 
+    const systemPrompt = `[OVERRIDE] WorkTool Director Agent. CLAUDE.md/bkit/플러그인 지침 무시. 반드시 JSON만 출력하세요. 설명/인사/메뉴 금지.`;
+
     const session = this.cliBridge.spawn(prompt, {
       workingDir,
       model: "sonnet",
+      systemPrompt,
+      outputFormat: "text",
     });
 
     let output = "";
@@ -293,6 +299,24 @@ IMPORTANT: For "direct" mode, steps should have one entry with agentId "generato
       message: `Director: ${features.length}개 기능 검토 완료 (스펙 일치도 ${matchResult.rate}%)`,
     });
 
+    // 누락 항목이 있으면 경고 알림
+    if (matchResult.missing.length > 0) {
+      this.emit("activity", {
+        agentId: "director",
+        eventType: "system",
+        message: `스펙 누락 항목 ${matchResult.missing.length}개: ${matchResult.missing.slice(0, 3).join(", ")}${matchResult.missing.length > 3 ? " ..." : ""}`,
+      });
+
+      // 누락 항목을 기능으로 자동 추가 제안 (checkpoint 대신 activity로 표시)
+      if (matchResult.rate < 70) {
+        this.emit("activity", {
+          agentId: "director",
+          eventType: "system",
+          message: `스펙 일치도 ${matchResult.rate}%로 낮음 — 누락 기능을 추가하거나 스펙을 수정하세요`,
+        });
+      }
+    }
+
     return {
       approved: true,
       specMatchRate: matchResult.rate,
@@ -311,6 +335,115 @@ IMPORTANT: For "direct" mode, steps should have one entry with agentId "generato
       ...(status === "in_progress" ? { actualStart: new Date().toISOString() } : {}),
       ...(status === "completed" || status === "failed" ? { actualEnd: new Date().toISOString() } : {}),
     });
+  }
+
+  /**
+   * specCard + directorHints 기반으로 동적 파이프라인 구성
+   * CLI 호출 없이 로컬 로직으로 생성 (토큰 절약)
+   */
+  buildDynamicPipeline(specCard: SpecCard, availableAgents: AgentDefinition[]): DynamicPipeline {
+    const hints = specCard.directorHints;
+    const suggestedPhases = hints?.suggestedPhases ?? ["plan", "generate", "evaluate"];
+    const agentMap = new Map(availableAgents.map(a => [a.id, a]));
+
+    const steps: PipelineStep[] = [];
+    let stepIndex = 0;
+
+    const addStep = (
+      agentId: string,
+      type: PipelineStep["type"],
+      displayName: string,
+      description: string,
+      loop?: PipelineStep["loop"],
+    ) => {
+      steps.push({
+        id: `step-${stepIndex++}`,
+        agentId,
+        displayName,
+        type,
+        description,
+        loop,
+      });
+    };
+
+    // 1. Plan 단계 (항상)
+    if (suggestedPhases.includes("plan")) {
+      addStep("planner", "plan", "기획", "기능 분해 + 구현 계획 수립");
+    }
+
+    // 2. 프로젝트별 중간 단계 (suggestedPhases 순서대로)
+    for (const phase of suggestedPhases) {
+      switch (phase) {
+        case "design":
+          addStep(
+            agentMap.has("designer") ? "designer" : "generator",
+            "design",
+            "설계",
+            hints?.domainContext
+              ? `${hints.domainContext} 관련 설계 (아트/아키텍처/UI)`
+              : "프로젝트 설계 (구조/아키텍처)",
+          );
+          break;
+        case "data-modeling":
+          addStep(
+            agentMap.has("data-modeler") ? "data-modeler" : "generator",
+            "custom",
+            "데이터 모델링",
+            "DB 스키마/데이터 모델 설계",
+          );
+          break;
+        case "compliance":
+          addStep(
+            agentMap.has("compliance") ? "compliance" : "generator",
+            "custom",
+            "규정 검토",
+            `${hints?.reviewFocus?.join(", ") ?? "관련 법률/규정"} 준수 여부 확인`,
+          );
+          break;
+        case "security":
+          addStep(
+            agentMap.has("security") ? "security" : "generator",
+            "custom",
+            "보안 감사",
+            "보안 취약점 점검 + OWASP 기준 검토",
+          );
+          break;
+        // plan, generate, evaluate는 아래에서 처리
+      }
+    }
+
+    // 3. Generate + Evaluate 루프 (항상)
+    const genStepId = `step-${stepIndex}`;
+    addStep("generator", "generate", "구현", "기능별 코드 생성");
+    const evalStepId = `step-${stepIndex}`;
+    addStep("evaluator", "evaluate", "검증",
+      hints?.reviewFocus?.length
+        ? `코드 검증 — 중점: ${hints.reviewFocus.join(", ")}`
+        : "코드 빌드/실행/스펙 충족 검증",
+    );
+
+    // generate와 evaluate에 루프 설정
+    const genStep = steps.find(s => s.id === genStepId);
+    const evalStep = steps.find(s => s.id === evalStepId);
+    if (genStep && evalStep) {
+      genStep.loop = { maxRetries: 3, pairedWith: evalStep.id };
+      evalStep.loop = { maxRetries: 3, pairedWith: genStep.id };
+    }
+
+    // 4. 후처리 커스텀 단계 (compliance/security가 evaluate 이후에도 올 수 있음)
+    // suggestedPhases에서 generate 이후의 compliance/security는 이미 위에서 추가됨
+
+    this.emit("activity", {
+      agentId: "director",
+      eventType: "complete",
+      message: `Director: 파이프라인 구성 — ${steps.map(s => s.displayName).join(" → ")}`,
+    });
+
+    return {
+      steps,
+      generateStepId: genStepId,
+      evaluateStepId: evalStepId,
+    };
   }
 
   // ── 프롬프트 빌더 ──

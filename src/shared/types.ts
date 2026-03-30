@@ -29,6 +29,15 @@ export interface SpecCard {
   expansions: Expansion[];
   techStack: string[];
   rawAnswers: DiscoveryAnswer[];
+  directorHints?: DirectorHints;
+}
+
+/** Discovery에서 수집한 프로젝트별 맞춤 힌트 — Director가 파이프라인 구성에 활용 */
+export interface DirectorHints {
+  domainContext: string;           // "한국 부동산 임대차 법률", "2D 픽셀 플랫포머" 등
+  reviewFocus: string[];           // 검증 시 중점 항목
+  techConstraints: string[];       // 기술적 제약/요구사항
+  suggestedPhases?: string[];      // AI가 제안하는 파이프라인 단계
 }
 
 export interface CoreDecision {
@@ -50,6 +59,38 @@ export interface DiscoveryAnswer {
   question: string;
   selectedOption: string | null;
   freeText: string | null;
+}
+
+// ============================================
+// 동적 파이프라인
+// ============================================
+
+/** 파이프라인 단계 유형 */
+export type PipelineStepType =
+  | "plan"       // 기능 분해 + 계획
+  | "design"     // 설계 (아트, 아키텍처, DB 등)
+  | "generate"   // 코드 생성/구현
+  | "evaluate"   // 검증/테스트
+  | "custom";    // 도메인 특화 (법률검토, 보안감사 등)
+
+/** Director가 생성하는 파이프라인 단계 정의 */
+export interface PipelineStep {
+  id: string;
+  agentId: string;         // 실행할 에이전트 ID
+  displayName: string;     // UI 표시명
+  type: PipelineStepType;
+  description: string;     // 이 단계에서 할 일
+  loop?: {                 // generate+evaluate 루프 설정
+    maxRetries: number;
+    pairedWith: string;    // 루프 상대 step id
+  };
+}
+
+/** Director가 반환하는 전체 파이프라인 구성 */
+export interface DynamicPipeline {
+  steps: PipelineStep[];
+  generateStepId: string;   // 메인 구현 단계 ID (Feature 루프 대상)
+  evaluateStepId: string;   // 메인 검증 단계 ID
 }
 
 // ============================================

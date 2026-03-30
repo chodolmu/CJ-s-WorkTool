@@ -6,6 +6,7 @@ interface Settings {
   workingDir: string;
   defaultModel: "sonnet" | "opus" | "haiku";
   maxRetries: number;
+  autoApprove: boolean;
   gitAutoCommit: boolean;
   gitBranchPerFeature: boolean;
 }
@@ -17,7 +18,7 @@ function loadSettings(): Settings {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) return JSON.parse(stored);
   } catch { /* ignore */ }
-  return { workingDir: "", defaultModel: "sonnet", maxRetries: 3, gitAutoCommit: false, gitBranchPerFeature: false };
+  return { workingDir: "", defaultModel: "sonnet", maxRetries: 10, autoApprove: false, gitAutoCommit: false, gitBranchPerFeature: false };
 }
 
 function saveSettings(settings: Settings) {
@@ -105,7 +106,7 @@ export function SettingsPage() {
         description="Evaluator가 반려한 후 Generator가 재시도하는 횟수"
       >
         <div className="flex gap-2">
-          {[2, 3, 5].map((n) => (
+          {[3, 5, 10, 20].map((n) => (
             <button
               key={n}
               onClick={() => update("maxRetries", n)}
@@ -115,10 +116,23 @@ export function SettingsPage() {
                   : "bg-bg-card border-border-subtle text-text-secondary hover:border-border-strong hover:bg-bg-hover"
               }`}
             >
-              {n}회 재시도
+              {n}회
             </button>
           ))}
         </div>
+      </SettingSection>
+
+      {/* Auto approve */}
+      <SettingSection
+        label="자동 진행 모드"
+        description="체크포인트에서 자동으로 승인하여 중단 없이 파이프라인 실행"
+      >
+        <ToggleRow
+          label="체크포인트 자동 승인"
+          description="매 기능 완료 후 확인 없이 다음으로 자동 진행합니다"
+          checked={settings.autoApprove}
+          onChange={(v) => update("autoApprove", v)}
+        />
       </SettingSection>
 
       {/* Keyboard shortcuts */}
@@ -134,6 +148,9 @@ export function SettingsPage() {
 
       {/* Advanced settings toggle */}
       <AdvancedSettings settings={settings} update={update} />
+
+      {/* E2E 감사 */}
+      <AuditSection />
     </div>
   );
 }
@@ -306,5 +323,77 @@ function ToggleRow({ label, description, checked, onChange }: {
         <div className="text-[11px] text-text-muted">{description}</div>
       </div>
     </label>
+  );
+}
+
+function AuditSection() {
+  const [running, setRunning] = useState(false);
+  const [results, setResults] = useState<{ test: string; pass: boolean; detail: string }[] | null>(null);
+
+  const runAudit = async () => {
+    if (!window.harness?.system?.runAudit) {
+      toast("error", "감사 불가", "harness.system.runAudit이 없습니다.");
+      return;
+    }
+    setRunning(true);
+    setResults(null);
+    try {
+      const r = await window.harness.system.runAudit();
+      setResults(r);
+      const passed = r.filter((x: any) => x.pass).length;
+      const failed = r.filter((x: any) => !x.pass).length;
+      toast(failed === 0 ? "success" : "warning", "감사 완료", `${passed} 통과 / ${failed} 실패`);
+    } catch (e: any) {
+      toast("error", "감사 오류", e.message);
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  const passed = results?.filter(r => r.pass).length ?? 0;
+  const failed = results?.filter(r => !r.pass).length ?? 0;
+
+  return (
+    <div className="border-t border-border-subtle pt-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="text-xs font-medium text-text-secondary">E2E 시스템 감사</div>
+          <div className="text-[11px] text-text-muted">DB, CLI, 프리셋, 채팅 등 전체 기능 테스트</div>
+        </div>
+        <button
+          onClick={runAudit}
+          disabled={running}
+          className="px-4 py-2 bg-accent hover:bg-accent-hover text-white text-xs font-medium rounded-lg disabled:opacity-50 cursor-pointer transition-all"
+        >
+          {running ? "테스트 중..." : "감사 실행"}
+        </button>
+      </div>
+
+      {results && (
+        <div className="space-y-1.5">
+          <div className="text-xs text-text-secondary">
+            {passed} 통과 / {failed} 실패 (총 {results.length})
+          </div>
+          <div className="max-h-60 overflow-y-auto space-y-1 bg-bg-base rounded-lg p-2">
+            {results.map((r, i) => (
+              <div key={i} className={`text-[11px] flex gap-2 py-0.5 ${r.pass ? "text-status-success" : "text-status-error"}`}>
+                <span className="shrink-0">{r.pass ? "\u2705" : "\u274C"}</span>
+                <span className="font-medium shrink-0">{r.test}</span>
+                <span className="text-text-muted truncate">{r.detail}</span>
+              </div>
+            ))}
+          </div>
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(JSON.stringify(results, null, 2));
+              toast("success", "복사됨", "결과 JSON이 클립보드에 복사되었습니다.");
+            }}
+            className="text-[11px] text-accent hover:text-accent-hover cursor-pointer"
+          >
+            결과 JSON 복사 (공유용)
+          </button>
+        </div>
+      )}
+    </div>
   );
 }

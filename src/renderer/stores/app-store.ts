@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { AgentStatus, FeatureStatus, Project } from "@shared/types";
+import type { AgentStatus, FeatureStatus, Project, PipelineStep } from "@shared/types";
 import type { AgentCardData } from "../components/AgentCard";
 import type { ActivityItem } from "../components/ActivityFeed";
 import type { FeatureItem } from "../components/FeatureList";
@@ -9,6 +9,9 @@ interface PipelineState {
   completedFeatures: number;
   totalFeatures: number;
   currentFeature: string | null;
+  steps: PipelineStep[];
+  activeStepId: string | null;
+  completedStepIds: string[];
 }
 
 interface CheckpointData {
@@ -47,11 +50,14 @@ interface AppState {
   setProjects: (projects: Project[]) => void;
   setFeatures: (features: FeatureItem[]) => void;
   updateFeatureStatus: (featureId: string, status: FeatureStatus) => void;
-  initAgents: (agents: { id: string; displayName: string; icon: string }[]) => void;
+  initAgents: (agents: { id: string; displayName: string; icon: string; trigger?: string }[]) => void;
   updateAgentStatus: (agentId: string, status: AgentStatus, currentFeature?: string | null) => void;
   updateAgentChangeSummary: (agentId: string, summary: string, filesChanged: string[]) => void;
   setPipelineStatus: (status: PipelineState["status"]) => void;
   setPipelineProgress: (completed: number, total: number, current: string | null) => void;
+  setPipelineSteps: (steps: PipelineStep[]) => void;
+  setActiveStep: (stepId: string | null) => void;
+  completeStep: (stepId: string) => void;
   addActivity: (activity: Omit<ActivityItem, "id">) => void;
   setCheckpoint: (checkpoint: CheckpointData | null) => void;
   setSelectedAgent: (id: string | null) => void;
@@ -72,6 +78,9 @@ export const useAppStore = create<AppState>((set) => ({
     completedFeatures: 0,
     totalFeatures: 0,
     currentFeature: null,
+    steps: [],
+    activeStepId: null,
+    completedStepIds: [],
   },
   activities: [],
   pendingCheckpoint: null,
@@ -97,6 +106,7 @@ export const useAppStore = create<AppState>((set) => ({
         id: a.id,
         displayName: a.displayName,
         icon: a.icon,
+        trigger: a.trigger,
         status: "queued" as AgentStatus,
         currentFeature: null,
         progress: null,
@@ -129,6 +139,25 @@ export const useAppStore = create<AppState>((set) => ({
       pipeline: { ...state.pipeline, completedFeatures: completed, totalFeatures: total, currentFeature: current },
     })),
 
+  setPipelineSteps: (steps) =>
+    set((state) => ({
+      pipeline: { ...state.pipeline, steps, activeStepId: null, completedStepIds: [] },
+    })),
+
+  setActiveStep: (stepId) =>
+    set((state) => ({
+      pipeline: { ...state.pipeline, activeStepId: stepId },
+    })),
+
+  completeStep: (stepId) =>
+    set((state) => ({
+      pipeline: {
+        ...state.pipeline,
+        activeStepId: null,
+        completedStepIds: [...state.pipeline.completedStepIds, stepId],
+      },
+    })),
+
   addActivity: (activity) =>
     set((state) => ({
       activities: [
@@ -149,7 +178,7 @@ export const useAppStore = create<AppState>((set) => ({
       projectName: null,
       agents: [],
       features: [],
-      pipeline: { status: "idle", completedFeatures: 0, totalFeatures: 0, currentFeature: null },
+      pipeline: { status: "idle", completedFeatures: 0, totalFeatures: 0, currentFeature: null, steps: [], activeStepId: null, completedStepIds: [] },
       activities: [],
       pendingCheckpoint: null,
       selectedAgentId: null,

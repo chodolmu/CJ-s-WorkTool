@@ -24,6 +24,7 @@ export function ChatPage() {
   const [detectedMode, setDetectedMode] = useState<ExecutionMode | null>(null);
   const [activeMode, setActiveMode] = useState<string | null>(null);
   const [showModeMenu, setShowModeMenu] = useState(false);
+  const [activityTrail, setActivityTrail] = useState<{ type: string; content: string; ts: number }[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const modeMenuRef = useRef<HTMLDivElement>(null);
@@ -65,6 +66,19 @@ export function ChatPage() {
         setIsStreaming(false);
         setStreamingContent("");
         setActiveMode(null);
+        // 작업 내역은 잠시 유지 후 정리
+        setTimeout(() => setActivityTrail([]), 3000);
+      }),
+    );
+
+    // 실시간 작업 내역 (도구 사용, 사고 등)
+    cleanups.push(
+      window.harness.on("chat:activity", (data: { type: string; content?: string }) => {
+        if (!data.content) return;
+        setActivityTrail((prev) => [
+          ...prev.slice(-10), // 최대 10개 유지
+          { type: data.type, content: data.content!, ts: Date.now() },
+        ]);
       }),
     );
 
@@ -130,6 +144,7 @@ export function ChatPage() {
     setInput("");
     setIsStreaming(true);
     setStreamingContent("");
+    setActivityTrail([]);
     setDetectedMode(null);
     if (inputRef.current) inputRef.current.style.height = "auto";
 
@@ -214,6 +229,20 @@ export function ChatPage() {
           ))
         )}
 
+        {/* Activity trail — 실시간 작업 내역 */}
+        {isStreaming && activityTrail.length > 0 && (
+          <div className="flex gap-3 animate-fade-in">
+            <div className="w-8 shrink-0" /> {/* Avatar spacer */}
+            <div className="flex-1 min-w-0">
+              <div className="space-y-0.5 mb-2">
+                {activityTrail.map((item, i) => (
+                  <ActivityTrailItem key={item.ts} item={item} isLatest={i === activityTrail.length - 1} />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Streaming */}
         {isStreaming && streamingContent && (
           <div className="flex gap-3 animate-fade-in">
@@ -225,7 +254,7 @@ export function ChatPage() {
           </div>
         )}
 
-        {isStreaming && !streamingContent && (
+        {isStreaming && !streamingContent && activityTrail.length === 0 && (
           <div className="flex gap-3 animate-fade-in">
             <Avatar role="assistant" />
             <div className="p-3 bg-bg-card border border-border-subtle rounded-lg">
@@ -361,6 +390,29 @@ function MessageBubble({ message, style }: { message: ChatMessage; style?: React
           {new Date(message.timestamp).toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit" })}
         </div>
       </div>
+    </div>
+  );
+}
+
+function ActivityTrailItem({ item, isLatest }: { item: { type: string; content: string }; isLatest: boolean }) {
+  const typeConfig: Record<string, { color: string; icon: string }> = {
+    tool_use:    { color: "text-status-info",    icon: "▸" },
+    tool_result: { color: "text-status-success", icon: "✓" },
+    thinking:    { color: "text-text-muted",     icon: "…" },
+    system:      { color: "text-text-muted",     icon: "●" },
+    progress:    { color: "text-accent",         icon: "↻" },
+    complete:    { color: "text-status-success",  icon: "✓" },
+  };
+
+  const config = typeConfig[item.type] ?? typeConfig.system;
+
+  return (
+    <div className={`flex items-center gap-1.5 text-[11px] font-mono transition-opacity ${
+      isLatest ? "opacity-100" : "opacity-40"
+    }`}>
+      <span className={`${config.color} shrink-0`}>{config.icon}</span>
+      <span className={`${config.color} truncate`}>{item.content}</span>
+      {isLatest && <span className="w-1 h-1 bg-accent rounded-full animate-pulse shrink-0 ml-1" />}
     </div>
   );
 }

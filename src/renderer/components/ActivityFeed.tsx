@@ -62,18 +62,24 @@ export function ActivityFeed({ activities, maxHeight = "100%" }: ActivityFeedPro
     });
   };
 
-  const filtered = filter
-    ? activities.filter((a) => a.eventType === filter)
-    : activities;
+  const importantTypes = new Set<ActivityEventType>(["error", "system", "complete", "checkpoint"]);
+  const filtered = filter === "important" as any
+    ? activities.filter((a) => importantTypes.has(a.eventType))
+    : filter
+      ? activities.filter((a) => a.eventType === filter)
+      : activities;
 
   return (
     <div className="flex flex-col" style={{ maxHeight }}>
       {/* Filter chips */}
-      <div className="flex items-center gap-1 px-1 pb-1.5 shrink-0">
-        <FilterChip label="All" active={filter === null} onClick={() => setFilter(null)} />
-        <FilterChip label="Tool" active={filter === "tool_call"} onClick={() => setFilter("tool_call")} />
+      <div className="flex items-center gap-1 px-1 pb-1.5 shrink-0 flex-wrap">
+        <FilterChip label="전체" active={filter === null} onClick={() => setFilter(null)} />
+        <FilterChip label="중요만" active={filter === "important" as any} onClick={() => setFilter("important" as any)} />
+        <FilterChip label="System" active={filter === "system"} onClick={() => setFilter("system")} />
         <FilterChip label="Error" active={filter === "error"} onClick={() => setFilter("error")} />
         <FilterChip label="Done" active={filter === "complete"} onClick={() => setFilter("complete")} />
+        <FilterChip label="Tool" active={filter === "tool_call"} onClick={() => setFilter("tool_call")} />
+        <span className="text-[10px] text-text-muted ml-auto">{filtered.length}/{activities.length}</span>
       </div>
 
       {/* Log entries */}

@@ -84,8 +84,10 @@ export class CLIBridge {
 
     // claude를 직접 spawn (shell 경유 없음 → 한국어 인자 깨짐 방지)
     const claudePath = this.findClaudeExe();
-    // 디버그 로그를 stderr에 출력 (Electron DevTools에서 안 보이지만 로그 파일에 남음)
+    // 디버그 로그 — console.log는 Electron main process에서 DevTools로 전달됨
     const _log = (msg: string) => {
+      const line = `[CLIBridge] ${msg}`;
+      console.log(line);
       try {
         const fs = require("fs");
         const os = require("os");
@@ -95,11 +97,12 @@ export class CLIBridge {
     };
     _log(`claudePath: ${claudePath}`);
     _log(`gitBash: ${env.CLAUDE_CODE_GIT_BASH_PATH}`);
-    _log(`args count: ${args.length}, prompt len: ${prompt.length}`);
+    _log(`args: ${JSON.stringify(args.map(a => a.length > 50 ? a.slice(0, 50) + "..." : a))}`);
     let proc;
 
     if (claudePath && claudePath.endsWith(".exe")) {
       // WinGet claude.exe → 직접 실행
+      _log(`spawn mode: direct exe — ${claudePath}`);
       proc = spawn(claudePath, args, {
         cwd: options.workingDir,
         stdio: ["pipe", "pipe", "pipe"],
@@ -107,8 +110,10 @@ export class CLIBridge {
         env,
       });
     } else if (claudePath && claudePath.endsWith(".js")) {
-      // npm global cli.js → node로 실행
-      proc = spawn(process.execPath, [claudePath, ...args], {
+      // npm global cli.js → node로 실행 (process.execPath은 Electron이므로 node를 찾아야 함)
+      const nodePath = this.findNodeExe() ?? "node";
+      _log(`spawn mode: node + cli.js — node=${nodePath}, cli=${claudePath}`);
+      proc = spawn(nodePath, [claudePath, ...args], {
         cwd: options.workingDir,
         stdio: ["pipe", "pipe", "pipe"],
         windowsHide: true,
@@ -116,6 +121,7 @@ export class CLIBridge {
       });
     } else {
       // 폴백: shell 경유 (macOS/Linux 또는 경로 못 찾은 경우)
+      _log("spawn mode: shell fallback (claude not found as exe/js)");
       proc = spawn("claude", args, {
         cwd: options.workingDir,
         stdio: ["pipe", "pipe", "pipe"],
@@ -125,16 +131,27 @@ export class CLIBridge {
       });
     }
 
+    _log(`spawn pid: ${proc.pid ?? "NONE"}`);
+    proc.on("error", (err) => _log(`proc error: ${err.message}`));
+    proc.on("close", (code, signal) => _log(`proc close: code=${code} signal=${signal}`));
+
     return new CLISession(proc, options.workingDir);
   }
 
-  /** claude.exe 경로 탐색 (shell 없이 직접 실행용) */
+  /** claude 실행 경로 탐색 (shell 없이 직접 실행용) */
   private findClaudeExe(): string | null {
     if (process.platform !== "win32") return null;
     const fs = require("fs");
     const pathMod = require("path");
 
-    // 1. WinGet 설치 경로
+    // 1. npm global 설치 우선 (항상 최신, node로 cli.js 실행)
+    const appData = process.env.APPDATA;
+    if (appData) {
+      const npmCli = pathMod.join(appData, "npm", "node_modules", "@anthropic-ai", "claude-code", "cli.js");
+      if (fs.existsSync(npmCli)) return npmCli; // .js → node로 실행
+    }
+
+    // 2. WinGet 설치 경로 (폴백 — 업데이트가 느릴 수 있음)
     const localAppData = process.env.LOCALAPPDATA;
     if (localAppData) {
       const wingetDir = pathMod.join(localAppData, "Microsoft", "WinGet", "Packages");
@@ -147,13 +164,6 @@ export class CLIBridge {
           }
         } catch {}
       }
-    }
-
-    // 2. npm global 설치 (node로 cli.js 실행)
-    const appData = process.env.APPDATA;
-    if (appData) {
-      const npmCli = pathMod.join(appData, "npm", "node_modules", "@anthropic-ai", "claude-code", "cli.js");
-      if (fs.existsSync(npmCli)) return npmCli; // node로 실행해야 함 — 아래에서 처리
     }
 
     return null;
@@ -178,6 +188,18 @@ export class CLIBridge {
         if (fs.existsSync(p)) return p;
       }
     }
+    return null;
+  }
+
+  /** Node.js 실행파일 경로 탐색 (Electron의 process.execPath은 electron.exe이므로 별도로 찾아야 함) */
+  private findNodeExe(): string | null {
+    if (process.platform !== "win32") return null;
+    const { execSync } = require("child_process");
+    try {
+      const result = execSync("where node", { encoding: "utf-8", timeout: 5000 }).trim();
+      const first = result.split("\n")[0]?.trim();
+      if (first) return first;
+    } catch {}
     return null;
   }
 

@@ -12,6 +12,7 @@ export interface AgentCardData {
   progress: { current: number; total: number } | null;
   lastChangeSummary: string | null;
   lastActivity: string | null;
+  trigger?: string;
 }
 
 interface AgentCardProps {

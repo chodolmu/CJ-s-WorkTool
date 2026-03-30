@@ -95,7 +95,7 @@ export function ProjectView({ projectId }: ProjectViewProps) {
           )}
           {activeTab === "pipeline" && (
             <div className="p-4">
-              <OrchestrationPage />
+              <OrchestrationPage specCard={specCard} />
             </div>
           )}
           {activeTab === "specs" && (
@@ -135,9 +135,24 @@ function OverviewTab({ specCard }: { specCard: SpecCard | null }) {
 
   const handleStartPipeline = async () => {
     if (!currentProjectId || !window.harness?.pipeline) return;
+    // 설정에서 maxRetries, autoApprove 로드
+    let maxRetries = 10;
+    let autoApprove = false;
     try {
-      await window.harness.pipeline.start(currentProjectId, workingDir);
-      toast("success", "파이프라인 시작", "Planner → Generator → Evaluator 파이프라인이 실행 중입니다.");
+      const stored = localStorage.getItem("worktool-settings");
+      if (stored) {
+        const s = JSON.parse(stored);
+        maxRetries = s.maxRetries ?? 10;
+        autoApprove = s.autoApprove ?? false;
+      }
+    } catch {}
+    try {
+      await window.harness.pipeline.start(currentProjectId, workingDir, maxRetries, autoApprove);
+      toast("success", "파이프라인 시작",
+        autoApprove
+          ? "자동 진행 모드로 실행 중입니다."
+          : "Planner → Generator → Evaluator 파이프라인이 실행 중입니다.",
+      );
     } catch (err) {
       toast("error", "파이프라인 실패", String(err));
     }

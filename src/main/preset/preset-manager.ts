@@ -54,10 +54,16 @@ export class PresetManager {
     return null;
   }
 
-  /** 프리셋의 에이전트 목록 */
+  /** 프리셋의 에이전트 목록 (builtin + custom 합산, custom이 우선) */
   getAgents(presetId: string): AgentDefinition[] {
-    const preset = this.getPreset(presetId);
-    return preset?.agents ?? [];
+    const builtinAgents = this.loadAgents(path.join(this.builtinDir, presetId, "agents"));
+    const customAgents = this.loadAgents(path.join(this.customDir, presetId, "agents"));
+
+    // custom이 builtin을 오버라이드 (같은 id면 custom 우선)
+    const merged = new Map<string, AgentDefinition>();
+    for (const a of builtinAgents) merged.set(a.id, a);
+    for (const a of customAgents) merged.set(a.id, a);
+    return Array.from(merged.values());
   }
 
   /** 특정 에이전트 정의 로드 */

@@ -12,6 +12,9 @@ export function useIpcEvents() {
     updateAgentChangeSummary,
     setPipelineStatus,
     setPipelineProgress,
+    setPipelineSteps,
+    setActiveStep,
+    completeStep,
     addActivity,
     setCheckpoint,
     setClaudeInstalled,
@@ -36,10 +39,21 @@ export function useIpcEvents() {
       }),
     );
 
-    // 파이프라인 진행률
+    // 파이프라인 진행률 + 기능 상태 동기화
     cleanups.push(
       window.harness.on("pipeline:progress", (data: { completed: number; total: number; current: string | null }) => {
         setPipelineProgress(data.completed, data.total, data.current);
+
+        // 기능 목록 새로고침 트리거
+        const { currentProjectId } = useAppStore.getState();
+        if (currentProjectId && window.harness?.invoke) {
+          window.harness.invoke("schedule:list", { projectId: currentProjectId }).then((features: any) => {
+            if (Array.isArray(features)) {
+              const { setFeatures } = useAppStore.getState();
+              setFeatures(features);
+            }
+          }).catch(() => {});
+        }
       }),
     );
 
@@ -59,7 +73,8 @@ export function useIpcEvents() {
           details: data.details ?? null,
         });
 
-        if (data.eventType === "system" && data.message.includes("starting")) {
+        // 에이전트 실행 상태 추적: system 이벤트 = 시작, thinking/tool_call = 작업중
+        if (data.eventType === "system" || data.eventType === "thinking" || data.eventType === "tool_call") {
           updateAgentStatus(data.agentId, "running");
         }
         if (data.eventType === "complete") {
@@ -103,6 +118,69 @@ export function useIpcEvents() {
           message: `Pipeline error: ${data.error}`,
         });
         toast("error", "Pipeline Error", data.error);
+      }),
+    );
+
+    // 동적 파이프라인 구성
+    cleanups.push(
+      window.harness.on("pipeline:configured", (data: { steps: unknown[] }) => {
+        setPipelineSteps(data.steps as Parameters<typeof setPipelineSteps>[0]);
+      }),
+    );
+
+    cleanups.push(
+      window.harness.on("pipeline:step-started", (data: { id: string }) => {
+        setActiveStep(data.id);
+      }),
+    );
+
+    cleanups.push(
+      window.harness.on("pipeline:step-completed", (data: { id: string }) => {
+        completeStep(data.id);
+      }),
+    );
+
+    // 채팅 액션 실행 결과
+    cleanups.push(
+      window.harness.on("chat:actions-executed", (data: { actions: string[] }) => {
+        for (const action of data.actions) {
+          toast("success", "액션 실행", action);
+        }
+      }),
+    );
+
+    // 에이전트 목록 업데이트 (채팅에서 추가/제거 시)
+    cleanups.push(
+      window.harness.on("agents:updated", (data: { agents: { id: string; displayName: string; icon: string; trigger?: string }[] }) => {
+        const { initAgents } = useAppStore.getState();
+        initAgents(data.agents);
+        toast("success", "팀 업데이트", `에이전트 ${data.agents.length}개`);
+      }),
+    );
+
+    // 기능 목록 업데이트 (채팅/파이프라인에서 기능 추가 시)
+    cleanups.push(
+      window.harness.on("features:updated", () => {
+        const { currentProjectId } = useAppStore.getState();
+        if (currentProjectId && window.harness?.invoke) {
+          window.harness.invoke("project:load", { projectId: currentProjectId }).then((project: any) => {
+            if (project) {
+              window.harness.invoke("schedule:list", { projectId: currentProjectId }).then((features: any) => {
+                if (Array.isArray(features)) {
+                  const { setFeatures } = useAppStore.getState();
+                  setFeatures(features);
+                }
+              }).catch(() => {});
+            }
+          }).catch(() => {});
+        }
+      }),
+    );
+
+    // 파이프라인 시작 요청 (채팅에서 트리거)
+    cleanups.push(
+      window.harness.on("pipeline:start-requested", () => {
+        toast("info", "파이프라인", "파이프라인 탭에서 시작 버튼을 눌러주세요.");
       }),
     );
 
