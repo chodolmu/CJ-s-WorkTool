@@ -4,10 +4,13 @@ import { toast } from "./Toast";
 
 interface Props {
   projectDir?: string;
+  mode?: "apply" | "select";
+  selectedId?: string | null;
+  onSelect?: (harnessId: string, entry: HarnessEntry) => void;
   onApplied?: (harnessId: string) => void;
 }
 
-export function HarnessBrowser({ projectDir, onApplied }: Props) {
+export function HarnessBrowser({ projectDir, mode = "apply", selectedId, onSelect, onApplied }: Props) {
   const [catalog, setCatalog] = useState<Record<string, HarnessEntry[]>>({});
   const [search, setSearch] = useState("");
   const [searchResults, setSearchResults] = useState<HarnessEntry[] | null>(null);
@@ -56,92 +59,84 @@ export function HarnessBrowser({ projectDir, onApplied }: Props) {
     }
   };
 
-  const displayItems = searchResults || [];
-  const categories = searchResults ? {} : catalog;
+  const handleAction = (harness: HarnessEntry) => {
+    if (mode === "select") {
+      onSelect?.(harness.id, harness);
+    } else {
+      handleApply(harness.id);
+    }
+  };
 
   if (loading) {
-    return <div className="harness-browser loading">카탈로그 로딩 중...</div>;
+    return (
+      <div className="flex items-center justify-center py-12 text-sm text-text-secondary">
+        카탈로그 로딩 중...
+      </div>
+    );
   }
 
   return (
-    <div className="harness-browser">
+    <div>
       {/* 검색바 + 언어 토글 */}
-      <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+      <div className="flex gap-2 mb-4">
         <input
           type="text"
           placeholder="하네스 검색... (예: game, API, 교육)"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          style={{
-            flex: 1, padding: "8px 12px",
-            background: "var(--bg-secondary, #2b2d31)",
-            border: "1px solid var(--border, #3f4147)",
-            borderRadius: 6, color: "inherit", fontSize: 14,
-          }}
+          className="flex-1 px-3 py-2 bg-bg-card border border-border-subtle rounded-md text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-colors"
         />
         <button
           onClick={() => setLang((l) => (l === "ko" ? "en" : "ko"))}
-          style={{
-            padding: "8px 16px", borderRadius: 6, cursor: "pointer",
-            background: "var(--bg-secondary, #2b2d31)",
-            border: "1px solid var(--border, #3f4147)",
-            color: "inherit", fontSize: 13, whiteSpace: "nowrap",
-          }}
+          className="px-4 py-2 rounded-md cursor-pointer bg-bg-card border border-border-subtle text-text-secondary text-xs hover:border-border-strong transition-colors whitespace-nowrap"
         >
           {lang === "ko" ? "한국어" : "English"}
         </button>
       </div>
 
-      {/* 검색 결과 */}
+      {/* 검색 결과 수 */}
       {searchResults && (
-        <div style={{ marginBottom: 12, fontSize: 13, opacity: 0.7 }}>
-          {searchResults.length}개 결과
-        </div>
+        <div className="mb-3 text-xs text-text-muted">{searchResults.length}개 결과</div>
       )}
 
       {/* 검색 결과 리스트 */}
       {searchResults && (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12 }}>
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-3">
           {searchResults.map((h) => (
             <HarnessCard
               key={h.id} harness={h} lang={lang}
-              onApply={handleApply} applying={applying === h.id}
+              mode={mode} isSelected={selectedId === h.id}
+              onAction={() => handleAction(h)}
+              isBusy={applying === h.id}
             />
           ))}
         </div>
       )}
 
       {/* 카테고리별 */}
-      {!searchResults && Object.entries(categories).map(([category, harnesses]) => (
-        <div key={category} style={{ marginBottom: 16 }}>
+      {!searchResults && Object.entries(catalog).map(([category, harnesses]) => (
+        <div key={category} className="mb-4">
           <button
             onClick={() => setExpandedCategory(expandedCategory === category ? null : category)}
-            style={{
-              display: "flex", alignItems: "center", gap: 8, width: "100%",
-              padding: "10px 12px", cursor: "pointer",
-              background: expandedCategory === category ? "var(--accent, #5865f2)" : "var(--bg-secondary, #2b2d31)",
-              border: "1px solid var(--border, #3f4147)", borderRadius: 8,
-              color: "inherit", fontSize: 14, fontWeight: 600,
-            }}
+            className={`flex items-center gap-2 w-full px-3 py-2.5 cursor-pointer rounded-lg text-sm font-semibold border transition-all ${
+              expandedCategory === category
+                ? "bg-accent text-white border-accent"
+                : "bg-bg-card border-border-subtle text-text-primary hover:border-border-strong"
+            }`}
           >
-            <span style={{ transform: expandedCategory === category ? "rotate(90deg)" : "none", transition: "transform 0.2s" }}>
-              ▶
-            </span>
+            <span className={`transition-transform text-xs ${expandedCategory === category ? "rotate-90" : ""}`}>▶</span>
             {category}
-            <span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.6 }}>
-              {harnesses.length}개
-            </span>
+            <span className="ml-auto text-xs opacity-60">{harnesses.length}개</span>
           </button>
 
           {expandedCategory === category && (
-            <div style={{
-              display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-              gap: 12, marginTop: 8, paddingLeft: 4,
-            }}>
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-3 mt-2 pl-1">
               {harnesses.map((h) => (
                 <HarnessCard
                   key={h.id} harness={h} lang={lang}
-                  onApply={handleApply} applying={applying === h.id}
+                  mode={mode} isSelected={selectedId === h.id}
+                  onAction={() => handleAction(h)}
+                  isBusy={applying === h.id}
                 />
               ))}
             </div>
@@ -152,56 +147,61 @@ export function HarnessBrowser({ projectDir, onApplied }: Props) {
   );
 }
 
-function HarnessCard({ harness, lang, onApply, applying }: {
+function HarnessCard({ harness, lang, mode, isSelected, onAction, isBusy }: {
   harness: HarnessEntry;
   lang: "ko" | "en";
-  onApply: (id: string) => void;
-  applying: boolean;
+  mode: "apply" | "select";
+  isSelected: boolean;
+  onAction: () => void;
+  isBusy: boolean;
 }) {
   return (
-    <div style={{
-      padding: 14, borderRadius: 8,
-      background: "var(--bg-secondary, #2b2d31)",
-      border: "1px solid var(--border, #3f4147)",
-      display: "flex", flexDirection: "column", gap: 8,
-    }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <span style={{ fontSize: 11, opacity: 0.5, fontFamily: "monospace" }}>#{harness.number}</span>
-        <span style={{ fontWeight: 600, fontSize: 14 }}>{harness.name[lang]}</span>
+    <div className={`p-3.5 rounded-lg border flex flex-col gap-2 transition-all ${
+      isSelected
+        ? "bg-accent/8 border-accent shadow-sm"
+        : "bg-bg-card border-border-subtle hover:border-border-strong"
+    }`}>
+      <div className="flex items-center gap-2">
+        <span className="text-[10px] text-text-muted font-mono">#{harness.number}</span>
+        <span className="font-semibold text-sm text-text-primary">{harness.name[lang]}</span>
       </div>
 
-      <p style={{ fontSize: 12, opacity: 0.7, margin: 0, lineHeight: 1.5 }}>
+      <p className="text-xs text-text-secondary leading-relaxed line-clamp-2">
         {harness.description[lang]?.slice(0, 120) || ""}
       </p>
 
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+      <div className="flex flex-wrap gap-1">
         {harness.agents.slice(0, 4).map((a) => (
-          <span key={a.id} style={{
-            fontSize: 11, padding: "2px 6px", borderRadius: 4,
-            background: "var(--bg-tertiary, #1e1f22)", opacity: 0.8,
-          }}>
+          <span key={a.id} className="text-[10px] px-1.5 py-0.5 rounded bg-bg-active text-text-secondary">
             {a.name}
           </span>
         ))}
         {harness.agents.length > 4 && (
-          <span style={{ fontSize: 11, opacity: 0.5 }}>+{harness.agents.length - 4}</span>
+          <span className="text-[10px] text-text-muted">+{harness.agents.length - 4}</span>
         )}
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "auto" }}>
-        <span style={{ fontSize: 11, opacity: 0.5 }}>
+      <div className="flex items-center justify-between mt-auto">
+        <span className="text-[10px] text-text-muted">
           {harness.agentCount} agents / {harness.skillCount} skills
         </span>
         <button
-          onClick={() => onApply(harness.id)}
-          disabled={applying}
-          style={{
-            padding: "4px 12px", borderRadius: 4, cursor: applying ? "wait" : "pointer",
-            background: applying ? "#3f4147" : "var(--accent, #5865f2)",
-            border: "none", color: "#fff", fontSize: 12,
-          }}
+          onClick={onAction}
+          disabled={isBusy}
+          className={`px-3 py-1 rounded text-xs cursor-pointer transition-all ${
+            mode === "select"
+              ? isSelected
+                ? "bg-accent text-white"
+                : "bg-bg-active text-text-primary hover:bg-accent/20"
+              : isBusy
+                ? "bg-bg-active text-text-muted cursor-wait"
+                : "bg-accent text-white hover:bg-accent-hover"
+          }`}
         >
-          {applying ? "적용 중..." : "적용"}
+          {mode === "select"
+            ? (isSelected ? "✓ 선택됨" : "선택")
+            : (isBusy ? "적용 중..." : "적용")
+          }
         </button>
       </div>
     </div>

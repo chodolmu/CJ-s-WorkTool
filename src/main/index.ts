@@ -539,12 +539,13 @@ function registerIpcHandlers(): void {
   });
 
   // ── Chat ──
-  ipcMain.handle("chat:history", (_event, { projectId, limit, offset }: {
+  ipcMain.handle("chat:history", (_event, { projectId, limit, offset, stepId }: {
     projectId: string;
     limit?: number;
     offset?: number;
+    stepId?: string;
   }) => {
-    return memoryManager.getChatMessages(projectId, limit ?? 100, offset ?? 0);
+    return memoryManager.getChatMessages(projectId, limit ?? 100, offset ?? 0, stepId);
   });
 
   // ── Debug Log (renderer로 전달) ──
@@ -780,18 +781,19 @@ function registerIpcHandlers(): void {
     };
   });
 
-  ipcMain.handle("chat:send", async (_event, { projectId, message, workingDir }: {
+  ipcMain.handle("chat:send", async (_event, { projectId, message, workingDir, stepId }: {
     projectId: string;
     message: string;
     workingDir: string;
+    stepId?: string;
   }) => {
     // 사용자 메시지 저장
-    const userMsg = memoryManager.addChatMessage(projectId, "user", message);
+    const userMsg = memoryManager.addChatMessage(projectId, "user", message, stepId);
     mainWindow?.webContents.send("chat:message", userMsg);
 
     const project = memoryManager.getProject(projectId);
     if (!project) {
-      const errMsg = memoryManager.addChatMessage(projectId, "assistant", "프로젝트를 찾을 수 없습니다.");
+      const errMsg = memoryManager.addChatMessage(projectId, "assistant", "프로젝트를 찾을 수 없습니다.", stepId);
       mainWindow?.webContents.send("chat:message", errMsg);
       return errMsg;
     }
@@ -840,7 +842,7 @@ function registerIpcHandlers(): void {
         workingDir: effectiveWorkingDir,
       });
 
-      const aiMsg = memoryManager.addChatMessage(projectId, "assistant", response || "응답을 생성하지 못했습니다.");
+      const aiMsg = memoryManager.addChatMessage(projectId, "assistant", response || "응답을 생성하지 못했습니다.", stepId);
       mainWindow?.webContents.send("chat:message", aiMsg);
       mainWindow?.webContents.send("chat:stream-end", {});
       return aiMsg;
@@ -875,12 +877,12 @@ function registerIpcHandlers(): void {
         const result = await Promise.race([session.waitForCompletion(), timeout]);
         const rawOutput = result.output.replace(/\n{3,}/g, "\n\n").trim();
 
-        const aiMsg = memoryManager.addChatMessage(projectId, "assistant", rawOutput || "응답을 생성하지 못했습니다.");
+        const aiMsg = memoryManager.addChatMessage(projectId, "assistant", rawOutput || "응답을 생성하지 못했습니다.", stepId);
         mainWindow?.webContents.send("chat:message", aiMsg);
         mainWindow?.webContents.send("chat:stream-end", {});
         return aiMsg;
       } catch (fallbackErr) {
-        const aiMsg = memoryManager.addChatMessage(projectId, "assistant", `AI 응답 오류: ${String(fallbackErr).slice(0, 200)}`);
+        const aiMsg = memoryManager.addChatMessage(projectId, "assistant", `AI 응답 오류: ${String(fallbackErr).slice(0, 200)}`, stepId);
         mainWindow?.webContents.send("chat:message", aiMsg);
         mainWindow?.webContents.send("chat:stream-end", {});
         return aiMsg;

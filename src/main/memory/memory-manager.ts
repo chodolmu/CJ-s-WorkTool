@@ -388,6 +388,7 @@ export class MemoryManager {
     projectId: string,
     role: "user" | "assistant",
     content: string,
+    stepId?: string,
   ): ChatMessage {
     const msg: ChatMessage = {
       id: uuid(),
@@ -395,25 +396,31 @@ export class MemoryManager {
       role,
       content,
       timestamp: new Date().toISOString(),
+      stepId,
     };
 
     this.db
       .prepare(
-        `INSERT INTO chat_messages (id, project_id, role, content, timestamp)
-         VALUES (?, ?, ?, ?, ?)`,
+        `INSERT INTO chat_messages (id, project_id, role, content, timestamp, step_id)
+         VALUES (?, ?, ?, ?, ?, ?)`,
       )
-      .run(msg.id, msg.projectId, msg.role, msg.content, msg.timestamp);
+      .run(msg.id, msg.projectId, msg.role, msg.content, msg.timestamp, msg.stepId ?? null);
 
     return msg;
   }
 
-  getChatMessages(projectId: string, limit: number = 100, offset: number = 0): ChatMessage[] {
-    const rows = this.db
-      .prepare(
-        `SELECT * FROM chat_messages WHERE project_id = ?
-         ORDER BY timestamp ASC LIMIT ? OFFSET ?`,
-      )
-      .all(projectId, limit, offset) as Record<string, unknown>[];
+  getChatMessages(projectId: string, limit: number = 100, offset: number = 0, stepId?: string): ChatMessage[] {
+    const query = stepId
+      ? `SELECT * FROM chat_messages WHERE project_id = ? AND step_id = ?
+         ORDER BY timestamp ASC LIMIT ? OFFSET ?`
+      : `SELECT * FROM chat_messages WHERE project_id = ?
+         ORDER BY timestamp ASC LIMIT ? OFFSET ?`;
+
+    const params = stepId
+      ? [projectId, stepId, limit, offset]
+      : [projectId, limit, offset];
+
+    const rows = this.db.prepare(query).all(...params) as Record<string, unknown>[];
 
     return rows.map((r) => ({
       id: r.id as string,
@@ -421,6 +428,7 @@ export class MemoryManager {
       role: r.role as ChatMessage["role"],
       content: r.content as string,
       timestamp: r.timestamp as string,
+      stepId: (r.step_id as string) ?? undefined,
     }));
   }
 

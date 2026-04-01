@@ -16,8 +16,8 @@ import { useIpcEvents } from "./hooks/useIpcEvents";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import type { SpecCard, Project, AgentDefinition } from "@shared/types";
 
-// 최상위 페이지: Dashboard(전체) | Project(상세) | Schedule(일정) | Presets | Settings
-export type TopPage = "dashboard" | "project" | "schedule" | "presets" | "settings";
+// 최상위 페이지: Dashboard(전체) | Project(상세) | Schedule(일정) | Harness | Settings
+export type TopPage = "dashboard" | "project" | "schedule" | "harness" | "settings";
 
 export default function App() {
   const [topPage, setTopPage] = useState<TopPage>("dashboard");
@@ -44,7 +44,7 @@ export default function App() {
   useKeyboardShortcuts({
     onNavigate: (page) => {
       // Ctrl+1 = dashboard, Ctrl+2 = project, Ctrl+3 = schedule, Ctrl+4 = presets, Ctrl+5 = settings
-      const map: Record<string, TopPage> = { "1": "dashboard", "2": "project", "3": "schedule", "4": "presets", "5": "settings" };
+      const map: Record<string, TopPage> = { "1": "dashboard", "2": "project", "3": "schedule", "4": "harness", "5": "settings" };
       if (map[page as string]) setTopPage(map[page as string]);
     },
     onNewProject: () => setShowDiscovery(true),
@@ -119,7 +119,7 @@ export default function App() {
     }
   }, [setProject, initAgents]);
 
-  const handleDiscoveryComplete = async (specCard: SpecCard, selectedAgents: AgentDefinition[], workingDir: string) => {
+  const handleDiscoveryComplete = async (specCard: SpecCard, selectedAgents: AgentDefinition[], workingDir: string, harnessId?: string) => {
     setShowDiscovery(false);
 
     const agentDefs = selectedAgents.map((a) => ({
@@ -164,6 +164,18 @@ export default function App() {
     setActiveProjectId(project.id);
     setTopPage("project");
     window.harness.session.start(project.id);
+
+    // 하네스 선택 시 .claude/ 적용 + GSD init
+    if (harnessId && window.harness.harness100) {
+      try {
+        await window.harness.harness100.apply(harnessId, workingDir, "ko");
+      } catch {}
+    }
+    if (window.harness.gsd?.initProject) {
+      try {
+        await window.harness.gsd.initProject(workingDir, specCard.projectType);
+      } catch {}
+    }
 
     const updatedProjects = await window.harness.project.list() as Project[];
     setProjects(updatedProjects);
@@ -245,7 +257,7 @@ export default function App() {
           )}
 
           {topPage === "schedule" && <SchedulePage />}
-          {topPage === "presets" && <div className="p-4 overflow-y-auto h-full"><PresetsPage /></div>}
+          {topPage === "harness" && <div className="p-4 overflow-y-auto h-full"><PresetsPage /></div>}
           {topPage === "settings" && <div className="p-4 overflow-y-auto h-full"><SettingsPage /></div>}
         </main>
       </div>

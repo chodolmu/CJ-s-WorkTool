@@ -54,6 +54,7 @@ interface AppState {
   // ── UI ──
   selectedAgentId: string | null;
   claudeInstalled: boolean | null;
+  activePhaseChatStepId: string | null;
 
   // ── 액션 ──
   setProject: (id: string, name: string) => void;
@@ -79,6 +80,7 @@ interface AppState {
   setGsdApproval: (approval: GsdApprovalRequest | null) => void;
   addGsdPhase: (phase: GsdPipelineState["phases"][0]) => void;
   updateGsdPhaseStatus: (phaseNumber: string, status: GsdPipelineState["phases"][0]["status"]) => void;
+  setActivePhaseChatStep: (stepId: string | null) => void;
   reset: () => void;
 }
 
@@ -111,6 +113,7 @@ export const useAppStore = create<AppState>((set) => ({
   gsdApproval: null,
   selectedAgentId: null,
   claudeInstalled: null,
+  activePhaseChatStepId: null,
 
   setProject: (id, name) => set({ currentProjectId: id, projectName: name }),
 
@@ -238,6 +241,8 @@ export const useAppStore = create<AppState>((set) => ({
       },
     })),
 
+  setActivePhaseChatStep: (stepId) => set({ activePhaseChatStepId: stepId }),
+
   reset: () =>
     set({
       currentProjectId: null,
@@ -250,5 +255,6 @@ export const useAppStore = create<AppState>((set) => ({
       phaseCoach: null,
       smartInputRequest: null,
       selectedAgentId: null,
+      activePhaseChatStepId: null,
     }),
 }));

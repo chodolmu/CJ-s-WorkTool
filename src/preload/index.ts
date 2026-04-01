@@ -96,10 +96,10 @@ const api = {
 
   // ── Chat ──
   chat: {
-    send: (projectId: string, message: string, workingDir: string, mode?: string) =>
-      ipcRenderer.invoke("chat:send", { projectId, message, workingDir, mode }),
-    history: (projectId: string, limit?: number, offset?: number) =>
-      ipcRenderer.invoke("chat:history", { projectId, limit, offset }),
+    send: (projectId: string, message: string, workingDir: string, mode?: string, stepId?: string) =>
+      ipcRenderer.invoke("chat:send", { projectId, message, workingDir, mode, stepId }),
+    history: (projectId: string, limit?: number, offset?: number, stepId?: string) =>
+      ipcRenderer.invoke("chat:history", { projectId, limit, offset, stepId }),
     classify: (message: string) =>
       ipcRenderer.invoke("chat:classify", { message }),
   },

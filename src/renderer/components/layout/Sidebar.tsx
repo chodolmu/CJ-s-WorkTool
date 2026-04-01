@@ -11,7 +11,7 @@ const navItems: { id: TopPage; label: string; icon: string }[] = [
   { id: "dashboard", label: "대시보드", icon: "📊" },
   { id: "project", label: "프로젝트", icon: "📁" },
   { id: "schedule", label: "일정", icon: "📅" },
-  { id: "presets", label: "프리셋", icon: "⚙" },
+  { id: "harness", label: "하네스", icon: "🧩" },
 ];
 
 export function Sidebar({ topPage, onNavigate, activeProjectName }: SidebarProps) {

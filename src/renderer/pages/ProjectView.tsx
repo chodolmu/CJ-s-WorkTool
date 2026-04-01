@@ -3,7 +3,6 @@ import { useAppStore } from "../stores/app-store";
 import { AgentCard, AgentStatusSummary } from "../components/AgentCard";
 import { DetailPanel } from "../components/layout/DetailPanel";
 import { ActivityPanel } from "../components/layout/ActivityPanel";
-import { ChatPage } from "./ChatPage";
 import { SpecsPage } from "./SpecsPage";
 import { LogsPage } from "./LogsPage";
 import { OrchestrationPage } from "./OrchestrationPage";
@@ -11,12 +10,11 @@ import { PlanPage } from "./PlanPage";
 import { toast } from "../components/Toast";
 import type { SpecCard } from "@shared/types";
 
-type ProjectTab = "overview" | "plan" | "chat" | "agents" | "pipeline" | "specs" | "logs";
+type ProjectTab = "overview" | "plan" | "agents" | "pipeline" | "specs" | "logs";
 
 const tabs: { id: ProjectTab; label: string; icon: string }[] = [
   { id: "overview", label: "개요", icon: "📊" },
   { id: "plan", label: "계획", icon: "📝" },
-  { id: "chat", label: "채팅", icon: "💬" },
   { id: "agents", label: "에이전트", icon: "🤖" },
   { id: "pipeline", label: "파이프라인", icon: "🔄" },
   { id: "specs", label: "스펙", icon: "📋" },
@@ -78,37 +76,36 @@ export function ProjectView({ projectId }: ProjectViewProps) {
 
       {/* Tab content */}
       <div className="flex flex-1 overflow-hidden">
-        <div className="flex-1 overflow-y-auto">
-          {activeTab === "overview" && (
-            <OverviewTab specCard={specCard} />
-          )}
-          {activeTab === "plan" && (
-            <PlanPage projectId={projectId} />
-          )}
-          {activeTab === "chat" && (
-            <ChatPage />
-          )}
-          {activeTab === "agents" && (
-            <div className="p-4">
-              <AgentsTab onSelectAgent={setSelectedAgent} />
-            </div>
-          )}
-          {activeTab === "pipeline" && (
-            <div className="p-4">
-              <OrchestrationPage specCard={specCard} />
-            </div>
-          )}
-          {activeTab === "specs" && (
-            <div className="p-4">
-              <SpecsPage specCard={specCard} />
-            </div>
-          )}
-          {activeTab === "logs" && (
-            <div className="p-4">
-              <LogsPage />
-            </div>
-          )}
-        </div>
+        {/* Pipeline takes full height with its own scroll management */}
+        {activeTab === "pipeline" ? (
+          <div className="flex-1 overflow-hidden">
+            <OrchestrationPage specCard={specCard} />
+          </div>
+        ) : (
+          <div className="flex-1 overflow-y-auto">
+            {activeTab === "overview" && (
+              <OverviewTab specCard={specCard} />
+            )}
+            {activeTab === "plan" && (
+              <PlanPage projectId={projectId} />
+            )}
+            {activeTab === "agents" && (
+              <div className="p-4">
+                <AgentsTab onSelectAgent={setSelectedAgent} />
+              </div>
+            )}
+            {activeTab === "specs" && (
+              <div className="p-4">
+                <SpecsPage specCard={specCard} />
+              </div>
+            )}
+            {activeTab === "logs" && (
+              <div className="p-4">
+                <LogsPage />
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Detail panel (agent selected) */}
         {selectedAgentId && (activeTab === "overview" || activeTab === "agents") && (
@@ -120,7 +117,7 @@ export function ProjectView({ projectId }: ProjectViewProps) {
       </div>
 
       {/* Activity bar (collapsed by default in project view) */}
-      {activeTab !== "logs" && activeTab !== "chat" && (
+      {activeTab !== "logs" && activeTab !== "pipeline" && (
         <ActivityBar />
       )}
     </div>

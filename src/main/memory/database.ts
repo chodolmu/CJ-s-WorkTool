@@ -204,6 +204,15 @@ function initSchema(db: ReturnType<typeof createDatabase>): void {
 
     db.pragma(`user_version = 6`);
   }
+
+  if (version < 7) {
+    db.exec(`
+      ALTER TABLE chat_messages ADD COLUMN step_id TEXT;
+      CREATE INDEX IF NOT EXISTS idx_chat_step ON chat_messages(project_id, step_id, timestamp ASC);
+    `);
+
+    db.pragma(`user_version = 7`);
+  }
 }
 
 export { getDataDir };

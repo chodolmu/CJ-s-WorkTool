@@ -5,6 +5,7 @@ import type {
   Expansion,
   Preset,
   AgentDefinition,
+  HarnessEntry,
 } from "@shared/types";
 import { getRecommendedAgents, type CatalogAgent } from "../data/agent-catalog";
 
@@ -15,8 +16,12 @@ interface ChatMessage {
 
 interface DiscoveryState {
   // 상태
-  phase: "chat" | "review" | "team_setup" | "confirmed";
+  phase: "harness_select" | "chat" | "review" | "team_setup" | "confirmed";
   presets: Preset[];
+
+  // 하네스 선택
+  selectedHarnessId: string | null;
+  selectedHarnessEntry: HarnessEntry | null;
 
   // 대화 기반 Discovery
   chatMessages: ChatMessage[];
@@ -32,6 +37,8 @@ interface DiscoveryState {
   // 액션
   setPresets: (presets: Preset[]) => void;
   setWorkingDir: (dir: string) => void;
+  setSelectedHarness: (id: string, entry: HarnessEntry) => void;
+  setPhase: (phase: DiscoveryState["phase"]) => void;
   addUserMessage: (content: string) => void;
   addAssistantMessage: (content: string) => void;
   setThinking: (v: boolean) => void;
@@ -47,8 +54,10 @@ interface DiscoveryState {
 }
 
 export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
-  phase: "chat",
+  phase: "harness_select",
   presets: [],
+  selectedHarnessId: null,
+  selectedHarnessEntry: null,
   chatMessages: [{
     role: "assistant",
     content: "안녕하세요! 어떤 프로젝트를 만들고 싶으세요? 자유롭게 설명해주세요.\n\n예시:\n- \"2D 횡스크롤 RPG 게임을 만들고 싶어\"\n- \"우리 팀 내부 업무 관리 대시보드\"\n- \"레시피 공유 SNS 앱\"",
@@ -63,6 +72,10 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
   setPresets: (presets) => set({ presets }),
 
   setWorkingDir: (dir) => set({ workingDir: dir }),
+
+  setSelectedHarness: (id, entry) => set({ selectedHarnessId: id, selectedHarnessEntry: entry }),
+
+  setPhase: (phase) => set({ phase }),
 
   addUserMessage: (content) =>
     set((state) => ({
@@ -88,6 +101,7 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
     const { phase } = get();
     if (phase === "team_setup") set({ phase: "review" });
     else if (phase === "review") set({ phase: "chat" });
+    else if (phase === "chat") set({ phase: "harness_select" });
   },
 
   updateSpecCard: (specCard) => set({ specCard }),
@@ -129,7 +143,9 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
 
   reset: () =>
     set({
-      phase: "chat",
+      phase: "harness_select",
+      selectedHarnessId: null,
+      selectedHarnessEntry: null,
       chatMessages: [{
         role: "assistant",
         content: "안녕하세요! 어떤 프로젝트를 만들고 싶으세요? 자유롭게 설명해주세요.\n\n예시:\n- \"2D 횡스크롤 RPG 게임을 만들고 싶어\"\n- \"우리 팀 내부 업무 관리 대시보드\"\n- \"레시피 공유 SNS 앱\"",

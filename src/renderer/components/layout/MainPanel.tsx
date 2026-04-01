@@ -4,7 +4,6 @@ import { useAppStore } from "../../stores/app-store";
 import { AgentCard, AgentStatusSummary } from "../AgentCard";
 import { PresetsPage } from "../../pages/Presets/PresetsPage";
 import { SettingsPage } from "../../pages/SettingsPage";
-import { ChatPage } from "../../pages/ChatPage";
 import { SpecsPage } from "../../pages/SpecsPage";
 import { LogsPage } from "../../pages/LogsPage";
 import { OrchestrationPage } from "../../pages/OrchestrationPage";
@@ -25,7 +24,6 @@ export function MainPanel({ currentPage, onSelectAgent, onNewProject, specCard, 
   return (
     <main className="flex-1 overflow-y-auto p-4">
       {currentPage === "home" && <HomePage onSelectAgent={onSelectAgent} onNewProject={onNewProject} phaseState={phaseState} onPhaseChange={onPhaseChange} />}
-      {currentPage === "chat" && <ChatPage />}
       {currentPage === "agents" && <AgentsPage onSelectAgent={onSelectAgent} />}
       {currentPage === "orchestration" && <OrchestrationPage />}
       {currentPage === "specs" && <SpecsPage specCard={specCard ?? null} />}
