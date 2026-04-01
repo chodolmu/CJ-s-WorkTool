@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { AgentStatus, FeatureStatus, Project, PipelineStep } from "@shared/types";
+import type { AgentStatus, AgentSubstatus, FeatureStatus, Project, PipelineStep, PhaseCoachMessage, SmartInputRequest, GsdPipelineState, GsdApprovalRequest, GsdUIEvent } from "@shared/types";
 import type { AgentCardData } from "../components/AgentCard";
 import type { ActivityItem } from "../components/ActivityFeed";
 import type { FeatureItem } from "../components/FeatureList";
@@ -41,6 +41,16 @@ interface AppState {
   // ── 체크포인트 ──
   pendingCheckpoint: CheckpointData | null;
 
+  // ── Phase Coach ──
+  phaseCoach: PhaseCoachMessage | null;
+
+  // ── Smart Input ──
+  smartInputRequest: SmartInputRequest | null;
+
+  // ── GSD 파이프라인 ──
+  gsdPipeline: GsdPipelineState;
+  gsdApproval: GsdApprovalRequest | null;
+
   // ── UI ──
   selectedAgentId: string | null;
   claudeInstalled: boolean | null;
@@ -52,6 +62,7 @@ interface AppState {
   updateFeatureStatus: (featureId: string, status: FeatureStatus) => void;
   initAgents: (agents: { id: string; displayName: string; icon: string; trigger?: string }[]) => void;
   updateAgentStatus: (agentId: string, status: AgentStatus, currentFeature?: string | null) => void;
+  updateAgentSubstatus: (agentId: string, substatus: AgentSubstatus) => void;
   updateAgentChangeSummary: (agentId: string, summary: string, filesChanged: string[]) => void;
   setPipelineStatus: (status: PipelineState["status"]) => void;
   setPipelineProgress: (completed: number, total: number, current: string | null) => void;
@@ -60,8 +71,14 @@ interface AppState {
   completeStep: (stepId: string) => void;
   addActivity: (activity: Omit<ActivityItem, "id">) => void;
   setCheckpoint: (checkpoint: CheckpointData | null) => void;
+  setPhaseCoach: (msg: PhaseCoachMessage | null) => void;
+  setSmartInputRequest: (req: SmartInputRequest | null) => void;
   setSelectedAgent: (id: string | null) => void;
   setClaudeInstalled: (installed: boolean) => void;
+  updateGsdPipeline: (update: Partial<GsdPipelineState>) => void;
+  setGsdApproval: (approval: GsdApprovalRequest | null) => void;
+  addGsdPhase: (phase: GsdPipelineState["phases"][0]) => void;
+  updateGsdPhaseStatus: (phaseNumber: string, status: GsdPipelineState["phases"][0]["status"]) => void;
   reset: () => void;
 }
 
@@ -84,6 +101,14 @@ export const useAppStore = create<AppState>((set) => ({
   },
   activities: [],
   pendingCheckpoint: null,
+  phaseCoach: null,
+  smartInputRequest: null,
+  gsdPipeline: {
+    isRunning: false,
+    cost: 0,
+    phases: [],
+  },
+  gsdApproval: null,
   selectedAgentId: null,
   claudeInstalled: null,
 
@@ -119,8 +144,22 @@ export const useAppStore = create<AppState>((set) => ({
     set((state) => ({
       agents: state.agents.map((a) =>
         a.id === agentId
-          ? { ...a, status, currentFeature: currentFeature ?? a.currentFeature, lastActivity: new Date().toISOString() }
+          ? {
+              ...a,
+              status,
+              currentFeature: currentFeature ?? a.currentFeature,
+              lastActivity: new Date().toISOString(),
+              // completed/failed 시 substatus 초기화
+              ...(status !== "running" ? { substatus: undefined } : {}),
+            }
           : a,
+      ),
+    })),
+
+  updateAgentSubstatus: (agentId, substatus) =>
+    set((state) => ({
+      agents: state.agents.map((a) =>
+        a.id === agentId ? { ...a, substatus } : a,
       ),
     })),
 
@@ -168,9 +207,36 @@ export const useAppStore = create<AppState>((set) => ({
 
   setCheckpoint: (checkpoint) => set({ pendingCheckpoint: checkpoint }),
 
+  setPhaseCoach: (msg) => set({ phaseCoach: msg }),
+
+  setSmartInputRequest: (req) => set({ smartInputRequest: req }),
+
   setSelectedAgent: (id) => set({ selectedAgentId: id }),
 
   setClaudeInstalled: (installed) => set({ claudeInstalled: installed }),
+
+  updateGsdPipeline: (update) =>
+    set((state) => ({ gsdPipeline: { ...state.gsdPipeline, ...update } })),
+
+  setGsdApproval: (approval) => set({ gsdApproval: approval }),
+
+  addGsdPhase: (phase) =>
+    set((state) => ({
+      gsdPipeline: {
+        ...state.gsdPipeline,
+        phases: [...state.gsdPipeline.phases, phase],
+      },
+    })),
+
+  updateGsdPhaseStatus: (phaseNumber, status) =>
+    set((state) => ({
+      gsdPipeline: {
+        ...state.gsdPipeline,
+        phases: state.gsdPipeline.phases.map((p) =>
+          p.number === phaseNumber ? { ...p, status } : p,
+        ),
+      },
+    })),
 
   reset: () =>
     set({
@@ -181,6 +247,8 @@ export const useAppStore = create<AppState>((set) => ({
       pipeline: { status: "idle", completedFeatures: 0, totalFeatures: 0, currentFeature: null, steps: [], activeStepId: null, completedStepIds: [] },
       activities: [],
       pendingCheckpoint: null,
+      phaseCoach: null,
+      smartInputRequest: null,
       selectedAgentId: null,
     }),
 }));

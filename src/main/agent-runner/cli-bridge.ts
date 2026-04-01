@@ -65,13 +65,29 @@ export class CLIBridge {
       args.push("--max-turns", String(options.maxTurns));
     }
 
-    // 프롬프트를 인자로 전달
-    args.push(prompt);
+    // 프롬프트를 임시 파일 + --append-system-prompt-file로 전달
+    // Windows에서 CLI 인자로 한글 전달 시 코드페이지 문제로 깨짐
+    // → 프롬프트를 시스템 프롬프트에 append하고, 인자에는 짧은 영문 트리거만 전달
+    {
+      const fs = require("fs");
+      const os = require("os");
+      const pathMod = require("path");
+      const tmpPromptFile = pathMod.join(os.tmpdir(), `worktool-prompt-${Date.now()}.txt`);
+      fs.writeFileSync(tmpPromptFile, `\n\n---\n## USER REQUEST\n${prompt}`, "utf-8");
+      args.push("--append-system-prompt-file", tmpPromptFile);
+      setTimeout(() => { try { fs.unlinkSync(tmpPromptFile); } catch {} }, 60000);
+    }
+    // 인자에는 짧은 영문 트리거 (CLI가 프롬프트 필수)
+    args.push("Execute the USER REQUEST from the appended system prompt above.");
 
     // 환경변수 설정
     const env: Record<string, string> = {
       ...process.env as Record<string, string>,
       CLAUDE_CODE_NONINTERACTIVE: "1",
+      // Windows 한글 인코딩 깨짐 방지 — UTF-8 코드페이지 강제
+      PYTHONIOENCODING: "utf-8",
+      LANG: "ko_KR.UTF-8",
+      CHCP: "65001",
     };
 
     // git-bash 경로 자동 설정 (Windows)

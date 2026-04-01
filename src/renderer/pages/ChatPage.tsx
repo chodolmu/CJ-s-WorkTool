@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useAppStore } from "../stores/app-store";
 import { MarkdownRenderer } from "../components/MarkdownRenderer";
+import { PhaseCoachBanner } from "../components/PhaseCoachBanner";
+import { SmartInputForm } from "../components/SmartInputForm";
 import { toast } from "../components/Toast";
 import type { ChatMessage } from "@shared/types";
 
@@ -14,7 +16,7 @@ const modeConfig: Record<ExecutionMode, { label: string; icon: string; descripti
 };
 
 export function ChatPage() {
-  const { currentProjectId, projectName } = useAppStore();
+  const { currentProjectId, projectName, phaseCoach, setPhaseCoach, smartInputRequest, setSmartInputRequest } = useAppStore();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
@@ -199,6 +201,45 @@ export function ChatPage() {
           </div>
         )}
       </div>
+
+      {/* Phase Coach Banner */}
+      {phaseCoach && (
+        <PhaseCoachBanner
+          message={phaseCoach}
+          onAction={(actionId) => {
+            if (window.harness?.invoke) {
+              window.harness.invoke("checkpoint:respond", { action: actionId });
+            }
+            setPhaseCoach(null);
+          }}
+          onDismiss={() => setPhaseCoach(null)}
+        />
+      )}
+
+      {/* Smart Input Form */}
+      {smartInputRequest && (
+        <SmartInputForm
+          request={smartInputRequest}
+          onSubmit={(answers) => {
+            if (window.harness?.invoke) {
+              window.harness.invoke("smart-input:respond", {
+                requestId: smartInputRequest.id,
+                answers,
+              });
+            }
+            setSmartInputRequest(null);
+          }}
+          onSkip={() => {
+            if (window.harness?.invoke) {
+              window.harness.invoke("smart-input:respond", {
+                requestId: smartInputRequest.id,
+                answers: {},
+              });
+            }
+            setSmartInputRequest(null);
+          }}
+        />
+      )}
 
       {/* Messages area */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">

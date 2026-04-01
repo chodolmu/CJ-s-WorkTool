@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>크롬 공룡 런게임</title>
+  <style>
+    /* ── 전역 리셋 ─────────────────────────────── */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+    }
+
+    /* ── 라이트 모드 (기본) ────────────────────── */
+    body {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: #f7f7f7;
+      font-family: 'Courier New', Courier, monospace;
+      transition: background 0.4s ease;
+    }
+
+    /* ── 다크 모드 ─────────────────────────────── */
+    body.dark {
+      background: #1a1a2e;
+    }
+
+    /* ── 캔버스 래퍼 ───────────────────────────── */
+    #wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      max-width: 700px;
+      padding: 0 8px;
+    }
+
+    /* ── 캔버스 ────────────────────────────────── */
+    canvas {
+      display: block;
+      width: 100%;        /* 반응형: 부모 너비에 맞춤 */
+      height: auto;       /* 비율 유지 */
+      border: 2px solid #535353;
+      border-radius: 2px;
+      cursor: pointer;
+      touch-action: none;
+      image-rendering: pixelated;
+    }
+    body.dark canvas { border-color: #7a7a9a; }
+
+    /* ── 힌트 텍스트 ───────────────────────────── */
+    #hint {
+      font-size: 11px;
+      color: #aaa;
+      letter-spacing: 0.5px;
+      user-select: none;
+    }
+    body.dark #hint { color: #555; }
+  </style>
+</head>
+<body>
+  <div id="wrap">
+    <!-- 캔버스: 내부 해상도 600×150 (원본 크롬 비율과 동일) -->
+    <canvas id="gameCanvas" width="600" height="150"></canvas>
+    <p id="hint">SPACE / ↑ — 점프 &nbsp;·&nbsp; ↓ — 숙이기</p>
+  </div>
+
+  <script>
+  'use strict';
+
+  /* ============================================================
+   *  상수 (Constants)
+   * ============================================================ */
+  const CANVAS_W = 600;
+  const CANVAS_H = 150;
+
+  /* ============================================================
+   *  캔버스 초기화 (Canvas Setup)
+   * ============================================================ */
+  const canvas = document.getElementById('gameCanvas');
+  const ctx    = canvas.getContext('2d');
+
+  // 캔버스 내부 해상도를 명시적으로 설정
+  canvas.width  = CANVAS_W;
+  canvas.height = CANVAS_H;
+
+  /* ============================================================
+   *  색상 테마 (Color Theme)
+   *  라이트: 배경 흰색, 전경 #535353
+   *  다크:   배경 #1a1a2e(약 rgb(26,26,46)), 전경 #c8c8d0
+   * ============================================================ */
+  const THEME = {
+    light: { bg: '#ffffff', fg: '#535353' },
+    dark:  { bg: '#1a1a2e', fg: '#c8c8d0' },
+  };
+  let isDark = false;
+
+  function getColors() {
+    return isDark ? THEME.dark : THEME.light;
+  }
+
+  /* ============================================================
+   *  게임 상태 (Game State)
+   *  'idle'    : 대기 (시작 전)
+   *  'playing' : 플레이 중
+   *  'over'    : 게임 오버
+   * ============================================================ */
+  let gameState = 'idle';
+
+  /* ============================================================
+   *  물리 상수 (Physics Constants)
+   * ============================================================ */
+  const GRAVITY  = 0.0028;        // 중력 가속도 (px/ms²)
+  const JUMP_VEL = -0.55;         // 점프 초속도 (px/ms, 음수=위쪽)
+  const GROUND_Y = CANVAS_H - 20; // 지면 Y 좌표 (발 끝 기준)
+
+  /* ============================================================
+   *  공룡 픽셀 스프라이트 (Pixel Sprite Maps)
+   *  단위: 픽셀 그리드 칸 (SCALE 배율로 실제 px 변환)
+   * ============================================================ */
+  const SCALE = 2; // 1그리드 칸 = 2px
+
+  // 몸통 + 머리 (두 프레임 공통)
+  const DINO_BODY = [
+    // 머리
+    [5,0],[6,0],[7,0],[8,0],[9,0],[10,0],[11,0],
+    [4,1],[5,1],[6,1],[7,1],[8,1],[9,1],[10,1],[11,1],[12,1],
+    [3,2],[4,2],[5,2],[6,2],[7,2],[8,2],[9,2],[10,2],[11,2],[12,2],
+    [3,3],[4,3],[5,3],[6,3],[7,3],[8,3],[9,3],[10,3],[11,3],[12,3],
+    // 몸통
+    [1,4],[2,4],[3,4],[4,4],[5,4],[6,4],[7,4],[8,4],[9,4],[10,4],[11,4],
+    [0,5],[1,5],[2,5],[3,5],[4,5],[5,5],[6,5],[7,5],[8,5],[9,5],[10,5],
+    [0,6],[1,6],[2,6],[3,6],[4,6],[5,6],[6,6],[7,6],[8,6],[9,6],
+    [0,7],[1,7],[2,7],[3,7],[4,7],[5,7],[6,7],[7,7],[8,7],
+    [1,8],[2,8],[3,8],[4,8],[5,8],
+    [2,9],[3,9],[4,9],[5,9],
+  ];
+
+  // 눈 (배경색으로 덮어 흰 점 표현)
+  const DINO_EYE = [[10,1],[11,1]];
+
+  // 다리 프레임 0 (왼발 앞)
+  const DINO_LEGS_0 = [
+    [2,10],[3,10],[2,11],[3,11],[2,12],[2,13],
+    [5,10],[6,10],[5,11],[5,12],[5,13],[6,13],
+  ];
+
+  // 다리 프레임 1 (오른발 앞)
+  const DINO_LEGS_1 = [
+    [2,10],[3,10],[3,11],[3,12],[3,13],[4,13],
+    [5,10],[6,10],[5,11],[5,12],[4,12],[4,13],
+  ];
+
+  /* ============================================================
+   *  공룡 객체 (Dino Object)
+   * ============================================================ */
+  const dino = {
+    x:             40,    // 화면 내 고정 X
+    y:             GROUND_Y, // 현재 Y (발 끝 기준)
+    vy:            0,     // 수직 속도 (px/ms)
+    onGround:      true,
+    frame:         0,     // 달리기 프레임 (0 or 1)
+    frameTimer:    0,     // 프레임 타이머 (ms)
+    FRAME_INTERVAL:120,   // 프레임 교체 주기 (ms)
+    W:             13 * SCALE, // 충돌 박스 너비
+    H:             14 * SCALE, // 충돌 박스 높이
+
+    update(dt) {
+      // 중력 & 낙하
+      if (!this.onGround) {
+        this.vy += GRAVITY * dt;
+        this.y  += this.vy * dt;
+        if (this.y >= GROUND_Y) {
+          this.y        = GROUND_Y;
+          this.vy       = 0;
+          this.onGround = true;
+        }
+      }
+      // 달리기 애니메이션 (지면일 때만)
+      if (this.onGround) {
+        this.frameTimer += dt;
+        if (this.frameTimer >= this.FRAME_INTERVAL) {
+          this.frameTimer = 0;
+          this.frame      = 1 - this.frame;
+        }
+      }
+    },
+
+    jump() {
+      if (this.onGround) {
+        this.vy       = JUMP_VEL;
+        this.onGround = false;
+      }
+    },
+
+    draw(ctx, fg) {
+      const px = Math.round(this.x);
+      const py = Math.round(this.y) - this.H; // 발→머리 변환
+
+      const fill = (pixels, color) => {
+        ctx.fillStyle = color;
+        for (const [ox, oy] of pixels) {
+          ctx.fillRect(px + ox * SCALE, py + oy * SCALE, SCALE, SCALE);
+        }
+      };
+
+      fill(DINO_BODY, fg);
+      fill(DINO_EYE, getColors().bg);
+      fill(this.frame === 0 ? DINO_LEGS_0 : DINO_LEGS_1, fg);
+    },
+  };
+
+  /* ============================================================
+   *  게임 루프 (Game Loop)
+   *  update → render 순서로 매 프레임 실행
+   *  deltaTime(dt): 이전 프레임과의 시간 차이(ms)
+   *                 프레임 독립적 움직임 계산에 사용
+   * ============================================================ */
+  let lastTime = 0;  // 이전 프레임 타임스탬프(ms)
+
+  /**
+   * 업데이트: 게임 로직을 dt(ms) 기반으로 갱신
+   * @param {number} dt - 이전 프레임 이후 경과 시간(ms)
+   */
+  function update(dt) {
+    dino.update(dt);
+    // TODO: obstacles.update(dt), score.update(dt) 추후 추가
+  }
+
+  /**
+   * 렌더: 현재 게임 상태를 캔버스에 그림
+   */
+  function render() {
+    const { bg, fg } = getColors();
+
+    // 배경 지우기
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+
+    // 지면선
+    ctx.fillStyle = fg;
+    ctx.fillRect(0, GROUND_Y + 1, CANVAS_W, 2);
+
+    // 공룡 렌더
+    dino.draw(ctx, fg);
+
+    // ── 개발용 디버그 텍스트 (이후 제거) ──
+    ctx.fillStyle = fg;
+    ctx.font      = '10px Courier New';
+    ctx.fillText(`${CANVAS_W}×${CANVAS_H}  state: ${gameState}`, 8, 14);
+  }
+
+  /**
+   * 메인 게임 루프 (requestAnimationFrame 기반)
+   * @param {number} now - 현재 타임스탬프(ms), rAF가 자동 주입
+   */
+  function gameLoop(now) {
+    // deltaTime 계산: 최대 100ms로 클램핑 (탭 비활성화 후 복귀 시 스파이크 방지)
+    const dt = Math.min(now - lastTime, 100);
+    lastTime = now;
+
+    update(dt);
+    render();
+
+    requestAnimationFrame(gameLoop);
+  }
+
+  /* ============================================================
+   *  시작 (Boot)
+   * ============================================================ */
+  // 첫 프레임을 시작하기 위해 lastTime을 현재로 초기화 후 루프 실행
+  requestAnimationFrame((now) => {
+    lastTime = now;
+    requestAnimationFrame(gameLoop);
+  });
+
+  </script>
+</body>
+</html>

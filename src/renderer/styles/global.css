@@ -2,21 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── Dark mode (default) ── */
+/* ── Dark mode (default) — Discord/Slack 수준 밝기 ── */
 .dark {
-  --wt-bg-base: #0a0a0a;
-  --wt-bg-card: #141414;
-  --wt-bg-hover: #1e1e1e;
-  --wt-bg-active: #282828;
-  --wt-border-subtle: #1e1e1e;
-  --wt-border-strong: #3a3a3a;
-  --wt-text-primary: #ececec;
-  --wt-text-secondary: #8a8a8a;
-  --wt-text-muted: #505050;
+  --wt-bg-base: #2b2d31;
+  --wt-bg-card: #313338;
+  --wt-bg-hover: #383a40;
+  --wt-bg-active: #404249;
+  --wt-border-subtle: #3f4147;
+  --wt-border-strong: #565860;
+  --wt-text-primary: #f2f3f5;
+  --wt-text-secondary: #b5bac1;
+  --wt-text-muted: #80848e;
   --wt-accent: #8b5cf6;
   --wt-accent-hover: #7c3aed;
-  --wt-accent-glow: rgba(139, 92, 246, 0.15);
-  --wt-shadow: rgba(0, 0, 0, 0.5);
+  --wt-accent-glow: rgba(139, 92, 246, 0.2);
+  --wt-shadow: rgba(0, 0, 0, 0.3);
   color-scheme: dark;
 }
 
@@ -43,6 +43,11 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+html {
+  /* 기본 폰트 크기 키움: 16px → 17px (모든 rem 단위에 영향) */
+  font-size: 17px;
+}
+
 body {
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background: var(--wt-bg-base);
@@ -52,7 +57,30 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  /* 기본 줄 높이 여유롭게 */
+  line-height: 1.6;
 }
+
+/* ── 최소 폰트 크기 + 컴포넌트 크기 확대 ── */
+/* text-[10px] → 12px, text-[11px] → 13px, text-xs(12px) → 13px */
+* {
+  min-height: 0; /* flexbox 오버플로 방지 유지 */
+}
+
+/* 버튼, 입력 필드 최소 크기 확대 */
+button, input, textarea, select {
+  min-height: 36px;
+  font-size: max(0.8125rem, 13px); /* 최소 13px */
+}
+
+/* 카드, 패널 패딩 확대 */
+.p-3 { padding: 14px !important; }
+.p-3\.5 { padding: 16px !important; }
+.px-3 { padding-left: 14px !important; padding-right: 14px !important; }
+.py-2 { padding-top: 10px !important; padding-bottom: 10px !important; }
+.py-2\.5 { padding-top: 12px !important; padding-bottom: 12px !important; }
+.gap-1\.5 { gap: 8px !important; }
+.gap-2 { gap: 10px !important; }
 
 /* ── Text selection ── */
 ::selection {

@@ -9,7 +9,10 @@ import { toast } from "../components/Toast";
 export function useIpcEvents() {
   const {
     updateAgentStatus,
+    updateAgentSubstatus,
     updateAgentChangeSummary,
+    setPhaseCoach,
+    setSmartInputRequest,
     setPipelineStatus,
     setPipelineProgress,
     setPipelineSteps,
@@ -87,6 +90,28 @@ export function useIpcEvents() {
       }),
     );
 
+    // 명시적 에이전트 상태 변경 (Pipeline/Orchestrator에서 emit)
+    cleanups.push(
+      window.harness.on("agent:status-change", (data: {
+        agentId: string;
+        status: string;
+        substatus?: string;
+        currentFeature?: string;
+      }) => {
+        updateAgentStatus(
+          data.agentId,
+          data.status as Parameters<typeof updateAgentStatus>[1],
+          data.currentFeature,
+        );
+        if (data.substatus) {
+          updateAgentSubstatus(
+            data.agentId,
+            data.substatus as Parameters<typeof updateAgentSubstatus>[1],
+          );
+        }
+      }),
+    );
+
     // 변경 요약
     cleanups.push(
       window.harness.on("agent:change-summary", (data: {
@@ -140,6 +165,20 @@ export function useIpcEvents() {
       }),
     );
 
+    // Phase Coach 가이드 메시지
+    cleanups.push(
+      window.harness.on("phase:coach", (data: unknown) => {
+        setPhaseCoach(data as Parameters<typeof setPhaseCoach>[0]);
+      }),
+    );
+
+    // Smart Input 요청
+    cleanups.push(
+      window.harness.on("smart-input:request", (data: unknown) => {
+        setSmartInputRequest(data as Parameters<typeof setSmartInputRequest>[0]);
+      }),
+    );
+
     // 채팅 액션 실행 결과
     cleanups.push(
       window.harness.on("chat:actions-executed", (data: { actions: string[] }) => {
@@ -181,6 +220,87 @@ export function useIpcEvents() {
     cleanups.push(
       window.harness.on("pipeline:start-requested", () => {
         toast("info", "파이프라인", "파이프라인 탭에서 시작 버튼을 눌러주세요.");
+      }),
+    );
+
+    // ── GSD 파이프라인 이벤트 ──
+    cleanups.push(
+      window.harness.on("gsd:event", (data: {
+        type: string;
+        gsdType: string;
+        message: string;
+        timestamp: string;
+        data: Record<string, unknown>;
+      }) => {
+        // 활동 로그에 추가
+        addActivity({
+          timestamp: data.timestamp,
+          agentId: "gsd",
+          eventType: data.type as Parameters<typeof addActivity>[0]["eventType"],
+          message: data.message,
+        });
+
+        // GSD 파이프라인 상태 업데이트
+        const { updateGsdPipeline, addGsdPhase, updateGsdPhaseStatus } = useAppStore.getState();
+
+        switch (data.gsdType) {
+          case "phase_start":
+            updateGsdPipeline({ isRunning: true, currentPhase: String(data.data.phaseName || "") });
+            addGsdPhase({
+              number: String(data.data.phaseNumber || ""),
+              name: String(data.data.phaseName || ""),
+              status: "running",
+            });
+            break;
+          case "phase_step_start":
+            updateGsdPipeline({ currentStep: String(data.data.step || "") });
+            break;
+          case "wave_start":
+            updateGsdPipeline({ activeWave: Number(data.data.waveNumber || 0) });
+            break;
+          case "phase_complete":
+            updateGsdPhaseStatus(String(data.data.phaseNumber || ""), data.data.success ? "completed" : "failed");
+            updateGsdPipeline({ currentStep: undefined, activeWave: undefined });
+            break;
+          case "cost_update":
+            updateGsdPipeline({ cost: Number(data.data.cumulativeCostUsd || 0) });
+            break;
+          case "session_error":
+            toast("error", "GSD 에러", data.message);
+            break;
+          case "milestone_complete":
+            updateGsdPipeline({ isRunning: false });
+            if (data.data.success) {
+              toast("success", "마일스톤 완료", data.message);
+            } else {
+              toast("error", "마일스톤 실패", data.message);
+            }
+            break;
+        }
+      }),
+    );
+
+    // GSD 승인 요청
+    cleanups.push(
+      window.harness.on("gsd:approval-request", (data: {
+        id: string;
+        type: string;
+        context: Record<string, unknown>;
+      }) => {
+        const { setGsdApproval } = useAppStore.getState();
+        setGsdApproval({
+          id: data.id,
+          type: data.type as "discuss" | "verify" | "blocker",
+          context: data.context,
+        });
+        toast("warning", "승인 필요", `${data.type} 단계에서 확인이 필요합니다.`, 0);
+      }),
+    );
+
+    // GSD 페이즈 완료
+    cleanups.push(
+      window.harness.on("gsd:phase-complete", (data: unknown) => {
+        toast("info", "페이즈 완료", "다음 페이즈로 진행합니다.");
       }),
     );
 

@@ -1,107 +1,111 @@
-# Handoff: WorkTool — Agent SDK 전환 + 파이프라인 안정화
+# Handoff: WorkTool v2 — GSD + Harness-100 피벗
 
-**Generated**: 2026-03-30 (Session 5)
+**Generated**: 2026-04-02 (Session 7)
 **Branch**: main
 **Repo**: https://github.com/chodolmu/CJ-s-WorkTool.git
-**Last Commit**: a187894 feat: 15개 파이프라인 이슈 수정 + Agent SDK 채팅 전환 + 파이프라인 제어 UI
-**Status**: 구현 완료 — EXE 테스트 필요
+**Status**: 백엔드 피벗 완료 — UI 플로우 재설계 필요
 
 ## Goal
 
-Claude Code CLI를 감싸는 Electron 데스크톱 앱. 비개발자/반개발자가 AI 에이전트 팀을 시각적으로 관리하며 프로젝트를 개발. **이번 세션에서 15개 파이프라인 이슈 전부 수정 + Agent SDK로 채팅 전환 + 파이프라인 제어 UI 추가.**
+Claude Code CLI를 감싸는 Electron 데스크톱 앱. 자체 오케스트레이션 엔진을 GSD SDK + Harness-100 오픈소스로 교체하여, GUI 시각화에 집중.
 
-## What Was Accomplished (Session 5)
+## What Was Accomplished (Session 7)
 
-### 1. 15개 파이프라인 이슈 전체 수정
-- **P0**: Evaluator 상세 시스템 프롬프트 (에이전트별 buildAgentSystemPrompt), 4단계 파서 (codeblock→비탐욕JSON→전체JSON→텍스트추론), Director 파이프라인 분류 수정
-- **P1**: autoApprove 자동 진행 모드, maxRetries 기본값 10 (UI에 3/5/10/20 옵션), 재시도 딜레이 최적화 (3s→1s)
-- **P2**: 에이전트 running 상태 표시 (system/thinking/tool_call 이벤트), 기능 목록 실시간 갱신, core 에이전트 서버측 삭제 차단, Generator 질문 패턴 감지, Director 스펙 누락 경고
-- **P3**: 로그 필터 6종 (전체/중요만/System/Error/Done/Tool + 카운트), 단계 상세 표시 (실행중/완료 상태), 단계별 보고서 emit
+### 1. GSD + Harness-100 피벗 완료
+- `vendor/gsd/` — GSD SDK dist + gsd-tools.cjs + agents (1.4MB)
+- `vendor/harness-100/` — ko/en 200개 하네스 프리셋 (12MB)
+- `scripts/prepare-vendor.sh` — 빌드 + 복사 자동화
 
-### 2. 파이프라인 제어 UI
-- 일시정지 (⏸) / 재개 (▶) / 강제 중단 (⏹, 2단계 확인) / 재시작 (🔄) 버튼
-- 중단 시 실행 중인 CLI 프로세스 SIGTERM 종료
-- Pipeline.stop()에서 activeSession.abort() + checkpoint cancel
+### 2. 자체 엔진 삭제 (9파일)
+- pipeline.ts, director-agent.ts, smart-orchestrator.ts, phase-coach.ts
+- prompt-assembler.ts, guideline-generator.ts, error-handler.ts
+- skill-detector.ts, research-agent.ts
+- resources/presets/ (5종)
 
-### 3. Agent SDK 채팅 전환
-- `@anthropic-ai/claude-agent-sdk` 설치 (구독 플랜 사용, API 키 불필요)
-- `SdkChat` 클래스 — 프로젝트별 세션 유지, 스트리밍, CLI 폴백
-- Discovery 채팅 + 프로젝트 채팅 모두 SDK 전환
-- 대화 연속성 확보 (더 이상 전체 대화 텍스트 재전송 안 함)
+### 3. 신규 모듈
+- `src/main/gsd-bridge.ts` — GSD SDK 래퍼 (파이프라인 실행, 이벤트 전달, 승인 콜백)
+- `src/main/harness-manager.ts` — Harness-100 카탈로그 인덱싱, 검색, .claude/ 복사 적용
+- `src/renderer/components/HarnessBrowser.tsx` — 카테고리별 카드 UI (미연결)
 
-### 4. 채팅 실시간 작업 내역
-- chat:activity 이벤트 — tool_use, thinking, tool_result, system 구분
-- ActivityTrailItem 컴포넌트 — 최근 항목 밝게, 이전 항목 흐리게, pulse 인디케이터
-- 도구별 사람 친화적 메시지 (📄 파일 읽기, 🔍 검색 등)
+### 4. index.ts 수술
+- GSD IPC 핸들러 6개 + Harness IPC 핸들러 6개 추가
+- chat:send / discovery:chat → SDK 전환 (CLI 폴백 포함)
+- 레거시 파이프라인 핸들러 삭제
+- E2E 감사 재작성 (17항목, 전부 통과)
+
+### 5. UI 기반 연결
+- preload: gsd + harness100 API 추가
+- app-store: GSD 파이프라인 상태 추가
+- useIpcEvents: GSD 이벤트 리스너 추가
+- OrchestrationPage: PipelineControls를 GSD 시작/중단으로 교체
 
 ## Architecture
 
 ```
-Electron App (src/)
+Electron App
 ├── main/
-│   ├── index.ts              — IPC 핸들러, SDK/CLI 채팅 라우팅
+│   ├── index.ts          — IPC 핸들러 (GSD/Harness/Chat)
+│   ├── gsd-bridge.ts     — GSD SDK 래퍼 ★NEW
+│   ├── harness-manager.ts — Harness-100 카탈로그 ★NEW
 │   ├── agent-runner/
-│   │   ├── cli-bridge.ts     — claude --print 프로세스 매니저 (파이프라인 전용)
-│   │   └── sdk-chat.ts       — Agent SDK 채팅 엔진 (세션 유지) ★NEW
-│   ├── orchestrator/
-│   │   ├── pipeline.ts       — 파이프라인 엔진 (autoApprove, stop, 상세 프롬프트)
-│   │   └── director-agent.ts — Director AI (스펙 매칭, 누락 경고)
-│   ├── memory/               — 프로젝트/채팅 메모리
-│   └── preset/               — 에이전트 프리셋
-├── preload/
-│   └── index.ts              — IPC API (pipeline.stop/restart 추가)
+│   │   ├── sdk-chat.ts   — Agent SDK 채팅 (세션 유지)
+│   │   └── cli-bridge.ts — CLI 폴백
+│   ├── memory/           — 프로젝트/세션/플랜 DB
+│   └── tools/git-manager.ts
 ├── renderer/
 │   ├── pages/
-│   │   ├── ChatPage.tsx      — 채팅 + 실시간 작업 내역 ActivityTrail ★UPDATED
-│   │   ├── OrchestrationPage.tsx — 파이프라인 제어 버튼 + 단계 상세 ★UPDATED
-│   │   ├── SettingsPage.tsx  — autoApprove 토글, maxRetries 옵션 ★UPDATED
-│   │   └── ProjectView.tsx   — 설정값 파이프라인 전달 ★UPDATED
+│   │   ├── OrchestrationPage.tsx — GSD 이벤트 연결 ★UPDATED
+│   │   ├── ChatPage.tsx          — ★삭제 예정 (파이프라인 통합)
+│   │   └── ...
 │   ├── components/
-│   │   └── ActivityFeed.tsx  — 로그 필터 6종 ★UPDATED
-│   └── hooks/
-│       └── useIpcEvents.ts   — 에이전트 상태, 기능 갱신 ★UPDATED
-└── shared/
-    └── types.ts              — PipelineConfig.autoApprove 추가
+│   │   └── HarnessBrowser.tsx    — ★NEW (미연결)
+│   └── stores/app-store.ts      — GSD 상태 추가
+└── vendor/
+    ├── gsd/sdk/dist/             — GSD SDK 빌드
+    └── harness-100/ko,en/        — 200개 하네스
 ```
 
 ## Key Decisions
 
-1. **채팅 = Agent SDK, 파이프라인 = CLI --print**: 채팅은 대화 연속성 필요 → SDK. 파이프라인 에이전트는 파일 수정 필요 → CLI.
-2. **SDK 실패 시 CLI 폴백**: SDK import 실패, 세션 에러 등에서 자동으로 CLI --print로 전환
-3. **Evaluator 파서 4단계 전략**: codeblock → 비탐욕 JSON → 전체 JSON → 텍스트 추론 순서로 시도
-4. **core 에이전트 보호**: director/planner/generator/evaluator는 서버측에서 삭제 차단
+1. **엔진은 오픈소스, GUI는 우리 것** — GSD가 파이프라인 관리, Harness-100이 에이전트 정의
+2. **SDK 채팅 + CLI 폴백** — SDK 실패 시 자동으로 CLI --print 전환
+3. **vendor/ 번들링** — exe에 GSD + Harness-100 내장 (~14MB)
+4. **파이프라인 + 채팅 통합 UX** — 채팅 탭을 없애고 파이프라인 우측에 단계별 세션
 
 ## Current State
 
-### 빌드: 성공 ✅
-- `npx electron-vite build` 통과
-- TypeScript 에러 없음 (TS6305 stale output만 있음)
+### 빌드: 성공 ✅ (3/3)
+### E2E 감사: 17/17 통과 ✅
 
-### 미테스트 ⚠️
-- **Agent SDK 채팅**: 실제 Claude 응답 테스트 필요 (SDK ESM dynamic import가 Electron main에서 작동하는지)
-- **파이프라인 15개 이슈**: 실행 테스트로 개선 확인 필요
-- **파이프라인 제어 버튼**: 일시정지/중단/재시작 실제 동작
-- **autoApprove**: 체크포인트 스킵이 올바르게 동작하는지
+### 미완성 ⚠️
+- **HarnessBrowser가 어떤 페이지에도 안 붙어있음**
+- **프로젝트 생성 플로우가 레거시 (프리셋→Discovery→팀구성)**
+- **채팅 탭이 아직 독립 존재 (파이프라인 통합 안 됨)**
+- **GSD init → .planning/ 생성 UI 미연결**
 
-## Failed Approaches (From Previous Sessions)
+## Failed Approaches (Previous Sessions)
 
-1. **claude stdin**: --print 모드는 stdin을 안 읽음
-2. **--continue/--resume**: Windows에서 타임아웃
-3. **shell: true spawn**: PowerShell이 claude.exe 못 찾음 → shell: false + 직접 경로 사용
-4. **대화 전체 재전송**: 토큰 낭비 → Agent SDK 세션으로 해결
+1. claude stdin: --print 모드는 stdin을 안 읽음
+2. --continue/--resume: Windows에서 타임아웃
+3. shell: true spawn: PowerShell이 claude.exe 못 찾음
+4. 대화 전체 재전송: 토큰 낭비 → Agent SDK 세션으로 해결
+5. 자체 파이프라인 엔진: 유지보수 비용 > 가치 → GSD로 교체
 
 ## Warnings
 
-- **Agent SDK ESM**: `@anthropic-ai/claude-agent-sdk`는 ESM-only. Electron main은 CJS이므로 `await import()` 사용. 빌드 시 번들러가 잘 처리하는지 실행 테스트 필수.
-- **이 터미널에서 claude 테스트 불가**: Electron 앱 내부에서만 테스트 가능.
-- **bkit 상태 파일**: `.bkit/` 하위 파일들은 스테이징하지 않음 (런타임 상태).
-- **test-audit.js**: 루트에 테스트 파일 있음 (untracked, 무시해도 됨).
+- **vendor/는 .gitignore** — `bash scripts/prepare-vendor.sh`로 재생성 필요
+- **GSD SDK는 ESM-only** — `await import(fileUrl)` 패턴 사용
+- **gsd-tools.cjs 경로**: `vendor/gsd/bin/gsd-tools.cjs` (get-shit-done/get-shit-done/bin/ 에서 복사)
 
 ## Resume Instructions
 
-1. `npm run dev`로 앱 실행
-2. **Agent SDK 채팅 테스트**: 프로젝트 선택 → 채팅 → 메시지 전송 → 세션 유지되는지 확인
-3. **작업 내역 표시 확인**: 채팅 시 tool_use/thinking 이벤트가 ActivityTrail에 보이는지
-4. **파이프라인 테스트**: 파이프라인 시작 → Evaluator 파싱 → 자동 승인 모드 → 중단/재시작
-5. **SDK 실패 시**: `sdk-chat.ts`의 dynamic import 실패 로그 확인 → CLI 폴백 동작 확인
-6. 이슈 있으면 수정, 없으면 `/pdca analyze Tool`로 갭 분석
+1. `bash scripts/prepare-vendor.sh` (vendor/ 재생성)
+2. `npm run dev` (앱 실행 확인)
+3. **Phase 5: UI 플로우 재설계**
+   - 프로젝트 생성: HarnessBrowser → 하네스 선택 → .claude/ 적용 → GSD init
+   - OrchestrationPage: 좌측 파이프라인 + 우측 단계별 채팅
+   - ChatPage.tsx 삭제 → PhaseChat.tsx로 교체
+   - 네비게이션: 채팅 탭 제거
+4. **Phase 6: 하네스 → GSD init 연결**
+5. **Phase 7: 레거시 UI 정리**
+6. 참조 문서: `docs/01-plan/features/Tool-v2.plan.md`, `docs/02-design/features/Tool-v2.design.md`

@@ -165,6 +165,15 @@ export type AgentStatus =
   | "failed"
   | "paused";
 
+export type AgentSubstatus = "thinking" | "tool_call" | "idle";
+
+export interface AgentStatusChangeEvent {
+  agentId: string;
+  status: AgentStatus;
+  substatus?: AgentSubstatus;
+  currentFeature?: string;
+}
+
 export interface Finding {
   severity: "error" | "warning" | "info";
   message: string;
@@ -324,6 +333,50 @@ export interface PlanChangeLog {
 }
 
 // ============================================
+// Phase Coach (선제적 가이드)
+// ============================================
+export type TouchLevel = "high" | "medium" | "auto" | "light";
+
+export interface PhaseCoachMessage {
+  phase: string;
+  touchLevel: TouchLevel;
+  title: string;
+  description: string;
+  actions?: PhaseCoachAction[];
+  autoAdvance: boolean;
+}
+
+export interface PhaseCoachAction {
+  id: string;
+  label: string;
+  type: "approve" | "edit" | "skip";
+}
+
+// ============================================
+// Smart Input (구조화된 사용자 입력)
+// ============================================
+export interface SmartQuestion {
+  id: string;
+  question: string;
+  type: "select" | "multiselect" | "text" | "confirm";
+  options?: { label: string; value: string; description?: string }[];
+  defaultValue?: string;
+  required: boolean;
+}
+
+export interface SmartInputRequest {
+  id: string;
+  phase: string;
+  context: string;
+  questions: SmartQuestion[];
+}
+
+export interface SmartInputResponse {
+  requestId: string;
+  answers: Record<string, string>;
+}
+
+// ============================================
 // 세션
 // ============================================
 export interface Session {
@@ -332,4 +385,70 @@ export interface Session {
   startedAt: string;
   endedAt: string | null;
   summary: string | null;
+}
+
+// ============================================
+// GSD 파이프라인 이벤트
+// ============================================
+
+/** GSD 이벤트를 UI로 전달할 때 사용하는 통합 포맷 */
+export interface GsdUIEvent {
+  type: ActivityEventType;  // 기존 ActivityEntry와 호환
+  gsdType: string;          // 원본 GSD 이벤트 타입 (session_init, phase_start 등)
+  message: string;          // 사람 친화적 메시지
+  timestamp: string;
+  data: Record<string, unknown>;  // 원본 이벤트 데이터
+}
+
+/** GSD 파이프라인 상태 */
+export interface GsdPipelineState {
+  isRunning: boolean;
+  currentPhase?: string;
+  currentStep?: string;
+  activeWave?: number;
+  cost: number;
+  phases: GsdPhaseInfo[];
+}
+
+export interface GsdPhaseInfo {
+  number: string;
+  name: string;
+  status: "pending" | "running" | "completed" | "failed";
+  cost?: number;
+  durationMs?: number;
+}
+
+/** GSD 승인 요청 (discuss, verify, blocker) */
+export interface GsdApprovalRequest {
+  id: string;
+  type: "discuss" | "verify" | "blocker";
+  context: Record<string, unknown>;
+}
+
+// ============================================
+// Harness-100 프리셋
+// ============================================
+
+export interface HarnessAgent {
+  id: string;
+  name: string;
+  description: string;
+}
+
+export interface HarnessEntry {
+  id: string;
+  number: number;
+  category: string;
+  name: { en: string; ko: string };
+  description: { en: string; ko: string };
+  agents: HarnessAgent[];
+  skills: string[];
+  agentCount: number;
+  skillCount: number;
+}
+
+export interface HarnessCategory {
+  name: string;
+  nameKo: string;
+  count: number;
 }

@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import type { AgentStatus } from "@shared/types";
+import type { AgentStatus, AgentSubstatus } from "@shared/types";
 import { StatusDot } from "./StatusDot";
 
 export interface AgentCardData {
@@ -8,6 +8,7 @@ export interface AgentCardData {
   displayName: string;
   icon: string;
   status: AgentStatus;
+  substatus?: AgentSubstatus;
   currentFeature: string | null;
   progress: { current: number; total: number } | null;
   lastChangeSummary: string | null;
@@ -47,6 +48,21 @@ export function AgentCard({ agent, isSelected, onClick, index = 0 }: AgentCardPr
         </div>
         <StatusDot status={agent.status} />
       </div>
+
+      {/* Running substatus */}
+      {agent.status === "running" && (
+        <div className="flex items-center gap-1.5 text-[10px] mb-2">
+          {agent.substatus === "thinking" && (
+            <><span className="text-accent animate-pulse">…</span><span className="text-accent">생각 중</span></>
+          )}
+          {agent.substatus === "tool_call" && (
+            <><span className="text-status-info">▸</span><span className="text-status-info">도구 실행 중</span></>
+          )}
+          {!agent.substatus && (
+            <><span className="text-status-success animate-pulse">●</span><span className="text-status-success">실행 중</span></>
+          )}
+        </div>
+      )}
 
       {/* Current task */}
       {agent.currentFeature && (

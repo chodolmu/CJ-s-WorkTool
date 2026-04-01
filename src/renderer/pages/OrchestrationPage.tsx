@@ -398,60 +398,48 @@ function FlowArrow() {
 
 function PipelineControls({ status, projectId }: { status: string; projectId: string | null }) {
   const [confirming, setConfirming] = useState<"stop" | null>(null);
+  const { gsdPipeline } = useAppStore();
 
-  const isRunning = status === "running" || status === "waiting_checkpoint";
-  const isPaused = status === "paused";
-  const isStopped = status === "idle" || status === "failed" || status === "completed";
+  const isRunning = gsdPipeline.isRunning;
+  const isStopped = !isRunning;
 
-  const handlePause = async () => {
-    await window.harness.pipeline.pause();
-    toast("info", "파이프라인", "일시정지됨 — 현재 에이전트 작업이 끝나면 멈춥니다");
-  };
+  const handleStart = async () => {
+    if (!projectId) return;
+    const project = await window.harness.project.load(projectId);
+    const workingDir = project?.workingDir || ".";
 
-  const handleResume = async () => {
-    await window.harness.pipeline.resume();
-    toast("info", "파이프라인", "재개됨");
+    toast("info", "GSD 파이프라인", "시작 중...");
+    const result = await window.harness.gsd.startPipeline({
+      projectDir: workingDir,
+      prompt: project?.specCard?.projectType || "프로젝트 빌드",
+    });
+
+    if (!result.success) {
+      toast("error", "GSD 파이프라인", result.error || "실패");
+    }
   };
 
   const handleStop = async () => {
     if (confirming !== "stop") {
       setConfirming("stop");
-      setTimeout(() => setConfirming(null), 3000); // 3초 후 확인 해제
+      setTimeout(() => setConfirming(null), 3000);
       return;
     }
     setConfirming(null);
-    await window.harness.pipeline.stop();
+    await window.harness.gsd.stop();
     toast("warning", "파이프라인", "강제 중단됨");
-  };
-
-  const handleRestart = async () => {
-    if (!projectId) return;
-    // 설정에서 값 로드
-    let settings = { maxRetries: 10, autoApprove: false, workingDir: "" };
-    try {
-      const stored = localStorage.getItem("worktool-settings");
-      if (stored) settings = { ...settings, ...JSON.parse(stored) };
-    } catch {}
-
-    const project = await window.harness.project.load(projectId);
-    const workingDir = project?.workingDir || settings.workingDir || ".";
-
-    await window.harness.pipeline.restart(projectId, workingDir, settings.maxRetries, settings.autoApprove);
-    toast("info", "파이프라인", "처음부터 재시작됨");
+    useAppStore.getState().updateGsdPipeline({ isRunning: false });
   };
 
   return (
     <div className="flex items-center gap-2">
-      {/* 일시정지 / 재개 */}
-      {isRunning && (
-        <ControlButton onClick={handlePause} icon="⏸" label="일시정지" />
-      )}
-      {isPaused && (
-        <ControlButton onClick={handleResume} icon="▶" label="재개" variant="accent" />
+      {/* 시작 */}
+      {isStopped && projectId && (
+        <ControlButton onClick={handleStart} icon="▶" label="GSD 시작" variant="accent" />
       )}
 
       {/* 중단 */}
-      {(isRunning || isPaused) && (
+      {isRunning && (
         <ControlButton
           onClick={handleStop}
           icon="⏹"
@@ -460,14 +448,18 @@ function PipelineControls({ status, projectId }: { status: string; projectId: st
         />
       )}
 
-      {/* 재시작 (중단/실패/완료 후) */}
-      {isStopped && projectId && status !== "idle" && (
-        <ControlButton onClick={handleRestart} icon="🔄" label="재시작" variant="accent" />
+      {/* 비용 표시 */}
+      {gsdPipeline.cost > 0 && (
+        <span className="text-[10px] text-text-muted ml-2">
+          ${gsdPipeline.cost.toFixed(3)}
+        </span>
       )}
 
-      {/* 상태 안내 */}
-      {isPaused && (
-        <span className="text-[10px] text-status-warning ml-1">현재 에이전트 작업 완료 후 멈춤</span>
+      {/* 현재 단계 */}
+      {gsdPipeline.currentStep && (
+        <span className="text-[10px] text-accent ml-1">
+          {gsdPipeline.currentPhase} / {gsdPipeline.currentStep}
+        </span>
       )}
     </div>
   );

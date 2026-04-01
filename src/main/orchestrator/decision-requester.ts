@@ -69,10 +69,11 @@ export class DecisionRequester extends EventEmitter {
   private detectDecisionNeeded(output: string): DetectedDecision | null {
     const text = output.toLowerCase();
 
-    // 1. 명시적 질문 패턴
+    // 1. 명시적 질문 패턴 (한국어 + 영어)
     const questionPatterns = [
-      /(?:should (?:I|we)|어떤 걸|어떻게|뭘 선택|which (?:one|approach|option)|do you (?:want|prefer))\s*(.{10,100})\??/i,
-      /(?:선택해|결정해|알려줘|let me know|please (?:decide|choose|confirm))\s*(.{5,100})/i,
+      /(?:should (?:I|we)|어떤 (?:걸|방식|방법|것)|어떻게|뭘 선택|which (?:one|approach|option)|do you (?:want|prefer))\s*(.{5,100})\??/i,
+      /(?:선택해|결정해|알려줘|확인해|진행할까|let me know|please (?:decide|choose|confirm))\s*(.{3,100})/i,
+      /(?:괜찮을까|맞을까|할까요|될까요|좋을까|어떨까)\s*\??/i,
     ];
 
     for (const pattern of questionPatterns) {
@@ -86,8 +87,8 @@ export class DecisionRequester extends EventEmitter {
       }
     }
 
-    // 2. 선택지 나열 패턴
-    const optionPattern = /(?:option [a-c]|방법 [1-3]|approach [1-3]|안 [1-3])[\s:]/gi;
+    // 2. 선택지 나열 패턴 (구분자 유연화)
+    const optionPattern = /(?:option [a-c]|방법 [1-3]|approach [1-3]|안 [1-3]|방식 [1-3])[\s:은는이가]/gi;
     const optionMatches = output.match(optionPattern);
     if (optionMatches && optionMatches.length >= 2) {
       return {
@@ -97,31 +98,27 @@ export class DecisionRequester extends EventEmitter {
       };
     }
 
-    // 3. 불확실성 패턴
+    // 3. 불확실성 패턴 (? 없이도 감지)
     const uncertaintyPatterns = [
-      /(?:not sure|확실하지 않|unclear|애매|either way|판단이 필요|depends on)/i,
+      /(?:not sure|확실하지 않|확실하지않|불확실|unclear|애매|either way|판단이 필요|depends on|확인이 필요|검토가 필요)/i,
     ];
     for (const pattern of uncertaintyPatterns) {
       if (pattern.test(text)) {
-        // 불확실성만 있고 질문이 없으면 스킵 (너무 자주 물어보면 안 됨)
-        // 질문이 동시에 있을 때만 감지
-        if (/\?/.test(output)) {
-          const questionLine = output.split("\n").find((l) => l.includes("?"));
-          return {
-            question: questionLine?.trim() ?? "확실하지 않은 부분이 있습니다. 확인이 필요합니다.",
-            options: this.extractOptions(output),
-            severity: "normal",
-          };
-        }
+        const questionLine = output.split("\n").find((l) => l.includes("?"));
+        return {
+          question: questionLine?.trim() ?? "확실하지 않은 부분이 있습니다. 확인이 필요합니다.",
+          options: this.extractOptions(output),
+          severity: "normal",
+        };
       }
     }
 
-    // 4. 리스크/경고 패턴 (이건 심각도 높음)
+    // 4. 리스크/경고 패턴 (심각도 높음 — ? 없이도 감지)
     const riskPatterns = [
-      /(?:breaking change|호환성|기존.*깨|destructive|데이터.*손실|삭제.*위험)/i,
+      /(?:breaking change|호환성|기존.*깨|destructive|데이터.*손실|삭제.*위험|주의.*필요)/i,
     ];
     for (const pattern of riskPatterns) {
-      if (pattern.test(text) && /\?/.test(output)) {
+      if (pattern.test(text)) {
         const questionLine = output.split("\n").find((l) => l.includes("?"));
         return {
           question: questionLine?.trim() ?? "주의가 필요한 변경사항이 있습니다.",

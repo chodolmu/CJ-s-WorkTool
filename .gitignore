@@ -11,3 +11,6 @@ harness_data/
 screenshot-*.png
 Thumbs.db
 Desktop.ini
+
+# vendor/ — prepare-vendor.sh로 재생성
+vendor/

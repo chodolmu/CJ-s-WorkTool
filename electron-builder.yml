@@ -25,6 +25,15 @@ extraResources:
     to: skills
     filter:
       - "**/*"
+  - from: vendor/gsd
+    to: vendor/gsd
+    filter:
+      - "**/*"
+  - from: vendor/harness-100
+    to: vendor/harness-100
+    filter:
+      - "**/*.md"
+      - "**/.catalog-cache.json"
 
 win:
   target:

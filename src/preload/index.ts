@@ -163,6 +163,30 @@ const api = {
     checkClaudeCode: () => ipcRenderer.invoke("system:check-claude-code"),
     runAudit: () => ipcRenderer.invoke("system:run-audit"),
   },
+
+  // ── GSD Pipeline ──
+  gsd: {
+    startPipeline: (params: { projectDir: string; phaseNumber?: string; prompt?: string; model?: string }) =>
+      ipcRenderer.invoke("gsd:start-pipeline", params),
+    stop: () => ipcRenderer.invoke("gsd:stop"),
+    getStatus: (projectDir: string) => ipcRenderer.invoke("gsd:get-status", { projectDir }),
+    initProject: (projectDir: string, prompt: string, model?: string) =>
+      ipcRenderer.invoke("gsd:init-project", { projectDir, prompt, model }),
+    respondApproval: (id: string, answer: string) =>
+      ipcRenderer.invoke("gsd:respond-approval", { id, answer }),
+    isRunning: () => ipcRenderer.invoke("gsd:is-running"),
+  },
+
+  // ── Harness-100 ──
+  harness100: {
+    getCatalog: () => ipcRenderer.invoke("harness:get-catalog"),
+    getByCategory: () => ipcRenderer.invoke("harness:get-by-category"),
+    getCategories: () => ipcRenderer.invoke("harness:get-categories"),
+    search: (query: string) => ipcRenderer.invoke("harness:search", { query }),
+    get: (id: string) => ipcRenderer.invoke("harness:get", { id }),
+    apply: (harnessId: string, projectDir: string, lang?: "ko" | "en") =>
+      ipcRenderer.invoke("harness:apply", { harnessId, projectDir, lang }),
+  },
 } as const;
 
 export type HarnessAPI = typeof api;
