@@ -5,7 +5,7 @@ import { Titlebar } from "./components/layout/Titlebar";
 import { DashboardPage } from "./pages/DashboardPage";
 import { ProjectView } from "./pages/ProjectView";
 import { DiscoveryPage } from "./pages/Discovery/DiscoveryPage";
-import { PresetsPage } from "./pages/Presets/PresetsPage";
+import { HarnessPage } from "./pages/HarnessPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { SchedulePage } from "./pages/SchedulePage";
 import { CheckpointModal } from "./components/CheckpointModal";
@@ -168,13 +168,23 @@ export default function App() {
     // 하네스 선택 시 .claude/ 적용 + GSD init
     if (harnessId && window.harness.harness100) {
       try {
-        await window.harness.harness100.apply(harnessId, workingDir, "ko");
-      } catch {}
+        const applyResult = await window.harness.harness100.apply(harnessId, workingDir, "ko");
+        if (!applyResult.success) {
+          console.warn("[Harness] apply failed:", applyResult.error);
+        }
+      } catch (err) {
+        console.error("[Harness] apply error:", err);
+      }
     }
     if (window.harness.gsd?.initProject) {
       try {
-        await window.harness.gsd.initProject(workingDir, specCard.projectType);
-      } catch {}
+        const gsdResult = await window.harness.gsd.initProject(workingDir, specCard.projectType);
+        if (!gsdResult.success) {
+          console.warn("[GSD] init failed:", gsdResult.error);
+        }
+      } catch (err) {
+        console.error("[GSD] init error:", err);
+      }
     }
 
     const updatedProjects = await window.harness.project.list() as Project[];
@@ -257,7 +267,7 @@ export default function App() {
           )}
 
           {topPage === "schedule" && <SchedulePage />}
-          {topPage === "harness" && <div className="p-4 overflow-y-auto h-full"><PresetsPage /></div>}
+          {topPage === "harness" && <HarnessPage />}
           {topPage === "settings" && <div className="p-4 overflow-y-auto h-full"><SettingsPage /></div>}
         </main>
       </div>

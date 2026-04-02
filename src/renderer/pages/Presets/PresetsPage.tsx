@@ -88,9 +88,9 @@ export function PresetsPage() {
   return (
     <div className="space-y-5 animate-fade-in">
       <div>
-        <h1 className="text-lg font-medium text-text-primary">프리셋 & 에이전트</h1>
+        <h2 className="text-sm font-medium text-text-primary">에이전트 구성</h2>
         <p className="text-xs text-text-secondary mt-0.5">
-          {presetId.charAt(0).toUpperCase() + presetId.slice(1)} 프리셋
+          {presetId.charAt(0).toUpperCase() + presetId.slice(1)} 프리셋 — 에이전트를 추가/편집/삭제합니다.
         </p>
       </div>
 

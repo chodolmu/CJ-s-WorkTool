@@ -2,20 +2,16 @@ import React, { useState, useMemo } from "react";
 import { useAppStore } from "../stores/app-store";
 import { AgentCard, AgentStatusSummary } from "../components/AgentCard";
 import { DetailPanel } from "../components/layout/DetailPanel";
-import { ActivityPanel } from "../components/layout/ActivityPanel";
 import { SpecsPage } from "./SpecsPage";
 import { LogsPage } from "./LogsPage";
 import { OrchestrationPage } from "./OrchestrationPage";
-import { PlanPage } from "./PlanPage";
 import { toast } from "../components/Toast";
 import type { SpecCard } from "@shared/types";
 
-type ProjectTab = "overview" | "plan" | "agents" | "pipeline" | "specs" | "logs";
+type ProjectTab = "overview" | "pipeline" | "specs" | "logs";
 
 const tabs: { id: ProjectTab; label: string; icon: string }[] = [
   { id: "overview", label: "개요", icon: "📊" },
-  { id: "plan", label: "계획", icon: "📝" },
-  { id: "agents", label: "에이전트", icon: "🤖" },
   { id: "pipeline", label: "파이프라인", icon: "🔄" },
   { id: "specs", label: "스펙", icon: "📋" },
   { id: "logs", label: "로그", icon: "📜" },
@@ -86,14 +82,6 @@ export function ProjectView({ projectId }: ProjectViewProps) {
             {activeTab === "overview" && (
               <OverviewTab specCard={specCard} />
             )}
-            {activeTab === "plan" && (
-              <PlanPage projectId={projectId} />
-            )}
-            {activeTab === "agents" && (
-              <div className="p-4">
-                <AgentsTab onSelectAgent={setSelectedAgent} />
-              </div>
-            )}
             {activeTab === "specs" && (
               <div className="p-4">
                 <SpecsPage specCard={specCard} />
@@ -108,7 +96,7 @@ export function ProjectView({ projectId }: ProjectViewProps) {
         )}
 
         {/* Detail panel (agent selected) */}
-        {selectedAgentId && (activeTab === "overview" || activeTab === "agents") && (
+        {selectedAgentId && activeTab === "overview" && (
           <DetailPanel
             agentId={selectedAgentId}
             onClose={() => setSelectedAgent(null)}
@@ -243,28 +231,6 @@ function OverviewTab({ specCard }: { specCard: SpecCard | null }) {
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-function AgentsTab({ onSelectAgent }: { onSelectAgent: (id: string) => void }) {
-  const { agents, selectedAgentId } = useAppStore();
-
-  if (agents.length === 0) {
-    return <p className="text-sm text-text-secondary">에이전트가 없습니다. Discovery를 시작하여 에이전트를 구성하세요.</p>;
-  }
-
-  return (
-    <div className="space-y-2">
-      {agents.map((agent, i) => (
-        <AgentCard
-          key={agent.id}
-          agent={agent}
-          isSelected={selectedAgentId === agent.id}
-          onClick={() => onSelectAgent(agent.id)}
-          index={i}
-        />
-      ))}
     </div>
   );
 }

@@ -1,61 +1,72 @@
-# Handoff: WorkTool v2 — Phase 5 UI 플로우 재설계 완료
+# Handoff: Dynamic Harness — 에이전트 풀 기반 동적 하네스 조합
 
-**Generated**: 2026-04-02 (Session 8)
+**Generated**: 2026-04-02 (Session 9)
 **Branch**: main
 **Repo**: https://github.com/chodolmu/CJ-s-WorkTool.git
-**Status**: Phase 5 완료 — Phase 6~7 진행 필요
+**Status**: Phase 6~7 완료, Dynamic Harness Plan+Design 완료 → Do 대기
 
 ## Goal
 
-Claude Code CLI를 감싸는 Electron 데스크톱 앱. GSD SDK + Harness-100 기반으로, GUI 시각화에 집중.
+Claude Code CLI를 감싸는 Electron 데스크톱 앱. GSD SDK + Harness-100 기반.
+**다음 목표**: 고정 하네스 선택 방식을 "에이전트 풀 기반 동적 조합"으로 전환.
 
-## What Was Accomplished (Session 8)
+## What Was Accomplished (Session 9)
 
-### Phase 5: UI 플로우 재설계 (Track A + Track B)
+### Phase 6: 하네스 → GSD init 연결 검증
+1. GSD init 플로우 검증 (App.tsx → preload → main → gsd-bridge.ts) — 정상 연결 확인
+2. `vendor/gsd/sdk/dist/init-runner.js` 존재 확인
+3. 하네스 적용 + GSD init 에러 핸들링 개선 (silent catch → 로깅)
+4. E2E 테스트에 하네스 카탈로그/검색/GSD SDK 테스트 3개 추가
 
-#### Track A: 파이프라인 + 채팅 통합
-1. **PhaseChat.tsx 생성** — ChatPage에서 핵심 채팅 로직 추출, 단계별 stepId 기반
-2. **OrchestrationPage.tsx 재설계** — 좌측 380px 파이프라인 + 우측 PhaseChat 분할 레이아웃
-3. **ProjectView.tsx 수정** — 채팅 탭 제거 (7→6탭), 파이프라인 탭 full height
-4. **ChatPage.tsx 삭제** — PhaseChat으로 완전 교체
-5. **Backend stepId 지원** — ChatMessage, preload, index.ts, memory-manager, DB migration v7
+### Phase 7: 레거시 UI 정리
+5. `MainPanel.tsx` 삭제 — 데드코드 (어디서도 import 안 됨)
+6. `HarnessPage.tsx` 생성 — 2탭 구조 (카탈로그 HarnessBrowser + 에이전트 편집)
+7. `App.tsx` — PresetsPage → HarnessPage 교체
+8. `ProjectView.tsx` — 6탭 → 4탭 (plan/agents 탭 제거, 미사용 import 정리)
+9. `PresetsPage.tsx` — 헤더 축소 (HarnessPage 내부 탭용)
+10. 빌드 성공 확인 (3/3 모듈)
 
-#### Track B: 하네스 브라우저 연결
-6. **HarnessBrowser.tsx Tailwind 마이그레이션** — inline style→Tailwind, select/apply 모드 추가
-7. **HarnessSelectStep.tsx 생성** — Discovery 첫 단계로 하네스 선택 UI
-8. **discovery-store.ts 수정** — harness_select 초기 phase, selectedHarnessId 상태
-9. **DiscoveryPage.tsx 수정** — 4단계 위저드 (harness_select→chat→review→team_setup)
-10. **Sidebar.tsx 수정** — "프리셋" → "하네스" (🧩)
-11. **App.tsx 수정** — TopPage "presets"→"harness", 하네스 apply + GSD init 연결
-
-### 빌드: 성공 ✅ (3/3)
+### Dynamic Harness 설계
+11. Plan 작성: `docs/01-plan/features/dynamic-harness.plan.md`
+12. Design 작성: `docs/02-design/features/dynamic-harness.design.md`
 
 ## Architecture
 
 ```
 Electron App
 ├── main/
-│   ├── index.ts          — IPC 핸들러 (GSD/Harness/Chat + stepId)
-│   ├── gsd-bridge.ts     — GSD SDK 래퍼
-│   ├── harness-manager.ts — Harness-100 카탈로그
+│   ├── index.ts              — IPC 핸들러
+│   ├── gsd-bridge.ts         — GSD SDK 래퍼
+│   ├── harness-manager.ts    — Harness-100 카탈로그
+│   ├── agent-pool-manager.ts — ★TODO: 동적 에이전트 매칭 엔진
 │   ├── agent-runner/
-│   │   ├── sdk-chat.ts   — Agent SDK 채팅 (세션 유지)
-│   │   └── cli-bridge.ts — CLI 폴백
-│   ├── memory/           — 프로젝트/세션/플랜 DB (v7: stepId)
+│   │   ├── sdk-chat.ts       — Agent SDK 채팅
+│   │   └── cli-bridge.ts     — CLI 폴백
+│   ├── memory/               — 프로젝트/세션/플랜 DB (v7: stepId)
 │   └── tools/git-manager.ts
 ├── renderer/
 │   ├── pages/
-│   │   ├── OrchestrationPage.tsx — 좌(파이프라인) + 우(PhaseChat) ★REDESIGNED
-│   │   ├── ProjectView.tsx       — 6탭 (chat 제거) ★UPDATED
-│   │   └── Discovery/            — 4단계 위저드 ★UPDATED
+│   │   ├── OrchestrationPage.tsx — 좌(파이프라인) + 우(PhaseChat)
+│   │   ├── ProjectView.tsx       — 4탭 (overview, pipeline, specs, logs)
+│   │   ├── HarnessPage.tsx       — ★NEW (카탈로그 + 에이전트 편집)
+│   │   └── Discovery/            — 4단계 → ★TODO: 3단계로 변경
 │   ├── components/
-│   │   ├── PhaseChat.tsx          — ★NEW (단계별 채팅)
-│   │   ├── HarnessBrowser.tsx     — ★UPDATED (Tailwind + select모드)
+│   │   ├── PhaseChat.tsx
+│   │   ├── HarnessBrowser.tsx
 │   │   └── discovery/
-│   │       └── HarnessSelectStep.tsx — ★NEW
-│   └── stores/
-│       ├── app-store.ts           — activePhaseChatStepId ★UPDATED
-│       └── discovery-store.ts     — harness_select phase ★UPDATED
+│   │       ├── HarnessSelectStep.tsx — ★TODO: 삭제 예정
+│   │       ├── DiscoveryChat.tsx
+│   │       ├── SpecCardReview.tsx
+│   │       └── AgentTeamSetup.tsx    — ★TODO: PoolAgent 타입으로 전환
+│   ├── stores/
+│   │   ├── app-store.ts
+│   │   └── discovery-store.ts        — ★TODO: phase "chat"으로 시작
+│   └── data/
+│       └── agent-catalog.ts          — ★TODO: 삭제 (agent-pool로 대체)
+├── agent-pool/                       — ★TODO: 신규 디렉토리
+│   ├── core/ (4개 .md)
+│   ├── game/ (12개 .md)
+│   └── web/ (5개 .md)
 └── vendor/
     ├── gsd/sdk/dist/
     └── harness-100/ko,en/
@@ -63,27 +74,27 @@ Electron App
 
 ## Key Decisions
 
-1. **엔진은 오픈소스, GUI는 우리 것** — GSD가 파이프라인 관리, Harness-100이 에이전트 정의
-2. **SDK 채팅 + CLI 폴백** — SDK 실패 시 자동으로 CLI --print 전환
-3. **vendor/ 번들링** — exe에 GSD + Harness-100 내장 (~14MB)
-4. **파이프라인 + 채팅 통합 UX** — 채팅 탭을 없애고 파이프라인 좌/우 분할 레이아웃
-5. **Discovery 4단계** — 하네스 선택 → 대화 → 스펙 리뷰 → 팀 구성
+1. **엔진은 오픈소스, GUI는 우리 것** — GSD 파이프라인 관리, Harness-100 에이전트 정의
+2. **에이전트 풀 동적 조합** — 고정 하네스 선택 대신 specCard 키워드 기반 자동 매칭
+3. **Discovery chat 먼저** — 하네스 선택 단계 제거, 대화로 프로젝트 파악 후 자동 추천
+4. **agent-pool/ = 프로젝트 코드** — vendor가 아닌 소스에 포함, extraResources로 번들링
 
 ## Current State
 
 ### 완료 ✅
-- 파이프라인 + PhaseChat 좌/우 분할
-- 채팅 탭 완전 제거
-- HarnessBrowser Tailwind + select 모드
-- Discovery 4단계 위저드 (하네스 → 대화 → 리뷰 → 팀)
-- Backend stepId 지원 (DB v7)
-- 사이드바 "프리셋" → "하네스" 변경
+- Phase 6~7 코드 변경 (미커밋 상태)
+- Dynamic Harness Plan + Design 문서
 
-### 미완성 ⚠️
-- **하네스 탭 페이지 개선** — 현재 PresetsPage를 그대로 보여줌, HarnessBrowser를 포함하는 새 페이지 필요
-- **GSD init → .planning/ 생성 UI 확인** — 하네스 적용 후 GSD init 연결은 코드 추가했으나 미테스트
-- **레거시 UI 정리** — MainPanel.tsx의 Page 타입 등 구 라우팅 잔재
-- **E2E 감사 재실행** — Phase 5 변경 후 테스트 미실행
+### 미완성 ⚠️ (Do Phase — 4단계)
+- **Phase A**: `agent-pool/` 에이전트 .md 파일 21개 작성 (core 4 + game 12 + web 5)
+- **Phase B**: `AgentPoolManager` 백엔드 + IPC 핸들러 + preload API
+- **Phase C**: Discovery 플로우 변경 (chat 먼저, harness_select 제거, agent-catalog 삭제)
+- **Phase D**: electron-builder.yml extraResources + 빌드 확인
+
+### 미커밋 파일
+- 수정: App.tsx, ProjectView.tsx, PresetsPage.tsx, test-audit.js
+- 삭제: MainPanel.tsx
+- 신규: HarnessPage.tsx, dynamic-harness.plan.md, dynamic-harness.design.md
 
 ## Failed Approaches (Previous Sessions)
 
@@ -92,23 +103,26 @@ Electron App
 3. shell: true spawn: PowerShell이 claude.exe 못 찾음
 4. 대화 전체 재전송: 토큰 낭비 → Agent SDK 세션으로 해결
 5. 자체 파이프라인 엔진: 유지보수 비용 > 가치 → GSD로 교체
+6. 고정 하네스 선택 방식: 게임 하네스 1개뿐 + 커스텀 불가 → 동적 에이전트 풀로 전환
 
 ## Warnings
 
 - **vendor/는 .gitignore** — `bash scripts/prepare-vendor.sh`로 재생성 필요
 - **GSD SDK는 ESM-only** — `await import(fileUrl)` 패턴 사용
-- **gsd-tools.cjs 경로**: `vendor/gsd/bin/gsd-tools.cjs`
+- **에이전트 .md 파일 작성 시 사용자 허락 필요** — game 에이전트 내용 확인 받고 생성
+- **agent-catalog.ts 삭제 전** AgentTeamSetup.tsx의 CatalogAgent 타입 import 변경 필수
 - **DB v7 migration**: chat_messages에 step_id 컬럼 추가 (nullable)
+- **Phase 6~7 변경사항 미커밋** — 커밋 전 `npm run build`로 재확인 권장
 
 ## Resume Instructions
 
 1. `bash scripts/prepare-vendor.sh` (vendor/ 재생성)
-2. `npm run dev` (앱 실행 확인)
-3. **Phase 6: 하네스 → GSD init 연결 테스트**
-   - Discovery로 프로젝트 생성 → 하네스 선택 → .claude/ 적용 확인
-   - GSD 파이프라인 시작 → 이벤트 수신 확인
-4. **Phase 7: 레거시 UI 정리**
-   - MainPanel.tsx의 Page 타입 정리 (구 라우팅 잔재)
-   - 하네스 탭 페이지 개선 (HarnessBrowser + PresetsPage 통합)
-   - E2E 감사 재실행
-5. 참조 문서: `docs/01-plan/features/Tool-v2.plan.md`, `docs/02-design/features/Tool-v2.design.md`
+2. `npm run build` (빌드 확인 — Phase 6~7 변경 포함)
+3. 미커밋 변경사항 커밋 결정 (Phase 6~7 완료분)
+4. **Dynamic Harness Do Phase 시작**:
+   - Design 문서 참조: `docs/02-design/features/dynamic-harness.design.md`
+   - Phase A: `agent-pool/` 에이전트 .md 작성 (사용자 확인 후)
+   - Phase B: `src/main/agent-pool-manager.ts` 구현
+   - Phase C: Discovery 플로우 변경
+   - Phase D: 빌드 + 테스트
+5. 참조: `docs/01-plan/features/dynamic-harness.plan.md`

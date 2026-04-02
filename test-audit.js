@@ -39,6 +39,32 @@
     log("프리셋 로드", false, e.message);
   }
 
+  // ── 2b. 하네스 카탈로그 ──
+  try {
+    const catalog = await h.harness100.getByCategory();
+    const categories = Object.keys(catalog);
+    const total = Object.values(catalog).reduce((sum, arr) => sum + arr.length, 0);
+    log("하네스 카탈로그", total > 0, `${categories.length}개 카테고리, ${total}개 하네스`);
+  } catch (e) {
+    log("하네스 카탈로그", false, e.message);
+  }
+
+  // ── 2c. 하네스 검색 ──
+  try {
+    const results = await h.harness100.search("game");
+    log("하네스 검색", results.length > 0, `"game" 검색 → ${results.length}개 결과`);
+  } catch (e) {
+    log("하네스 검색", false, e.message);
+  }
+
+  // ── 2d. GSD SDK 로드 ──
+  try {
+    const status = await h.gsd.getStatus(".");
+    log("GSD SDK", true, `status=${JSON.stringify(status).slice(0, 80)}`);
+  } catch (e) {
+    log("GSD SDK", false, e.message);
+  }
+
   // ── 3. 프로젝트 생성 ──
   try {
     const specCard = {
