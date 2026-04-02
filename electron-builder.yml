@@ -34,6 +34,10 @@ extraResources:
     filter:
       - "**/*.md"
       - "**/.catalog-cache.json"
+  - from: agent-pool
+    to: agent-pool
+    filter:
+      - "**/*.md"
 
 win:
   target:

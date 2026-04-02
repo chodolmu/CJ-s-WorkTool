@@ -430,6 +430,31 @@ export interface GsdApprovalRequest {
 // Harness-100 프리셋
 // ============================================
 
+// ============================================
+// 에이전트 풀 (동적 하네스)
+// ============================================
+export interface PoolAgent {
+  id: string;              // frontmatter.name
+  displayName: string;
+  icon: string;
+  description: string;
+  tags: string[];
+  category: "core" | "game" | "web";
+  trigger: string;
+  model: string;
+  filePath: string;        // agent-pool/ 기준 상대 경로
+  // UI 전용 (recommend 결과)
+  matchScore?: number;
+  matchReason?: string;
+  recommendCategory?: "core" | "recommended" | "optional";
+}
+
+export interface PoolRecommendation {
+  core: PoolAgent[];
+  recommended: PoolAgent[];
+  optional: PoolAgent[];
+}
+
 export interface HarnessAgent {
   id: string;
   name: string;

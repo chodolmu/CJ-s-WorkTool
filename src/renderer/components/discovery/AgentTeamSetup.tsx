@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import { useDiscoveryStore } from "../../stores/discovery-store";
-import type { CatalogAgent } from "../../data/agent-catalog";
+import { useDiscoveryStore, type CatalogAgent } from "../../stores/discovery-store";
 import type { AgentDefinition } from "@shared/types";
 
 interface AgentTeamSetupProps {

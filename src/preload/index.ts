@@ -177,6 +177,15 @@ const api = {
     isRunning: () => ipcRenderer.invoke("gsd:is-running"),
   },
 
+  // ── Agent Pool (동적 하네스) ──
+  agentPool: {
+    getAll: () => ipcRenderer.invoke("agent-pool:get-all"),
+    recommend: (specCard: unknown) =>
+      ipcRenderer.invoke("agent-pool:recommend", { specCard }),
+    apply: (agentIds: string[], projectDir: string) =>
+      ipcRenderer.invoke("agent-pool:apply", { agentIds, projectDir }),
+  },
+
   // ── Harness-100 ──
   harness100: {
     getCatalog: () => ipcRenderer.invoke("harness:get-catalog"),

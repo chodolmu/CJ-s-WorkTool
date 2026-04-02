@@ -10,6 +10,7 @@ import { PlanManager } from "./memory/plan-manager";
 import { SdkChat } from "./agent-runner/sdk-chat";
 import { GsdBridge } from "./gsd-bridge";
 import { HarnessManager } from "./harness-manager";
+import { AgentPoolManager } from "./agent-pool-manager";
 
 let mainWindow: BrowserWindow | null = null;
 let presetManager: PresetManager;
@@ -19,6 +20,7 @@ let sessionManager: SessionManager;
 let planManager: PlanManager;
 let gsdBridge: GsdBridge;
 let harnessManager: HarnessManager;
+let agentPoolManager: AgentPoolManager;
 const pendingApprovals = new Map<string, (answer: string) => void>();
 
 // 프로젝트별 SDK 채팅 세션
@@ -98,6 +100,15 @@ function initServices(): void {
   harnessManager = new HarnessManager(path.join(vendorDir, "harness-100"));
   harnessManager.buildCatalog().catch((err) => {
     console.error("[HarnessManager] catalog build failed:", err);
+  });
+
+  // Agent Pool (동적 하네스)
+  const agentPoolDir = app.isPackaged
+    ? path.join(process.resourcesPath, "agent-pool")
+    : path.join(__dirname, "../../agent-pool");
+  agentPoolManager = new AgentPoolManager(agentPoolDir);
+  agentPoolManager.buildIndex().catch((err) => {
+    console.error("[AgentPool] index build failed:", err);
   });
 
   // GSD 이벤트 → Renderer 전달
@@ -530,6 +541,19 @@ function registerIpcHandlers(): void {
     harnessId: string; projectDir: string; lang?: "ko" | "en";
   }) => {
     return harnessManager.applyHarness(harnessId, projectDir, lang || "ko");
+  });
+
+  // ── Agent Pool ──
+  ipcMain.handle("agent-pool:get-all", async () => {
+    return agentPoolManager.getAll();
+  });
+
+  ipcMain.handle("agent-pool:recommend", async (_event, { specCard }: { specCard: import("../shared/types").SpecCard }) => {
+    return agentPoolManager.recommend(specCard);
+  });
+
+  ipcMain.handle("agent-pool:apply", async (_event, { agentIds, projectDir }: { agentIds: string[]; projectDir: string }) => {
+    return agentPoolManager.applyAgents(agentIds, projectDir);
   });
 
   // ── Project Delete ──

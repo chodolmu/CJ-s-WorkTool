@@ -119,7 +119,7 @@ export default function App() {
     }
   }, [setProject, initAgents]);
 
-  const handleDiscoveryComplete = async (specCard: SpecCard, selectedAgents: AgentDefinition[], workingDir: string, harnessId?: string) => {
+  const handleDiscoveryComplete = async (specCard: SpecCard, selectedAgents: AgentDefinition[], workingDir: string) => {
     setShowDiscovery(false);
 
     const agentDefs = selectedAgents.map((a) => ({
@@ -165,15 +165,16 @@ export default function App() {
     setTopPage("project");
     window.harness.session.start(project.id);
 
-    // 하네스 선택 시 .claude/ 적용 + GSD init
-    if (harnessId && window.harness.harness100) {
+    // 에이전트 풀 → 프로젝트 .claude/agents/ 적용
+    if (window.harness.agentPool && selectedAgents.length > 0) {
       try {
-        const applyResult = await window.harness.harness100.apply(harnessId, workingDir, "ko");
+        const agentIds = selectedAgents.map(a => a.id);
+        const applyResult = await window.harness.agentPool.apply(agentIds, workingDir) as { success: boolean; error?: string };
         if (!applyResult.success) {
-          console.warn("[Harness] apply failed:", applyResult.error);
+          console.warn("[AgentPool] apply failed:", applyResult.error);
         }
       } catch (err) {
-        console.error("[Harness] apply error:", err);
+        console.error("[AgentPool] apply error:", err);
       }
     }
     if (window.harness.gsd?.initProject) {
