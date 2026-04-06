@@ -1,9 +1,35 @@
 import { app, BrowserWindow, ipcMain, dialog } from "electron";
 import path from "path";
+import { execSync } from "child_process";
 import { createDatabase, getDataDir } from "./memory/database";
 import { MemoryManager } from "./memory/memory-manager";
 import { SdkChat } from "./agent-runner/sdk-chat";
 import { GitManager } from "./tools/git-manager";
+
+// Windows: Claude Code CLI가 git-bash를 찾을 수 있도록 환경변수 설정
+if (process.platform === "win32" && !process.env.CLAUDE_CODE_GIT_BASH_PATH) {
+  try {
+    const bashPath = execSync("where bash", { encoding: "utf-8", timeout: 3000, windowsHide: true }).trim().split("\n")[0];
+    if (bashPath) {
+      process.env.CLAUDE_CODE_GIT_BASH_PATH = bashPath.trim();
+    }
+  } catch {
+    // git-bash를 못 찾으면 일반적인 경로 시도
+    const candidates = [
+      "C:\\Program Files\\Git\\bin\\bash.exe",
+      "C:\\Program Files\\Git\\usr\\bin\\bash.exe",
+      "D:\\Git\\bin\\bash.exe",
+      "D:\\Git\\usr\\bin\\bash.exe",
+    ];
+    for (const p of candidates) {
+      try {
+        require("fs").accessSync(p);
+        process.env.CLAUDE_CODE_GIT_BASH_PATH = p;
+        break;
+      } catch { /* skip */ }
+    }
+  }
+}
 
 let mainWindow: BrowserWindow | null = null;
 let memoryManager: MemoryManager;
