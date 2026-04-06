@@ -21,23 +21,12 @@ export class SdkChat extends EventEmitter {
 
     try {
       const { execSync } = require("child_process");
-      const gitPath = execSync("where git", {
+      const bashPath = execSync("where bash", {
         encoding: "utf-8", timeout: 3000, shell: true, windowsHide: true,
-      }).trim().split("\n")[0].trim();
+      }).trim().split(/\r?\n/)[0].trim();
 
-      if (!gitPath) return;
-
-      // git.exe 위치에서 상위로 올라가며 bash.exe 찾기
-      let dir = path.dirname(gitPath);
-      for (let i = 0; i < 4 && dir !== path.dirname(dir); i++) {
-        for (const sub of ["usr\\bin\\bash.exe", "bin\\bash.exe"]) {
-          const bp = path.join(dir, sub);
-          if (fs.existsSync(bp)) {
-            process.env.CLAUDE_CODE_GIT_BASH_PATH = bp;
-            return;
-          }
-        }
-        dir = path.dirname(dir);
+      if (bashPath && fs.existsSync(bashPath)) {
+        process.env.CLAUDE_CODE_GIT_BASH_PATH = bashPath;
       }
     } catch { /* ignore */ }
   }
