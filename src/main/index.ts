@@ -8,25 +8,46 @@ import { GitManager } from "./tools/git-manager";
 
 // Windows: Claude Code CLI가 git-bash를 찾을 수 있도록 환경변수 설정
 if (process.platform === "win32" && !process.env.CLAUDE_CODE_GIT_BASH_PATH) {
+  const fs = require("fs");
+
+  // 1단계: git 실행파일 경로에서 bash 추론
+  let found = false;
   try {
-    const bashPath = execSync("where bash", { encoding: "utf-8", timeout: 3000, windowsHide: true }).trim().split("\n")[0];
-    if (bashPath) {
-      process.env.CLAUDE_CODE_GIT_BASH_PATH = bashPath.trim();
+    const gitPath = execSync("where git", { encoding: "utf-8", timeout: 3000, shell: true, windowsHide: true }).trim().split("\n")[0].trim();
+    if (gitPath) {
+      // git.exe 위치에서 Git 루트를 찾기 (1~3단계 상위 탐색)
+      let dir = path.dirname(gitPath);
+      for (let i = 0; i < 3 && dir !== path.dirname(dir); i++) {
+        const bashCandidates = [
+          path.join(dir, "usr", "bin", "bash.exe"),
+          path.join(dir, "bin", "bash.exe"),
+        ];
+        for (const bp of bashCandidates) {
+          if (fs.existsSync(bp)) {
+            process.env.CLAUDE_CODE_GIT_BASH_PATH = bp;
+            found = true;
+            break;
+          }
+        }
+        if (found) break;
+        dir = path.dirname(dir);
+      }
     }
-  } catch {
-    // git-bash를 못 찾으면 일반적인 경로 시도
+  } catch { /* git not found via where */ }
+
+  // 2단계: 일반적인 경로 하드코딩 시도
+  if (!found) {
     const candidates = [
-      "C:\\Program Files\\Git\\bin\\bash.exe",
       "C:\\Program Files\\Git\\usr\\bin\\bash.exe",
-      "D:\\Git\\bin\\bash.exe",
+      "C:\\Program Files\\Git\\bin\\bash.exe",
       "D:\\Git\\usr\\bin\\bash.exe",
+      "D:\\Git\\bin\\bash.exe",
     ];
     for (const p of candidates) {
-      try {
-        require("fs").accessSync(p);
+      if (fs.existsSync(p)) {
         process.env.CLAUDE_CODE_GIT_BASH_PATH = p;
         break;
-      } catch { /* skip */ }
+      }
     }
   }
 }
