@@ -28,6 +28,18 @@ const api = {
     load: (projectId: string) => ipcRenderer.invoke("project:load", { projectId }),
     loadLast: () => ipcRenderer.invoke("project:load-last"),
     delete: (projectId: string) => ipcRenderer.invoke("project:delete", { projectId }),
+    setWorkingDir: (projectId: string, workingDir: string) =>
+      ipcRenderer.invoke("project:set-working-dir", { projectId, workingDir }),
+  },
+
+  // ── Chat (인터랙티브 Claude 세션) ──
+  chat: {
+    start: (projectId: string, workingDir: string) =>
+      ipcRenderer.invoke("chat:start", { projectId, workingDir }),
+    send: (projectId: string, message: string) =>
+      ipcRenderer.invoke("chat:send", { projectId, message }),
+    stop: (projectId: string) =>
+      ipcRenderer.invoke("chat:stop", { projectId }),
   },
 
   // ── Planning ─���

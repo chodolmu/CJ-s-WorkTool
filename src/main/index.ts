@@ -1,46 +1,16 @@
 import { app, BrowserWindow, ipcMain, dialog } from "electron";
 import fs from "fs";
 import path from "path";
-import { execSync } from "child_process";
 import { createDatabase, getDataDir } from "./memory/database";
 import { MemoryManager } from "./memory/memory-manager";
 import { SdkChat } from "./agent-runner/sdk-chat";
 import { GitManager } from "./tools/git-manager";
 
-// Windows: Claude Code CLI가 git-bash를 요구하므로 환경변수 자동 설정
-if (process.platform === "win32" && !process.env.CLAUDE_CODE_GIT_BASH_PATH) {
-  // git 경로에서 bash 위치를 추론
-  try {
-    const gitPath = execSync("where git", { encoding: "utf-8", timeout: 3000, shell: true, windowsHide: true }).trim().split("\n")[0].trim();
-    let dir = path.dirname(gitPath);
-    for (let i = 0; i < 4 && dir !== path.dirname(dir); i++) {
-      for (const sub of ["usr\\bin\\bash.exe", "bin\\bash.exe"]) {
-        const bp = path.join(dir, sub);
-        if (fs.existsSync(bp)) { process.env.CLAUDE_CODE_GIT_BASH_PATH = bp; break; }
-      }
-      if (process.env.CLAUDE_CODE_GIT_BASH_PATH) break;
-      dir = path.dirname(dir);
-    }
-  } catch { /* ignore */ }
-}
-
 let mainWindow: BrowserWindow | null = null;
 let memoryManager: MemoryManager;
 
-// 프로젝트별 SDK 채팅 세션
-const sdkChatSessions = new Map<string, SdkChat>();
-
-function getSdkChat(projectId: string): SdkChat {
-  let chat = sdkChatSessions.get(projectId);
-  if (!chat) {
-    chat = new SdkChat();
-    sdkChatSessions.set(projectId, chat);
-  }
-  return chat;
-}
-
-// Discovery 전용 SDK 채팅
-let discoverySdkChat: SdkChat | null = null;
+// 프로젝트별 인터랙티브 Claude 세션
+const claudeSessions = new Map<string, SdkChat>();
 
 // 실행 상태
 let executionRunning = false;
@@ -103,8 +73,7 @@ function registerIpcHandlers(): void {
   // ── System Check ──
   ipcMain.handle("system:check-claude-code", async () => {
     try {
-      const { execSync } = require("child_process");
-      const version = execSync("claude --version", {
+      const version = require("child_process").execSync("claude --version", {
         encoding: "utf-8", timeout: 5000, shell: true, windowsHide: true,
       }).trim();
       return { installed: true, version };
@@ -114,7 +83,7 @@ function registerIpcHandlers(): void {
   });
 
   // ══════════════════════════════════
-  // Discovery
+  // Discovery — claude -p로 one-shot 호출
   // ══════════════════════════════════
 
   ipcMain.handle("discovery:chat", async (_event, { messages }: {
@@ -122,7 +91,7 @@ function registerIpcHandlers(): void {
   }) => {
     const latestUserMsg = messages[messages.length - 1]?.content ?? "";
 
-    const discoverySystemPrompt = `당신은 프로젝트 기획 전문가입니다. 사용자의 프로젝트 아이디어를 구체화하여 SpecCard를 만들어야 합니다.
+    const systemPrompt = `당신은 프로젝트 기획 전문가입니다. 사용자의 프로젝트 아이디어를 구체화하여 SpecCard를 만들어야 합니다.
 
 ## 규칙
 1. 한국어로 대화. 한 번에 2~3개 질문. 선택지를 제시하면 답하기 쉬워집니다.
@@ -139,34 +108,30 @@ function registerIpcHandlers(): void {
 {"ready":true,"specCard":{"projectName":"이름","projectType":"유형","description":"설명","coreDecisions":["결정1","결정2"],"techStack":["기술1"],"features":["기능1","기능2"]}}
 5. 확인 전에는 JSON 금지.`;
 
+    // 이전 대화를 포함해서 전체 맥락 전달
+    const fullPrompt = messages.length > 1
+      ? messages.map(m => `[${m.role === "user" ? "사용자" : "AI"}]: ${m.content}`).join("\n\n") + `\n\n위 대화를 이어서 응답하세요.`
+      : latestUserMsg;
+
     try {
-      if (!discoverySdkChat) {
-        discoverySdkChat = new SdkChat();
-      }
-
-      const discoveryPrompt = messages.length > 1
-        ? `이전 대화를 이어서 진행합니다.\n\n사용자: ${latestUserMsg}`
-        : latestUserMsg;
-
-      const result = await discoverySdkChat.send({
-        message: discoveryPrompt,
-        systemPrompt: discoverySystemPrompt,
+      const chat = new SdkChat();
+      const { response } = await chat.send({
+        message: fullPrompt,
+        systemPrompt,
         workingDir: ".",
       });
 
       // JSON 스펙카드 추출
       let specCard = null;
       try {
-        const jsonMatch = result.response.match(/\{[\s\S]*"ready"\s*:\s*true[\s\S]*\}/);
+        const jsonMatch = response.match(/\{[\s\S]*"ready"\s*:\s*true[\s\S]*\}/);
         if (jsonMatch) {
           const parsed = JSON.parse(jsonMatch[0]);
-          if (parsed.ready && parsed.specCard) {
-            specCard = parsed.specCard;
-          }
+          if (parsed.ready && parsed.specCard) specCard = parsed.specCard;
         }
-      } catch { /* 파싱 실패 — 일반 대화 */ }
+      } catch { /* 일반 대화 */ }
 
-      const cleanResponse = result.response
+      const cleanResponse = response
         .replace(/\{[\s\S]*"ready"\s*:\s*true[\s\S]*\}/g, "")
         .replace(/\n{3,}/g, "\n\n")
         .trim();
@@ -177,21 +142,18 @@ function registerIpcHandlers(): void {
       };
     } catch (err) {
       return {
-        response: `AI 연결 오류: ${String(err).slice(0, 300)}`,
+        response: `AI 연결 오류: ${String(err).slice(0, 500)}`,
         error: String(err),
       };
     }
   });
 
   ipcMain.handle("discovery:complete", (_event, { projectName, specCard, workingDir }: {
-    projectName: string;
-    specCard: unknown;
-    workingDir?: string;
+    projectName: string; specCard: unknown; workingDir?: string;
   }) => {
     const project = memoryManager.createProject(projectName, "", workingDir ?? "");
     memoryManager.updateProjectSpecCard(project.id, specCard as any);
     memoryManager.updateProjectStatus(project.id, "planning");
-    discoverySdkChat = null; // Discovery 세션 정리
     return memoryManager.getProject(project.id);
   });
 
@@ -202,76 +164,115 @@ function registerIpcHandlers(): void {
   ipcMain.handle("project:list", () => memoryManager.listProjects());
   ipcMain.handle("project:load", (_event, { projectId }: { projectId: string }) => memoryManager.getProject(projectId));
   ipcMain.handle("project:delete", (_event, { projectId }: { projectId: string }) => {
+    // 세션도 정리
+    const session = claudeSessions.get(projectId);
+    if (session) { session.stop(); claudeSessions.delete(projectId); }
     memoryManager.deleteProject(projectId);
     return { ok: true };
   });
-  ipcMain.handle("project:load-last", () => {
-    const project = memoryManager.getLastProject();
-    return project ?? null;
+  ipcMain.handle("project:load-last", () => memoryManager.getLastProject() ?? null);
+
+  // 프로젝트 폴더 변경
+  ipcMain.handle("project:set-working-dir", async (_event, { projectId, workingDir }: {
+    projectId: string; workingDir: string;
+  }) => {
+    const db = (memoryManager as any).db;
+    db.prepare("UPDATE projects SET working_dir = ?, updated_at = ? WHERE id = ?")
+      .run(workingDir, new Date().toISOString(), projectId);
+    return { ok: true };
   });
 
   // ══════════════════════════════════
-  // Planning
+  // Claude 인터랙티브 채팅 — 프로젝트 폴더에서 claude를 띄움
+  // ══════════════════════════════════
+
+  ipcMain.handle("chat:start", (_event, { projectId, workingDir }: {
+    projectId: string; workingDir: string;
+  }) => {
+    // 기존 세션 정리
+    const existing = claudeSessions.get(projectId);
+    if (existing) existing.stop();
+
+    const chat = new SdkChat();
+    claudeSessions.set(projectId, chat);
+
+    // stdout → renderer
+    chat.on("stdout", (text: string) => {
+      mainWindow?.webContents.send("chat:output", { projectId, text });
+    });
+
+    // stderr → renderer
+    chat.on("stderr", (text: string) => {
+      mainWindow?.webContents.send("chat:output", { projectId, text });
+    });
+
+    // 프로세스 종료
+    chat.on("exit", (code: number) => {
+      mainWindow?.webContents.send("chat:exit", { projectId, code });
+      claudeSessions.delete(projectId);
+    });
+
+    chat.on("error", (message: string) => {
+      mainWindow?.webContents.send("chat:error", { projectId, message });
+      claudeSessions.delete(projectId);
+    });
+
+    chat.startInteractive(workingDir);
+    return { ok: true };
+  });
+
+  ipcMain.handle("chat:send", (_event, { projectId, message }: {
+    projectId: string; message: string;
+  }) => {
+    const chat = claudeSessions.get(projectId);
+    if (!chat?.isRunning) return { error: "세션이 없습니다. 먼저 시작하세요." };
+    chat.write(message);
+    return { ok: true };
+  });
+
+  ipcMain.handle("chat:stop", (_event, { projectId }: { projectId: string }) => {
+    const chat = claudeSessions.get(projectId);
+    if (chat) { chat.stop(); claudeSessions.delete(projectId); }
+    return { ok: true };
+  });
+
+  // ══════════════════════════════════
+  // Planning — claude -p one-shot
   // ══════════════════════════════════
 
   ipcMain.handle("planning:generate", async (_event, { projectId }: { projectId: string }) => {
     const project = memoryManager.getProject(projectId);
     if (!project?.specCard) return { error: "프로젝트 또는 SpecCard가 없습니다." };
 
-    const systemPrompt = `너는 소프트웨어 프로젝트 매니저다.
-사용자가 제공한 프로젝트 정의(SpecCard)를 기반으로 프로젝트를 마일스톤 → 스프린트 → 태스크로 분할하라.
+    const systemPrompt = `너는 소프트웨어 프로젝트 매니저다. JSON만 출력하라.
+프로젝트를 마일스톤 → 스프린트 → 태스크로 분할하라.
 
-## 분할 원칙
-- 태스크 하나 = AI가 한 세션에서 완료할 수 있는 크기 (한 파일~몇 파일)
-- 태스크 하나 = "~하면 끝" 한 문장으로 완료 조건 정의 가능
-- 의존성은 최소화하여 병렬 실행 가능하게
+분할 원칙:
+- 태스크 = AI가 한 세션에서 완료할 수 있는 크기
 - 마일스톤 = 배포/데모 가능한 단위
 - 스프린트 = 검증 가능한 단위
+- 난이도: easy(haiku)/medium(sonnet)/hard(opus)
 
-## 난이도 판정
-- easy (haiku): 보일러플레이트, 설정, 단순 복사, CSS
-- medium (sonnet): 일반 기능 구현, 버그 수정, 리팩토링
-- hard (opus): 아키텍처 설계, 복잡한 알고리즘, 다중 파일 변경
-
-## 출력
-반드시 아래 JSON 스키마의 배열을 출력하라. 다른 텍스트 없이 JSON만:
-{
-  "milestones": [{
-    "id": "m1", "name": "", "description": "", "orderIndex": 0, "status": "pending",
-    "validationStrategy": "",
-    "sprints": [{
-      "id": "m1-s1", "milestoneId": "m1", "name": "", "description": "", "orderIndex": 0,
-      "status": "pending", "validationStrategy": "", "dependencies": [],
-      "tasks": [{
-        "id": "m1-s1-t1", "sprintId": "m1-s1", "name": "", "description": "", "plan": "",
-        "orderIndex": 0, "status": "pending", "difficulty": "medium", "model": "sonnet",
-        "executionMode": "single", "dependencies": [],
-        "validation": { "auto": ["build", "typecheck"] },
-        "estimatedFiles": []
-      }]
-    }]
-  }]
-}`;
+출력 스키마:
+{"milestones":[{"id":"m1","name":"","description":"","orderIndex":0,"status":"pending","validationStrategy":"","sprints":[{"id":"m1-s1","milestoneId":"m1","name":"","description":"","orderIndex":0,"status":"pending","validationStrategy":"","dependencies":[],"tasks":[{"id":"m1-s1-t1","sprintId":"m1-s1","name":"","description":"","plan":"","orderIndex":0,"status":"pending","difficulty":"medium","model":"sonnet","executionMode":"single","dependencies":[],"validation":{"auto":["build","typecheck"]},"estimatedFiles":[]}]}]}]}`;
 
     try {
-      const sdkChat = new SdkChat();
-      const { response } = await sdkChat.send({
+      const chat = new SdkChat();
+      const { response } = await chat.send({
         message: `SpecCard:\n${JSON.stringify(project.specCard, null, 2)}`,
         systemPrompt,
         workingDir: project.workingDir || ".",
       });
 
-      // JSON 추출
       const jsonMatch = response.match(/\{[\s\S]*"milestones"[\s\S]*\}/);
-      if (!jsonMatch) return { error: "PM이 유효한 JSON을 생성하지 못했습니다." };
+      if (!jsonMatch) return { error: "PM이 유효한 JSON을 생성하지 못했습니다.\n\n" + response.slice(0, 500) };
 
       const plan = JSON.parse(jsonMatch[0]);
       memoryManager.savePlan(projectId, plan);
       memoryManager.updateProjectStatus(projectId, "planning");
-
       return { success: true, plan };
     } catch (err) {
-      return { error: `계획 생성 실패: ${String(err).slice(0, 300)}` };
+      return { error: `계획 생성 실패: ${String(err)}` };
     }
   });
 
@@ -282,14 +283,11 @@ function registerIpcHandlers(): void {
 
   ipcMain.handle("planning:approve", (_event, { projectId }: { projectId: string }) => {
     memoryManager.updateProjectStatus(projectId, "active");
-    // 첫 번째 마일스톤과 스프린트를 active로
     const milestones = memoryManager.getMilestones(projectId);
     if (milestones.length > 0) {
       memoryManager.updateMilestoneStatus(milestones[0].id, "active");
       const sprints = memoryManager.getSprints(milestones[0].id);
-      if (sprints.length > 0) {
-        memoryManager.updateSprintStatus(sprints[0].id, "active");
-      }
+      if (sprints.length > 0) memoryManager.updateSprintStatus(sprints[0].id, "active");
     }
     return { success: true };
   });
@@ -305,40 +303,24 @@ function registerIpcHandlers(): void {
   });
 
   // ══════════════════════════════════
-  // Execution
+  // Execution — claude -p로 태스크 하나씩 실행
   // ══════════════════════════════════
 
   ipcMain.handle("execution:start", async (_event, { projectId }: { projectId: string }) => {
     if (executionRunning) return { error: "이미 실행 중입니다." };
-
     executionRunning = true;
     executionPaused = false;
-
-    // 비동기로 태스크 루프 시작
     runExecutionLoop(projectId).catch((err) => {
       console.error("[Execution] loop error:", err);
       executionRunning = false;
       mainWindow?.webContents.send("execution:error", { message: String(err) });
     });
-
     return { success: true };
   });
 
-  ipcMain.handle("execution:pause", () => {
-    executionPaused = true;
-    return { success: true };
-  });
-
-  ipcMain.handle("execution:resume", () => {
-    executionPaused = false;
-    return { success: true };
-  });
-
-  ipcMain.handle("execution:stop", () => {
-    executionRunning = false;
-    executionPaused = false;
-    return { success: true };
-  });
+  ipcMain.handle("execution:pause", () => { executionPaused = true; return { success: true }; });
+  ipcMain.handle("execution:resume", () => { executionPaused = false; return { success: true }; });
+  ipcMain.handle("execution:stop", () => { executionRunning = false; executionPaused = false; return { success: true }; });
 
   ipcMain.handle("execution:retry-task", async (_event, { taskId }: { taskId: string }) => {
     memoryManager.incrementTaskRetry(taskId);
@@ -369,26 +351,19 @@ function registerIpcHandlers(): void {
   // Data
   // ══════════════════════════════════
 
-  ipcMain.handle("data:get-project-tree", (_event, { projectId }: { projectId: string }) => {
-    return memoryManager.getProjectTree(projectId);
-  });
-
+  ipcMain.handle("data:get-project-tree", (_event, { projectId }: { projectId: string }) => memoryManager.getProjectTree(projectId));
   ipcMain.handle("data:get-task-detail", (_event, { taskId }: { taskId: string }) => {
     const task = memoryManager.getTask(taskId);
     if (!task) return null;
-    const handoff = memoryManager.getHandoff(taskId);
-    const validation = memoryManager.getValidation("task", taskId);
-    const logs = memoryManager.getTaskLogs(taskId);
-    return { task, handoff, validation, logs };
+    return {
+      task,
+      handoff: memoryManager.getHandoff(taskId),
+      validation: memoryManager.getValidation("task", taskId),
+      logs: memoryManager.getTaskLogs(taskId),
+    };
   });
-
-  ipcMain.handle("data:get-handoff", (_event, { taskId }: { taskId: string }) => {
-    return memoryManager.getHandoff(taskId);
-  });
-
-  ipcMain.handle("data:get-project-stats", (_event, { projectId }: { projectId: string }) => {
-    return memoryManager.getProjectStats(projectId);
-  });
+  ipcMain.handle("data:get-handoff", (_event, { taskId }: { taskId: string }) => memoryManager.getHandoff(taskId));
+  ipcMain.handle("data:get-project-stats", (_event, { projectId }: { projectId: string }) => memoryManager.getProjectStats(projectId));
 
   // ══════════════════════════════════
   // Git
@@ -399,30 +374,20 @@ function registerIpcHandlers(): void {
     if (!git.isGitRepo()) return { isRepo: false };
     return { isRepo: true, ...git.getStatus() };
   });
-
   ipcMain.handle("git:init", (_event, { workingDir }: { workingDir: string }) => {
-    const git = new GitManager(workingDir);
-    git.init();
+    new GitManager(workingDir).init();
     return { ok: true };
   });
-
-  ipcMain.handle("git:commit", (_event, { workingDir, featureName, summary }: {
-    workingDir: string; featureName: string; summary: string;
-  }) => {
-    const git = new GitManager(workingDir);
-    return git.autoCommit(featureName, summary);
+  ipcMain.handle("git:commit", (_event, { workingDir, featureName, summary }: { workingDir: string; featureName: string; summary: string }) => {
+    return new GitManager(workingDir).autoCommit(featureName, summary);
   });
-
   ipcMain.handle("git:log", (_event, { workingDir, count }: { workingDir: string; count?: number }) => {
     const git = new GitManager(workingDir);
-    if (!git.isGitRepo()) return [];
-    return git.getRecentCommits(count ?? 10);
+    return git.isGitRepo() ? git.getRecentCommits(count ?? 10) : [];
   });
-
   ipcMain.handle("git:diff", (_event, { workingDir }: { workingDir: string }) => {
     const git = new GitManager(workingDir);
-    if (!git.isGitRepo()) return "";
-    return git.getDiff();
+    return git.isGitRepo() ? git.getDiff() : "";
   });
 }
 
@@ -432,10 +397,7 @@ function registerIpcHandlers(): void {
 
 async function runExecutionLoop(projectId: string): Promise<void> {
   while (executionRunning) {
-    if (executionPaused) {
-      await new Promise((r) => setTimeout(r, 1000));
-      continue;
-    }
+    if (executionPaused) { await new Promise(r => setTimeout(r, 1000)); continue; }
 
     const task = memoryManager.getNextPendingTask(projectId);
     if (!task) {
@@ -444,30 +406,23 @@ async function runExecutionLoop(projectId: string): Promise<void> {
       break;
     }
 
-    // 의존성 체크
     if (task.dependencies.length > 0) {
-      const allDepsComplete = task.dependencies.every((depId) => {
-        const depTask = memoryManager.getTask(depId);
-        return depTask?.status === "completed" || depTask?.status === "skipped";
+      const allDeps = task.dependencies.every(depId => {
+        const d = memoryManager.getTask(depId);
+        return d?.status === "completed" || d?.status === "skipped";
       });
-      if (!allDepsComplete) {
-        // 의존성 미충족 → 건너뛰고 다음 찾기
-        memoryManager.updateTaskStatus(task.id, "queued");
-        continue;
-      }
+      if (!allDeps) { memoryManager.updateTaskStatus(task.id, "queued"); continue; }
     }
 
     activeTaskId = task.id;
     await executeTask(task, projectId);
     activeTaskId = null;
   }
-
   executionRunning = false;
 }
 
 async function executeTask(task: import("@shared/types").Task, projectId: string): Promise<void> {
   const startTime = Date.now();
-
   memoryManager.updateTaskStatus(task.id, "running");
   memoryManager.addTaskLog(task.id, "start", `태스크 시작: ${task.name}`);
   mainWindow?.webContents.send("execution:task-started", { taskId: task.id, model: task.model });
@@ -476,21 +431,13 @@ async function executeTask(task: import("@shared/types").Task, projectId: string
   if (!project) return;
 
   // 컨텍스트 조립
-  const relatedHandoffs: string[] = [];
+  const handoffs: string[] = [];
   for (const depId of task.dependencies) {
-    const handoff = memoryManager.getHandoff(depId);
-    if (handoff) {
-      relatedHandoffs.push(`## ${depId} Handoff\n${handoff.summary}\nFiles: ${handoff.filesChanged.join(", ")}\nDecisions: ${handoff.designDecisions.join("; ")}`);
-    }
+    const h = memoryManager.getHandoff(depId);
+    if (h) handoffs.push(`[${depId}] ${h.summary} | Files: ${h.filesChanged.join(", ")}`);
   }
 
-  const systemPrompt = `너는 소프트웨어 개발자다. 아래 태스크를 완료하라.
-완료 후 반드시 아래 JSON 형식으로 handoff를 출력하라:
-{"handoff":{"summary":"무엇을 했는지","filesChanged":["파일"],"designDecisions":["결정"],"knownIssues":["이슈"],"nextTaskNotes":"다음 태스크 참고사항"}}`;
-
-  const taskPrompt = `# 태스크: ${task.name}
-
-## 설명
+  const prompt = `# 태스크: ${task.name}
 ${task.description}
 
 ## 계획
@@ -498,32 +445,20 @@ ${task.plan}
 
 ## 예상 변경 파일
 ${task.estimatedFiles.join(", ") || "없음"}
+${handoffs.length > 0 ? `\n## 이전 태스크 결과\n${handoffs.join("\n")}` : ""}
 
-${relatedHandoffs.length > 0 ? `## 이전 태스크 Handoff\n${relatedHandoffs.join("\n\n")}` : ""}
-
-## 검증 조건
-${task.validation.auto.join(", ")}
-${task.validation.manual ? `수동 확인: ${task.validation.manual}` : ""}`;
+완료 후 JSON handoff를 출력:
+{"handoff":{"summary":"무엇을 했는지","filesChanged":["파일"],"designDecisions":["결정"],"knownIssues":["이슈"],"nextTaskNotes":"참고"}}`;
 
   try {
-    const sdkChat = new SdkChat();
-
-    sdkChat.on("stream", (data: { text: string }) => {
-      mainWindow?.webContents.send("execution:task-progress", {
-        taskId: task.id, eventType: "output", message: data.text,
-      });
-    });
-    sdkChat.on("activity", (data: any) => {
-      const eventType = data.type === "tool_use" ? "tool_call" : "thinking";
-      memoryManager.addTaskLog(task.id, eventType, JSON.stringify(data).slice(0, 500));
-      mainWindow?.webContents.send("execution:task-progress", {
-        taskId: task.id, eventType, message: data.tool ?? data.type,
-      });
+    const chat = new SdkChat();
+    chat.on("stream", (data: { text: string }) => {
+      mainWindow?.webContents.send("execution:task-progress", { taskId: task.id, eventType: "output", message: data.text });
     });
 
-    const { response } = await sdkChat.send({
-      message: taskPrompt,
-      systemPrompt,
+    const { response } = await chat.send({
+      message: prompt,
+      systemPrompt: "너는 소프트웨어 개발자다. 태스크를 완료하고 handoff JSON을 출력하라.",
       workingDir: project.workingDir || ".",
     });
 
@@ -532,23 +467,16 @@ ${task.validation.manual ? `수동 확인: ${task.validation.manual}` : ""}`;
     // Handoff 추출
     let handoffData = null;
     try {
-      const handoffMatch = response.match(/\{[\s\S]*"handoff"[\s\S]*\}/);
-      if (handoffMatch) {
-        const parsed = JSON.parse(handoffMatch[0]);
-        handoffData = parsed.handoff;
-      }
-    } catch { /* 파싱 실패 */ }
+      const m = response.match(/\{[\s\S]*"handoff"[\s\S]*\}/);
+      if (m) handoffData = JSON.parse(m[0]).handoff;
+    } catch { /* */ }
 
     if (handoffData) {
       const { v4: uuid } = require("uuid");
       memoryManager.createHandoff({
-        id: uuid(),
-        taskId: task.id,
-        projectId,
-        summary: handoffData.summary ?? "",
-        filesChanged: handoffData.filesChanged ?? [],
-        designDecisions: handoffData.designDecisions ?? [],
-        knownIssues: handoffData.knownIssues ?? [],
+        id: uuid(), taskId: task.id, projectId,
+        summary: handoffData.summary ?? "", filesChanged: handoffData.filesChanged ?? [],
+        designDecisions: handoffData.designDecisions ?? [], knownIssues: handoffData.knownIssues ?? [],
         nextTaskNotes: handoffData.nextTaskNotes,
       });
     }
@@ -556,69 +484,45 @@ ${task.validation.manual ? `수동 확인: ${task.validation.manual}` : ""}`;
     memoryManager.updateTaskCost(task.id, 0, durationMs);
     memoryManager.updateTaskStatus(task.id, "completed");
     memoryManager.addTaskLog(task.id, "complete", `완료 (${Math.round(durationMs / 1000)}초)`);
-
-    mainWindow?.webContents.send("execution:task-completed", {
-      taskId: task.id, handoff: handoffData, durationMs,
-    });
-
-    // 스프린트 완료 체크
+    mainWindow?.webContents.send("execution:task-completed", { taskId: task.id, handoff: handoffData, durationMs });
     checkSprintCompletion(task.sprintId, projectId);
-
   } catch (err) {
     const durationMs = Date.now() - startTime;
     memoryManager.updateTaskCost(task.id, 0, durationMs);
     memoryManager.addTaskLog(task.id, "error", String(err).slice(0, 500));
-
     if (task.retryCount < 2) {
       memoryManager.incrementTaskRetry(task.id);
       memoryManager.updateTaskStatus(task.id, "pending");
-      mainWindow?.webContents.send("execution:task-failed", {
-        taskId: task.id, error: String(err).slice(0, 300), retryCount: task.retryCount + 1,
-      });
     } else {
       memoryManager.updateTaskStatus(task.id, "failed");
-      mainWindow?.webContents.send("execution:task-failed", {
-        taskId: task.id, error: String(err).slice(0, 300), retryCount: task.retryCount + 1,
-      });
     }
+    mainWindow?.webContents.send("execution:task-failed", { taskId: task.id, error: String(err).slice(0, 300), retryCount: task.retryCount + 1 });
   }
 }
 
 function checkSprintCompletion(sprintId: string, projectId: string): void {
   const tasks = memoryManager.getTasks(sprintId);
-  const allDone = tasks.every((t) => t.status === "completed" || t.status === "skipped");
-  if (allDone) {
-    memoryManager.updateSprintStatus(sprintId, "completed");
-    mainWindow?.webContents.send("execution:sprint-completed", { sprintId });
+  if (!tasks.every(t => t.status === "completed" || t.status === "skipped")) return;
 
-    // 마일스톤 완료 체크
-    const sprint = memoryManager.getSprintsByProject(projectId).find((s) => s.id === sprintId);
-    if (sprint) {
-      const milestoneId = sprint.milestoneId;
-      const sprints = memoryManager.getSprints(milestoneId);
-      const allSprintsDone = sprints.every((s) => s.status === "completed");
-      if (allSprintsDone) {
-        memoryManager.updateMilestoneStatus(milestoneId, "completed");
-        mainWindow?.webContents.send("execution:milestone-completed", { milestoneId });
+  memoryManager.updateSprintStatus(sprintId, "completed");
+  mainWindow?.webContents.send("execution:sprint-completed", { sprintId });
 
-        // 다음 마일스톤 활성화
-        const milestones = memoryManager.getMilestones(projectId);
-        const nextMilestone = milestones.find((m) => m.status === "pending");
-        if (nextMilestone) {
-          memoryManager.updateMilestoneStatus(nextMilestone.id, "active");
-          const nextSprints = memoryManager.getSprints(nextMilestone.id);
-          if (nextSprints.length > 0) {
-            memoryManager.updateSprintStatus(nextSprints[0].id, "active");
-          }
-        }
-      } else {
-        // 다음 스프린트 활성화
-        const nextSprint = sprints.find((s) => s.status === "pending");
-        if (nextSprint) {
-          memoryManager.updateSprintStatus(nextSprint.id, "active");
-        }
-      }
+  const sprint = memoryManager.getSprintsByProject(projectId).find(s => s.id === sprintId);
+  if (!sprint) return;
+
+  const sprints = memoryManager.getSprints(sprint.milestoneId);
+  if (sprints.every(s => s.status === "completed")) {
+    memoryManager.updateMilestoneStatus(sprint.milestoneId, "completed");
+    mainWindow?.webContents.send("execution:milestone-completed", { milestoneId: sprint.milestoneId });
+    const next = memoryManager.getMilestones(projectId).find(m => m.status === "pending");
+    if (next) {
+      memoryManager.updateMilestoneStatus(next.id, "active");
+      const ns = memoryManager.getSprints(next.id);
+      if (ns.length > 0) memoryManager.updateSprintStatus(ns[0].id, "active");
     }
+  } else {
+    const next = sprints.find(s => s.status === "pending");
+    if (next) memoryManager.updateSprintStatus(next.id, "active");
   }
 }
 
@@ -629,10 +533,8 @@ app.whenReady().then(async () => {
   registerIpcHandlers();
   createWindow();
 
-  // Claude Code 설치 확인
   try {
-    const { execSync } = require("child_process");
-    const version = execSync("claude --version", { encoding: "utf-8", timeout: 5000, shell: true, windowsHide: true }).trim();
+    const version = require("child_process").execSync("claude --version", { encoding: "utf-8", timeout: 5000, shell: true, windowsHide: true }).trim();
     mainWindow?.webContents.once("did-finish-load", () => {
       mainWindow?.webContents.send("system:claude-status", { installed: true, version });
     });
@@ -643,14 +545,10 @@ app.whenReady().then(async () => {
   }
 
   app.on("activate", () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
-    }
+    if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
 });
 
 app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") {
-    app.quit();
-  }
+  if (process.platform !== "darwin") app.quit();
 });
