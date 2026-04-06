@@ -6,15 +6,14 @@ import fs from "fs";
 /**
  * Claude Code CLI 래퍼
  *
- * 두 가지 모드:
- * 1. one-shot: claude -p "prompt" — 한 번 실행하고 결과 반환
- * 2. interactive: claude 프로세스를 띄우고 stdin/stdout 파이프
+ * one-shot: claude -p — stdin으로 메시지 전달, stdout으로 응답 수신
+ * interactive: claude 프로세스를 띄우고 stdin/stdout 파이프
  */
 export class SdkChat extends EventEmitter {
   private proc: ChildProcess | null = null;
   private workingDir: string = ".";
 
-  /** git-bash 환경변수가 설정되었는지 확인하고 없으면 자동 설정 */
+  /** Windows에서 git-bash 경로 자동 설정 */
   private static ensureGitBash(): void {
     if (process.platform !== "win32") return;
     if (process.env.CLAUDE_CODE_GIT_BASH_PATH) return;
@@ -32,8 +31,7 @@ export class SdkChat extends EventEmitter {
   }
 
   /**
-   * One-shot 실행: claude -p "prompt"
-   * Discovery, Planning 등 한 번 물어보고 답 받는 용도
+   * One-shot: 메시지를 stdin으로 전달하고 응답을 stdout으로 받음
    */
   async send(params: {
     message: string;
@@ -42,8 +40,9 @@ export class SdkChat extends EventEmitter {
   }): Promise<{ response: string; sessionId: string | null }> {
     SdkChat.ensureGitBash();
 
+    // args에 메시지를 넣지 않고 stdin으로 전달 (Windows cmd.exe 인코딩 문제 회피)
     const args = [
-      "-p", params.message,
+      "-p", "-",
       "--output-format", "text",
       "--max-turns", "10",
     ];
@@ -57,10 +56,9 @@ export class SdkChat extends EventEmitter {
         cwd: params.workingDir || ".",
         shell: true,
         windowsHide: true,
-        env: { ...process.env, PYTHONIOENCODING: "utf-8" },
+        env: { ...process.env },
       });
 
-      // UTF-8 디코딩 보장
       proc.stdout?.setEncoding("utf-8");
       proc.stderr?.setEncoding("utf-8");
 
@@ -80,7 +78,7 @@ export class SdkChat extends EventEmitter {
         if (code === 0 || stdout.trim()) {
           resolve({ response: stdout.trim(), sessionId: null });
         } else {
-          reject(new Error(`claude exited ${code}: ${stderr.slice(0, 300)}`));
+          reject(new Error(`claude exited ${code}: ${stderr.slice(0, 500)}`));
         }
       });
 
@@ -88,6 +86,11 @@ export class SdkChat extends EventEmitter {
         reject(new Error(`claude spawn error: ${err.message}`));
       });
 
+      // stdin으로 메시지 전달 후 닫기
+      proc.stdin?.write(params.message, "utf-8");
+      proc.stdin?.end();
+
+      // 2분 타임아웃
       setTimeout(() => {
         proc.kill();
         reject(new Error("claude timeout (120s)"));
@@ -96,8 +99,7 @@ export class SdkChat extends EventEmitter {
   }
 
   /**
-   * 인터랙티브 세션 시작: 프로젝트 폴더에서 claude를 띄움
-   * 사용자 채팅용 — stdin으로 입력, stdout으로 출력
+   * 인터랙티브 세션: 프로젝트 폴더에서 claude를 띄움
    */
   startInteractive(workingDir: string): void {
     SdkChat.ensureGitBash();
@@ -138,30 +140,17 @@ export class SdkChat extends EventEmitter {
     });
   }
 
-  /** 인터랙티브 세션에 메시지 전송 */
   write(text: string): void {
     if (this.proc?.stdin?.writable) {
-      this.proc.stdin.write(text + "\n");
+      this.proc.stdin.write(text + "\n", "utf-8");
     }
   }
 
-  /** 인터랙티브 세션 종료 */
   stop(): void {
-    if (this.proc) {
-      this.proc.kill();
-      this.proc = null;
-    }
+    if (this.proc) { this.proc.kill(); this.proc = null; }
   }
 
-  get isRunning(): boolean {
-    return this.proc !== null;
-  }
-
-  resetSession(): void {
-    this.stop();
-  }
-
-  getSessionId(): string | null {
-    return null;
-  }
+  get isRunning(): boolean { return this.proc !== null; }
+  resetSession(): void { this.stop(); }
+  getSessionId(): string | null { return null; }
 }
