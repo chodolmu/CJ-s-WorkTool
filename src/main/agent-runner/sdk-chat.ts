@@ -56,11 +56,11 @@ export class SdkChat extends EventEmitter {
     const args = [
       "-p", params.message,
       "--output-format", "text",
-      "--max-turns", "3",
+      "--max-turns", "10",
     ];
 
     if (params.systemPrompt) {
-      args.push("--system-prompt", params.systemPrompt);
+      args.push("--append-system-prompt", params.systemPrompt);
     }
 
     return new Promise((resolve, reject) => {
