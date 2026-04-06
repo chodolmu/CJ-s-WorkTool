@@ -1,0 +1,30 @@
+{
+  "projectName": "WorkTool v3 — 태스크 드리븐 프로젝트 매니저",
+  "projectType": "desktop-app",
+  "description": "비개발자도 Claude Code를 쉽게 사용하여 프로젝트를 완성할 수 있는 Electron 데스크톱 도구. Opus PM이 프로젝트를 마일스톤→스프린트→태스크로 자동 분할하고, 태스크 단위로 깨끗한 컨텍스트에서 실행하며, Handoff로 태스크 간 맥락을 전달한다.",
+  "coreDecisions": [
+    "Opus가 PM — 프로젝트 분할, 의존성, 난이도 판정",
+    "태스크 단위 실행 — 매번 깨끗한 컨텍스트에서 시작",
+    "Handoff로 연결 — 태스크 간 맥락 전달",
+    "난이도별 모델 배치 — easy:haiku, medium:sonnet, hard:opus",
+    "하네스는 수단 — 업무에서 필요가 생겨야만 투입",
+    "스킬은 자산 — 하네스 없이도 태스크에 주입 가능"
+  ],
+  "techStack": [
+    "Electron",
+    "React + TypeScript",
+    "SQLite (better-sqlite3)",
+    "Zustand (state management)",
+    "Claude Agent SDK (@anthropic-ai/claude-code)",
+    "TailwindCSS"
+  ],
+  "features": [
+    "Discovery: 대화형 프로젝트 정의 → SpecCard 생성",
+    "Planning: Opus PM이 마일스톤/스프린트/태스크 자동 분할",
+    "Execution: 태스크 단위 실행 (컨텍스트 주입 + 모델 배치 + handoff 생성)",
+    "Validation: 태스크/스프린트/마일스톤 단위 자동 검증",
+    "Project Tree UI: 마일스톤/스프린트/태스크 트리 뷰 + 진행률",
+    "Task Detail: 계획, 실행 로그, handoff, 검증 결과 표시",
+    "Cost Tracking: 모델별 비용 추적"
+  ]
+}

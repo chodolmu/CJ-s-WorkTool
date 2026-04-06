@@ -2,13 +2,10 @@ import React, { useEffect } from "react";
 import { useDiscoveryStore } from "../../stores/discovery-store";
 import { DiscoveryChat } from "../../components/discovery/DiscoveryChat";
 import { SpecCardReview } from "../../components/discovery/SpecCardReview";
-import { AgentTeamSetup } from "../../components/discovery/AgentTeamSetup";
-import type { Preset, SpecCard, AgentDefinition } from "@shared/types";
-
-import { MOCK_PRESETS } from "./mock-presets";
+import type { SpecCard } from "@shared/types";
 
 interface DiscoveryPageProps {
-  onComplete: (specCard: SpecCard, selectedAgents: AgentDefinition[], workingDir: string, harnessId?: string) => void;
+  onComplete: (specCard: SpecCard, workingDir: string) => void;
   onCancel: () => void;
 }
 
@@ -16,85 +13,98 @@ export function DiscoveryPage({ onComplete, onCancel }: DiscoveryPageProps) {
   const store = useDiscoveryStore();
 
   useEffect(() => {
-    if (!window.harness?.preset) {
-      store.setPresets(MOCK_PRESETS);
-      return;
-    }
-    window.harness.preset.list()
-      .then((presets: Preset[]) => store.setPresets(presets?.length > 0 ? presets : MOCK_PRESETS))
-      .catch(() => store.setPresets(MOCK_PRESETS));
+    store.reset();
   }, []);
 
-  const handleToggleExpansion = (id: string) => {
-    if (!store.specCard) return;
-    store.updateSpecCard({
-      ...store.specCard,
-      expansions: store.specCard.expansions.map((e) =>
-        e.id === id ? { ...e, enabled: !e.enabled } : e,
-      ),
-    });
+  const handleSpecReady = () => {
+    store.setPhase("spec_review");
   };
 
-  const handleTeamConfirm = () => {
+  const handleConfirm = () => {
+    if (!store.specCard || !store.workingDir) return;
     store.confirm();
-    if (store.specCard) {
-      const specCard = { ...store.specCard };
-      const selectedAgents = store.getSelectedAgents();
-      const workingDir = store.workingDir;
-      store.reset();
-      onComplete(specCard, selectedAgents, workingDir);
+    onComplete(store.specCard, store.workingDir);
+  };
+
+  const handleSelectFolder = async () => {
+    if (!window.harness?.dialog) return;
+    const folder = await window.harness.dialog.selectFolder();
+    if (folder) {
+      store.setWorkingDir(folder as string);
     }
   };
 
-  // 진행률 표시
-  const phaseIndex = ["chat", "review", "team_setup"].indexOf(store.phase);
-  const totalPhases = 3;
-
   return (
-    <div className="h-full relative flex flex-col">
-      {/* Cancel + Progress */}
-      <div className="absolute top-4 right-4 z-10 flex items-center gap-3">
-        {/* Phase indicator */}
-        <div className="flex items-center gap-1">
-          {[0, 1, 2].map((i) => (
-            <div
-              key={i}
-              className={`w-2 h-2 rounded-full transition-colors ${
-                i <= phaseIndex ? "bg-accent" : "bg-bg-active"
-              }`}
-            />
-          ))}
+    <div className="flex flex-col h-full bg-bg-base">
+      {/* 헤더 */}
+      <div className="flex items-center justify-between px-6 py-4 border-b border-border-subtle">
+        <div>
+          <h1 className="text-lg font-semibold text-text-primary">새 프로젝트</h1>
+          <p className="text-xs text-text-muted mt-0.5">
+            {store.phase === "chat" && "프로젝트에 대해 설명해주세요"}
+            {store.phase === "spec_review" && "스펙을 확인하고 작업 폴더를 선택하세요"}
+          </p>
         </div>
         <button
           onClick={onCancel}
-          className="px-3 py-1.5 text-xs text-text-secondary hover:text-text-primary hover:bg-bg-hover rounded-lg transition-all cursor-pointer"
+          className="text-sm text-text-muted hover:text-text-secondary cursor-pointer"
         >
-          ✕ Cancel
+          취소
         </button>
       </div>
 
-      {/* Phase: Chat — 대화로 프로젝트 정의 */}
-      {store.phase === "chat" && (
-        <DiscoveryChat onSpecReady={() => {}} />
-      )}
+      {/* 본문 */}
+      <div className="flex-1 overflow-hidden">
+        {store.phase === "chat" && (
+          <DiscoveryChat onSpecReady={handleSpecReady} />
+        )}
 
-      {/* Phase: Review — 스펙 카드 확인/수정 */}
-      {store.phase === "review" && store.specCard && (
-        <SpecCardReview
-          specCard={store.specCard}
-          onToggleExpansion={handleToggleExpansion}
-          onConfirm={() => store.confirmSpec()}
-          onBack={() => store.goBack()}
-        />
-      )}
+        {store.phase === "spec_review" && store.specCard && (
+          <div className="flex flex-col h-full overflow-y-auto p-6 gap-4">
+            <SpecCardReview
+              specCard={store.specCard}
+              onUpdate={(sc: SpecCard) => store.updateSpecCard(sc)}
+            />
 
-      {/* Phase: Team Setup — 에이전트 팀 구성 */}
-      {store.phase === "team_setup" && (
-        <AgentTeamSetup
-          onConfirm={handleTeamConfirm}
-          onBack={() => store.goBack()}
-        />
-      )}
+            {/* 작업 폴더 선택 */}
+            <div className="bg-bg-surface rounded-lg p-4 border border-border-subtle">
+              <h3 className="text-sm font-medium text-text-primary mb-2">작업 폴더</h3>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleSelectFolder}
+                  className="px-3 py-1.5 text-xs bg-accent/10 text-accent rounded hover:bg-accent/20 cursor-pointer"
+                >
+                  폴더 선택
+                </button>
+                <span className="text-xs text-text-muted font-mono">
+                  {store.workingDir || "선택 안 됨"}
+                </span>
+              </div>
+            </div>
+
+            {/* 확인 버튼 */}
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={() => store.setPhase("chat")}
+                className="px-4 py-2 text-sm text-text-secondary hover:text-text-primary cursor-pointer"
+              >
+                ← 대화로 돌아가기
+              </button>
+              <button
+                onClick={handleConfirm}
+                disabled={!store.workingDir}
+                className={`px-6 py-2 text-sm rounded-lg font-medium cursor-pointer ${
+                  store.workingDir
+                    ? "bg-accent text-white hover:bg-accent-hover"
+                    : "bg-bg-hover text-text-muted cursor-not-allowed"
+                }`}
+              >
+                계획 생성 시작
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

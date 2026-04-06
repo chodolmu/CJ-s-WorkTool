@@ -1,0 +1,17 @@
+{
+  "projectId": "worktool-v3",
+  "status": "running",
+  "currentTaskId": "m3-s2-t1",
+  "completedTasks": [
+    "m1-s1-t1", "m1-s1-t2", "m1-s1-t3",
+    "m1-s2-t1", "m1-s2-t2", "m1-s2-t3", "m1-s2-t4", "m1-s2-t5", "m1-s2-t6", "m1-s2-t7",
+    "m2-s1-t1", "m2-s1-t2", "m2-s1-t3",
+    "m2-s2-t1", "m2-s2-t2", "m2-s2-t3",
+    "m2-s3-t1", "m2-s3-t2",
+    "m3-s1-t1", "m3-s1-t2"
+  ],
+  "failedTasks": [],
+  "skippedTasks": [],
+  "totalCost": 0,
+  "startedAt": "2026-04-06T00:00:00Z"
+}

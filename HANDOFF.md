@@ -1,128 +1,138 @@
-# Handoff: Dynamic Harness — 에이전트 풀 기반 동적 하네스 조합
+# Handoff: WorkTool v3 — 태스크 드리븐 구현 완료
 
-**Generated**: 2026-04-02 (Session 9)
+**Generated**: 2026-04-07 (Session 11)
 **Branch**: main
-**Repo**: https://github.com/chodolmu/CJ-s-WorkTool.git
-**Status**: Phase 6~7 완료, Dynamic Harness Plan+Design 완료 → Do 대기
+**Status**: v3 핵심 구현 완료, 빌드 성공, E2E 테스트 필요
 
 ## Goal
 
-Claude Code CLI를 감싸는 Electron 데스크톱 앱. GSD SDK + Harness-100 기반.
-**다음 목표**: 고정 하네스 선택 방식을 "에이전트 풀 기반 동적 조합"으로 전환.
+비개발자도 Claude Code를 쉽게 사용하여 프로젝트를 완성할 수 있는 데스크톱 도구.
+핵심 철학: **잘게 쪼개서, 명확하게, 깨끗한 컨텍스트에서.**
 
-## What Was Accomplished (Session 9)
+## What Was Accomplished (Session 11)
 
-### Phase 6: 하네스 → GSD init 연결 검증
-1. GSD init 플로우 검증 (App.tsx → preload → main → gsd-bridge.ts) — 정상 연결 확인
-2. `vendor/gsd/sdk/dist/init-runner.js` 존재 확인
-3. 하네스 적용 + GSD init 에러 핸들링 개선 (silent catch → 로깅)
-4. E2E 테스트에 하네스 카탈로그/검색/GSD SDK 테스트 3개 추가
+### v3 전면 구현 (23개 태스크 중 20개 완료)
 
-### Phase 7: 레거시 UI 정리
-5. `MainPanel.tsx` 삭제 — 데드코드 (어디서도 import 안 됨)
-6. `HarnessPage.tsx` 생성 — 2탭 구조 (카탈로그 HarnessBrowser + 에이전트 편집)
-7. `App.tsx` — PresetsPage → HarnessPage 교체
-8. `ProjectView.tsx` — 6탭 → 4탭 (plan/agents 탭 제거, 미사용 import 정리)
-9. `PresetsPage.tsx` — 헤더 축소 (HarnessPage 내부 탭용)
-10. 빌드 성공 확인 (3/3 모듈)
+#### M1: 핵심 엔진 + 데이터 레이어 ✅
+- `src/shared/types.ts` — v3 타입 시스템 전면 재작성
+  - Project, Milestone, Sprint, Task, TaskHandoff, ValidationResult, TaskLog, ProjectTree, ProjectStats
+- `src/main/memory/database.ts` — v3 SQLite 스키마 (7개 테이블)
+- `src/main/memory/memory-manager.ts` — v3 CRUD (Projects, Milestones, Sprints, Tasks, Handoffs, Validations, TaskLogs, ProjectTree, ProjectStats, savePlan)
+- `src/main/index.ts` — v3 IPC 핸들러 전면 재작성
+  - Discovery (chat + complete)
+  - Planning (generate, save, approve, update-task, remove-task)
+  - Execution (start, pause, resume, stop, retry-task, skip-task, get-status)
+  - Data (get-project-tree, get-task-detail, get-handoff, get-project-stats)
+  - Task execution loop with handoff extraction, retry logic, sprint/milestone completion
+- `src/preload/index.ts` — v3 API (discovery, project, planning, execution, data, git, dialog, system)
 
-### Dynamic Harness 설계
-11. Plan 작성: `docs/01-plan/features/dynamic-harness.plan.md`
-12. Design 작성: `docs/02-design/features/dynamic-harness.design.md`
+#### M2: UI 재구성 ✅
+- `src/renderer/stores/app-store.ts` — v3 상태 (milestones, tasks, execution, stats)
+- `src/renderer/stores/discovery-store.ts` — 간소화 (chat + spec_review + confirmed)
+- `src/renderer/App.tsx` — 3페이지 라우팅 (dashboard, project, settings) + Discovery/PlanReview 오버레이
+- `src/renderer/hooks/useIpcEvents.ts` — v3 이벤트 핸들링
+- `src/renderer/pages/DashboardPage.tsx` — 프로젝트 카드 목록
+- `src/renderer/pages/PlanReviewPage.tsx` — Opus PM 계획 트리 표시 + 승인
+- `src/renderer/pages/ProjectPage.tsx` — 트리 뷰 + 태스크 상세 분할 뷰
+- `src/renderer/pages/Discovery/DiscoveryPage.tsx` — 간소화 (chat → spec review → folder)
+- `src/renderer/components/discovery/DiscoveryChat.tsx` — v3 store 호환
+- `src/renderer/components/discovery/SpecCardReview.tsx` — v3 SpecCard 포맷
+- `src/renderer/components/tree/` — ProjectTree, MilestoneNode, SprintNode, TaskNode
+- `src/renderer/components/detail/TaskDetailPanel.tsx` — 태스크 상세 패널
+- `src/renderer/components/ProjectHeader.tsx` — 진행률 + 실행 제어
+- `src/renderer/components/ExecutionBar.tsx` — 하단 실행 상태 바
+- `src/renderer/components/layout/Sidebar.tsx` — 간소화 (3탭)
 
-## Architecture
+#### 삭제된 파일 (30+)
+- gsd-bridge, harness-manager, agent-pool-manager, orchestration-generator
+- orchestrator/, preset/, plan-manager, learning-manager, session-manager
+- OrchestrationPage, HarnessPage, SchedulePage, PlanPage, SpecsPage, LogsPage
+- AgentCard, PhaseTracker, PhaseChat, DecisionModal, CheckpointModal, etc.
+- ProjectView (→ ProjectPage), ActivityPanel, DetailPanel
+
+### 빌드 결과
+- `electron-vite build` ✅ 성공
+- main: 49.39 kB + sdk: 582.42 kB
+- preload: 3.47 kB
+- renderer: 288.79 kB JS + 40.25 kB CSS
+
+## Architecture (v3 Final)
 
 ```
-Electron App
-├── main/
-│   ├── index.ts              — IPC 핸들러
-│   ├── gsd-bridge.ts         — GSD SDK 래퍼
-│   ├── harness-manager.ts    — Harness-100 카탈로그
-│   ├── agent-pool-manager.ts — ★TODO: 동적 에이전트 매칭 엔진
-│   ├── agent-runner/
-│   │   ├── sdk-chat.ts       — Agent SDK 채팅
-│   │   └── cli-bridge.ts     — CLI 폴백
-│   ├── memory/               — 프로젝트/세션/플랜 DB (v7: stepId)
-│   └── tools/git-manager.ts
-├── renderer/
-│   ├── pages/
-│   │   ├── OrchestrationPage.tsx — 좌(파이프라인) + 우(PhaseChat)
-│   │   ├── ProjectView.tsx       — 4탭 (overview, pipeline, specs, logs)
-│   │   ├── HarnessPage.tsx       — ★NEW (카탈로그 + 에이전트 편집)
-│   │   └── Discovery/            — 4단계 → ★TODO: 3단계로 변경
-│   ├── components/
-│   │   ├── PhaseChat.tsx
-│   │   ├── HarnessBrowser.tsx
-│   │   └── discovery/
-│   │       ├── HarnessSelectStep.tsx — ★TODO: 삭제 예정
-│   │       ├── DiscoveryChat.tsx
-│   │       ├── SpecCardReview.tsx
-│   │       └── AgentTeamSetup.tsx    — ★TODO: PoolAgent 타입으로 전환
-│   ├── stores/
-│   │   ├── app-store.ts
-│   │   └── discovery-store.ts        — ★TODO: phase "chat"으로 시작
-│   └── data/
-│       └── agent-catalog.ts          — ★TODO: 삭제 (agent-pool로 대체)
-├── agent-pool/                       — ★TODO: 신규 디렉토리
-│   ├── core/ (4개 .md)
-│   ├── game/ (12개 .md)
-│   └── web/ (5개 .md)
-└── vendor/
-    ├── gsd/sdk/dist/
-    └── harness-100/ko,en/
+src/
+  main/
+    index.ts                    — IPC 핸들러 + Task Execution Loop
+    agent-runner/
+      sdk-chat.ts               — Claude Agent SDK 채팅
+      cli-bridge.ts             — CLI 폴백
+    memory/
+      database.ts               — SQLite v3 스키마
+      memory-manager.ts         — v3 CRUD (전체 데이터 레이어)
+    tools/
+      git-manager.ts            — Git 작업
+  
+  renderer/
+    App.tsx                     — 라우팅 (dashboard/project/settings)
+    pages/
+      DashboardPage.tsx         — 프로젝트 목록
+      ProjectPage.tsx           — 트리 뷰 + 상세 (메인)
+      PlanReviewPage.tsx        — 계획 검토/승인
+      Discovery/
+        DiscoveryPage.tsx       — 프로젝트 정의
+      SettingsPage.tsx          — 설정
+    components/
+      tree/                     — 프로젝트 트리 (4개)
+      detail/
+        TaskDetailPanel.tsx     — 태스크 상세
+      ProjectHeader.tsx         — 프로젝트 헤더
+      ExecutionBar.tsx          — 실행 상태 바
+      discovery/                — Discovery 채팅/리뷰
+      layout/                   — Sidebar, Titlebar
+    stores/
+      app-store.ts              — v3 상태
+      discovery-store.ts        — Discovery 상태
+      theme-store.ts            — 테마
+    hooks/
+      useIpcEvents.ts           — v3 IPC 이벤트
+  
+  shared/
+    types.ts                    — v3 도메인 타입
+  
+  preload/
+    index.ts                    — v3 API
 ```
 
 ## Key Decisions
 
-1. **엔진은 오픈소스, GUI는 우리 것** — GSD 파이프라인 관리, Harness-100 에이전트 정의
-2. **에이전트 풀 동적 조합** — 고정 하네스 선택 대신 specCard 키워드 기반 자동 매칭
-3. **Discovery chat 먼저** — 하네스 선택 단계 제거, 대화로 프로젝트 파악 후 자동 추천
-4. **agent-pool/ = 프로젝트 코드** — vendor가 아닌 소스에 포함, extraResources로 번들링
+1. **Opus PM을 main process에서 직접 실행** — 별도 모듈 대신 index.ts의 planning:generate 핸들러에서 SdkChat으로 호출
+2. **Task execution loop** — main process에서 while 루프로 순차 실행, 의존성 체크 포함
+3. **Handoff 자동 추출** — 태스크 완료 시 응답에서 JSON handoff 파싱
+4. **Sprint/Milestone 자동 완료** — 하위 태스크 모두 완료 시 자동 상태 전환
 
-## Current State
+## Remaining Tasks
 
-### 완료 ✅
-- Phase 6~7 코드 변경 (미커밋 상태)
-- Dynamic Harness Plan + Design 문서
+### M3-S2-T1: DashboardPage v3 갱신
+- 프로젝트 카드에 마일스톤 진행률, 비용 요약 추가
 
-### 미완성 ⚠️ (Do Phase — 4단계)
-- **Phase A**: `agent-pool/` 에이전트 .md 파일 21개 작성 (core 4 + game 12 + web 5)
-- **Phase B**: `AgentPoolManager` 백엔드 + IPC 핸들러 + preload API
-- **Phase C**: Discovery 플로우 변경 (chat 먼저, harness_select 제거, agent-catalog 삭제)
-- **Phase D**: electron-builder.yml extraResources + 빌드 확인
+### M4: 폴리싱 (2 태스크)
+- 에러 핸들링 + 로딩/빈 상태
+- 최종 빌드 검증 + 미사용 코드 정리
 
-### 미커밋 파일
-- 수정: App.tsx, ProjectView.tsx, PresetsPage.tsx, test-audit.js
-- 삭제: MainPanel.tsx
-- 신규: HarnessPage.tsx, dynamic-harness.plan.md, dynamic-harness.design.md
-
-## Failed Approaches (Previous Sessions)
-
-1. claude stdin: --print 모드는 stdin을 안 읽음
-2. --continue/--resume: Windows에서 타임아웃
-3. shell: true spawn: PowerShell이 claude.exe 못 찾음
-4. 대화 전체 재전송: 토큰 낭비 → Agent SDK 세션으로 해결
-5. 자체 파이프라인 엔진: 유지보수 비용 > 가치 → GSD로 교체
-6. 고정 하네스 선택 방식: 게임 하네스 1개뿐 + 커스텀 불가 → 동적 에이전트 풀로 전환
+### 실전 테스트 필요
+- Discovery → Plan → Execute 전체 플로우 E2E 확인
+- 실제 프로젝트에서 Opus PM 분할 품질 확인
+- 태스크 실행 + handoff 추출 + 검증 동작 확인
 
 ## Warnings
 
 - **vendor/는 .gitignore** — `bash scripts/prepare-vendor.sh`로 재생성 필요
-- **GSD SDK는 ESM-only** — `await import(fileUrl)` 패턴 사용
-- **에이전트 .md 파일 작성 시 사용자 허락 필요** — game 에이전트 내용 확인 받고 생성
-- **agent-catalog.ts 삭제 전** AgentTeamSetup.tsx의 CatalogAgent 타입 import 변경 필수
-- **DB v7 migration**: chat_messages에 step_id 컬럼 추가 (nullable)
-- **Phase 6~7 변경사항 미커밋** — 커밋 전 `npm run build`로 재확인 권장
+- **DB 스키마 변경** — 기존 v2 DB는 호환 안 됨, 새 DB가 자동 생성됨
+- **기존 미커밋 변경 다수** — 이 세션의 모든 변경이 미커밋 상태
+- **E2E 테스트 미실행** — 빌드만 확인, 실제 실행은 테스트 안 됨
 
 ## Resume Instructions
 
-1. `bash scripts/prepare-vendor.sh` (vendor/ 재생성)
-2. `npm run build` (빌드 확인 — Phase 6~7 변경 포함)
-3. 미커밋 변경사항 커밋 결정 (Phase 6~7 완료분)
-4. **Dynamic Harness Do Phase 시작**:
-   - Design 문서 참조: `docs/02-design/features/dynamic-harness.design.md`
-   - Phase A: `agent-pool/` 에이전트 .md 작성 (사용자 확인 후)
-   - Phase B: `src/main/agent-pool-manager.ts` 구현
-   - Phase C: Discovery 플로우 변경
-   - Phase D: 빌드 + 테스트
-5. 참조: `docs/01-plan/features/dynamic-harness.plan.md`
+1. 미커밋 변경을 커밋: `git add . && git commit -m "feat: WorkTool v3 태스크 드리븐 구현"`
+2. `npx electron-vite dev`로 실행 테스트
+3. Discovery → Plan → Execute 전체 플로우 확인
+4. 남은 태스크 (M3-S2-T1, M4) 완료

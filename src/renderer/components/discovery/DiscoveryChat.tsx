@@ -19,12 +19,10 @@ export function DiscoveryChat({ onSpecReady }: DiscoveryChatProps) {
   const {
     chatMessages,
     isThinking,
-    workingDir,
     addUserMessage,
     addAssistantMessage,
     setThinking,
     setSpecFromChat,
-    setWorkingDir,
   } = useDiscoveryStore();
 
   const [input, setInput] = useState("");
@@ -76,7 +74,7 @@ export function DiscoveryChat({ onSpecReady }: DiscoveryChatProps) {
       { role: "user", content: msg },
     ];
 
-    const result = await window.harness.discovery.chat(allMessages, round);
+    const result = await window.harness.discovery.chat(allMessages);
 
     if (result.error || !result.response) {
       throw new Error(result.error || "No response");
@@ -85,10 +83,10 @@ export function DiscoveryChat({ onSpecReady }: DiscoveryChatProps) {
     // AI 응답 표시
     addAssistantMessage(result.response);
 
-    // AI가 스펙 카드를 생성했으면 (사용자 확인 후) Review 단계로
+    // AI가 스펙 카드를 생성했으면 Review 단계로
     if (result.specCard) {
       setTimeout(() => {
-        setSpecFromChat(result.specCard, result.presetId ?? "game");
+        setSpecFromChat(result.specCard);
         onSpecReady();
       }, 1000);
     }
@@ -103,29 +101,6 @@ export function DiscoveryChat({ onSpecReady }: DiscoveryChatProps) {
 
   return (
     <div className="flex flex-col h-full max-w-2xl mx-auto">
-      {/* Project directory selector */}
-      <div className="shrink-0 px-6 pt-6 pb-3">
-        <div className="flex items-center gap-2 p-2.5 bg-bg-card border border-border-subtle rounded-lg">
-          <span className="text-xs text-text-muted shrink-0">📁 프로젝트 폴더:</span>
-          <input
-            value={workingDir}
-            onChange={(e) => setWorkingDir(e.target.value)}
-            placeholder="C:/Projects/my-project (코드가 생성될 폴더)"
-            className="flex-1 bg-transparent text-xs text-text-primary placeholder:text-text-muted focus:outline-none"
-          />
-          <button
-            onClick={async () => {
-              if (!window.harness) return;
-              const folder = await (window.harness as any).dialog.selectFolder();
-              if (folder) setWorkingDir(folder);
-            }}
-            className="shrink-0 px-2.5 py-1 text-[10px] bg-accent/15 text-accent rounded hover:bg-accent/25 cursor-pointer transition-all"
-          >
-            찾아보기
-          </button>
-        </div>
-      </div>
-
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-6 py-3 space-y-4">
         {chatMessages.map((msg, i) => (

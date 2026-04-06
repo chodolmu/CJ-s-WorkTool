@@ -1,58 +1,32 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { AnimatePresence, motion } from "framer-motion";
 import { Sidebar } from "./components/layout/Sidebar";
 import { Titlebar } from "./components/layout/Titlebar";
 import { DashboardPage } from "./pages/DashboardPage";
-import { ProjectView } from "./pages/ProjectView";
+import { ProjectPage } from "./pages/ProjectPage";
+import { PlanReviewPage } from "./pages/PlanReviewPage";
 import { DiscoveryPage } from "./pages/Discovery/DiscoveryPage";
-import { HarnessPage } from "./pages/HarnessPage";
 import { SettingsPage } from "./pages/SettingsPage";
-import { SchedulePage } from "./pages/SchedulePage";
-import { CheckpointModal } from "./components/CheckpointModal";
-import { DecisionModal } from "./components/DecisionModal";
 import { ToastContainer } from "./components/Toast";
 import { useAppStore } from "./stores/app-store";
 import { useIpcEvents } from "./hooks/useIpcEvents";
-import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
-import type { SpecCard, Project, AgentDefinition } from "@shared/types";
+import type { SpecCard, Project } from "@shared/types";
 
-// 최상위 페이지: Dashboard(전체) | Project(상세) | Schedule(일정) | Harness | Settings
-export type TopPage = "dashboard" | "project" | "schedule" | "harness" | "settings";
+export type TopPage = "dashboard" | "project" | "settings";
 
 export default function App() {
   const [topPage, setTopPage] = useState<TopPage>("dashboard");
   const [showDiscovery, setShowDiscovery] = useState(false);
+  const [showPlanReview, setShowPlanReview] = useState(false);
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
-  const [pendingDecision, setPendingDecision] = useState<any>(null);
 
   const {
-    pendingCheckpoint,
-    setCheckpoint,
-    selectedAgentId,
-    setSelectedAgent,
-    initAgents,
-    setProject,
-    setProjects,
-    setFeatures,
     setClaudeInstalled,
-    reset,
+    setProjects,
+    setCurrentProject,
     projects,
   } = useAppStore();
 
   useIpcEvents();
-
-  useKeyboardShortcuts({
-    onNavigate: (page) => {
-      // Ctrl+1 = dashboard, Ctrl+2 = project, Ctrl+3 = schedule, Ctrl+4 = presets, Ctrl+5 = settings
-      const map: Record<string, TopPage> = { "1": "dashboard", "2": "project", "3": "schedule", "4": "harness", "5": "settings" };
-      if (map[page as string]) setTopPage(map[page as string]);
-    },
-    onNewProject: () => setShowDiscovery(true),
-    onClosePanel: () => {
-      if (selectedAgentId) setSelectedAgent(null);
-      else if (showDiscovery) setShowDiscovery(false);
-    },
-  });
 
   // 앱 시작 시 프로젝트 목록 로드
   useEffect(() => {
@@ -63,16 +37,9 @@ export default function App() {
     });
 
     const cleanups: (() => void)[] = [];
-
     cleanups.push(
       window.harness.on("system:claude-status", (data: { installed: boolean }) => {
         setClaudeInstalled(data.installed);
-      }),
-    );
-
-    cleanups.push(
-      window.harness.on("decision:request", (data: any) => {
-        setPendingDecision(data);
       }),
     );
 
@@ -81,115 +48,40 @@ export default function App() {
 
   const openProject = useCallback((projectId: string) => {
     setActiveProjectId(projectId);
+    setCurrentProject(projectId);
     setTopPage("project");
+  }, [setCurrentProject]);
 
-    // 프로젝트 데이터 로드
-    // 프로젝트 목록에서 찾기 (이미 로드됨)
-    const project = projects.find((p) => p.id === projectId);
-    if (project) {
-      setProject(project.id, project.name);
-      // DB에 저장된 에이전트가 있으면 사용, 없으면 기본 3개
-      const agentDefs = Array.isArray(project.selectedAgents) && project.selectedAgents.length > 0
-        ? project.selectedAgents.map((a: any) => ({ id: a.id, displayName: a.displayName, icon: a.icon, trigger: a.trigger }))
-        : [
-            { id: "director", displayName: "Director", icon: "🎬", trigger: "manual" },
-            { id: "planner", displayName: "Planner", icon: "🔧", trigger: "manual" },
-            { id: "generator", displayName: "Generator", icon: "💻", trigger: "after_planner" },
-            { id: "evaluator", displayName: "Evaluator", icon: "🔍", trigger: "after_generator" },
-          ];
-      initAgents(agentDefs);
-      window.harness?.session.start(project.id);
-    } else if (window.harness) {
-      // 목록에 없으면 IPC로 로드
-      window.harness.project.load(projectId).then((p: Project | null) => {
-        if (p) {
-          setProject(p.id, p.name);
-          const defs = Array.isArray(p.selectedAgents) && p.selectedAgents.length > 0
-            ? p.selectedAgents.map((a: any) => ({ id: a.id, displayName: a.displayName, icon: a.icon, trigger: a.trigger }))
-            : [
-                { id: "director", displayName: "Director", icon: "🎬", trigger: "manual" },
-                { id: "planner", displayName: "Planner", icon: "🔧", trigger: "manual" },
-                { id: "generator", displayName: "Generator", icon: "💻", trigger: "after_planner" },
-                { id: "evaluator", displayName: "Evaluator", icon: "🔍", trigger: "after_generator" },
-              ];
-          initAgents(defs);
-          window.harness?.session.start(p.id);
-        }
-      });
-    }
-  }, [setProject, initAgents]);
-
-  const handleDiscoveryComplete = async (specCard: SpecCard, selectedAgents: AgentDefinition[], workingDir: string) => {
+  const handleDiscoveryComplete = async (specCard: SpecCard, workingDir: string) => {
     setShowDiscovery(false);
 
-    const agentDefs = selectedAgents.map((a) => ({
-      id: a.id,
-      displayName: a.displayName,
-      icon: a.icon,
-      trigger: a.trigger,
-    }));
-
     if (!window.harness) {
-      // 브라우저 폴백
       const fakeId = "local-" + Date.now();
-      setProject(fakeId, specCard.projectType);
-      initAgents(agentDefs);
       setActiveProjectId(fakeId);
+      setCurrentProject(fakeId);
       setTopPage("project");
-
-      setProjects([...projects, {
-        id: fakeId,
-        name: specCard.projectType,
-        presetId: "game",
-        specCard,
-        status: "planning",
-        workingDir: workingDir || ".",
-        selectedAgents,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }]);
       return;
     }
 
     const project = await window.harness.discovery.complete(
-      specCard.projectType,
-      "game",
+      specCard.projectName || specCard.projectType || "New Project",
       specCard,
       workingDir,
-      selectedAgents,
     ) as Project;
 
-    setProject(project.id, project.name);
-    initAgents(agentDefs);
     setActiveProjectId(project.id);
-    setTopPage("project");
-    window.harness.session.start(project.id);
+    setCurrentProject(project.id);
 
-    // 에이전트 풀 → 프로젝트 .claude/agents/ 적용
-    if (window.harness.agentPool && selectedAgents.length > 0) {
-      try {
-        const agentIds = selectedAgents.map(a => a.id);
-        const applyResult = await window.harness.agentPool.apply(agentIds, workingDir) as { success: boolean; error?: string };
-        if (!applyResult.success) {
-          console.warn("[AgentPool] apply failed:", applyResult.error);
-        }
-      } catch (err) {
-        console.error("[AgentPool] apply error:", err);
-      }
-    }
-    if (window.harness.gsd?.initProject) {
-      try {
-        const gsdResult = await window.harness.gsd.initProject(workingDir, specCard.projectType);
-        if (!gsdResult.success) {
-          console.warn("[GSD] init failed:", gsdResult.error);
-        }
-      } catch (err) {
-        console.error("[GSD] init error:", err);
-      }
-    }
+    // 계획 생성 → PlanReview로
+    setShowPlanReview(true);
 
     const updatedProjects = await window.harness.project.list() as Project[];
     setProjects(updatedProjects);
+  };
+
+  const handlePlanApproved = () => {
+    setShowPlanReview(false);
+    setTopPage("project");
   };
 
   const handleDeleteProject = async (projectId: string) => {
@@ -202,15 +94,8 @@ export default function App() {
     }
     if (activeProjectId === projectId) {
       setActiveProjectId(null);
+      setCurrentProject(null);
       setTopPage("dashboard");
-      reset();
-    }
-  };
-
-  const handleCheckpointRespond = (action: "approve" | "cancel") => {
-    if (pendingCheckpoint) {
-      window.harness?.checkpoint.respond(action);
-      setCheckpoint(null);
     }
   };
 
@@ -225,15 +110,31 @@ export default function App() {
             onCancel={() => setShowDiscovery(false)}
           />
         </div>
+        <ToastContainer />
+      </div>
+    );
+  }
+
+  // PlanReview 전체화면
+  if (showPlanReview && activeProjectId) {
+    return (
+      <div className="flex flex-col h-screen w-screen overflow-hidden">
+        <Titlebar />
+        <div className="flex-1 overflow-hidden">
+          <PlanReviewPage
+            projectId={activeProjectId}
+            onApprove={handlePlanApproved}
+            onBack={() => setShowPlanReview(false)}
+          />
+        </div>
+        <ToastContainer />
       </div>
     );
   }
 
   return (
     <div className="flex flex-col h-screen w-screen overflow-hidden">
-      <Titlebar
-        onNewProject={() => setShowDiscovery(true)}
-      />
+      <Titlebar onNewProject={() => setShowDiscovery(true)} />
 
       <div className="flex flex-1 overflow-hidden">
         <Sidebar
@@ -252,7 +153,7 @@ export default function App() {
           )}
 
           {topPage === "project" && activeProjectId && (
-            <ProjectView projectId={activeProjectId} />
+            <ProjectPage projectId={activeProjectId} />
           )}
 
           {topPage === "project" && !activeProjectId && (
@@ -267,33 +168,9 @@ export default function App() {
             </div>
           )}
 
-          {topPage === "schedule" && <SchedulePage />}
-          {topPage === "harness" && <HarnessPage />}
           {topPage === "settings" && <div className="p-4 overflow-y-auto h-full"><SettingsPage /></div>}
         </main>
       </div>
-
-      <AnimatePresence>
-        {pendingCheckpoint && (
-          <CheckpointModal
-            checkpoint={pendingCheckpoint as Parameters<typeof CheckpointModal>[0]["checkpoint"]}
-            onRespond={handleCheckpointRespond}
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Decision Modal (에이전트가 사용자에게 묻는 질문) */}
-      <AnimatePresence>
-        {pendingDecision && (
-          <DecisionModal
-            decision={pendingDecision}
-            onRespond={(answer) => {
-              window.harness?.decision.respond(answer);
-              setPendingDecision(null);
-            }}
-          />
-        )}
-      </AnimatePresence>
 
       <ToastContainer />
     </div>
