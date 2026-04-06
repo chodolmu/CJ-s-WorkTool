@@ -57,20 +57,23 @@ export class SdkChat extends EventEmitter {
         cwd: params.workingDir || ".",
         shell: true,
         windowsHide: true,
-        env: { ...process.env },
+        env: { ...process.env, PYTHONIOENCODING: "utf-8" },
       });
+
+      // UTF-8 디코딩 보장
+      proc.stdout?.setEncoding("utf-8");
+      proc.stderr?.setEncoding("utf-8");
 
       let stdout = "";
       let stderr = "";
 
-      proc.stdout?.on("data", (chunk: Buffer) => {
-        const text = chunk.toString();
+      proc.stdout?.on("data", (text: string) => {
         stdout += text;
         this.emit("stream", { text });
       });
 
-      proc.stderr?.on("data", (chunk: Buffer) => {
-        stderr += chunk.toString();
+      proc.stderr?.on("data", (text: string) => {
+        stderr += text;
       });
 
       proc.on("close", (code: number | null) => {
@@ -113,12 +116,15 @@ export class SdkChat extends EventEmitter {
       stdio: ["pipe", "pipe", "pipe"],
     });
 
-    this.proc.stdout?.on("data", (chunk: Buffer) => {
-      this.emit("stdout", chunk.toString());
+    this.proc.stdout?.setEncoding("utf-8");
+    this.proc.stderr?.setEncoding("utf-8");
+
+    this.proc.stdout?.on("data", (text: string) => {
+      this.emit("stdout", text);
     });
 
-    this.proc.stderr?.on("data", (chunk: Buffer) => {
-      this.emit("stderr", chunk.toString());
+    this.proc.stderr?.on("data", (text: string) => {
+      this.emit("stderr", text);
     });
 
     this.proc.on("close", (code: number | null) => {
