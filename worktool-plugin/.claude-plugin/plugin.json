@@ -1,0 +1,13 @@
+{
+  "name": "worktool",
+  "version": "0.1.0",
+  "description": "태스크 드리븐 프로젝트 매니저. 프로젝트를 마일스톤→스프린트→태스크로 자동 분할하고, 태스크 단위로 실행하며, Handoff로 맥락을 연결합니다. 비개발자도 사용 가능.",
+  "author": {
+    "name": "Cho Jun",
+    "url": "https://github.com/chodolmu"
+  },
+  "repository": "https://github.com/chodolmu/worktool-plugin",
+  "license": "MIT",
+  "keywords": ["project-manager", "task-driven", "planning", "execution", "handoff"],
+  "skills": "./skills/"
+}
