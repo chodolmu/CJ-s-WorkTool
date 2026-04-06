@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useAppStore } from "../stores/app-store";
-import type { Project } from "@shared/types";
+import type { Project, ProjectStats } from "@shared/types";
 
 interface DashboardPageProps {
   onNewProject: () => void;
@@ -17,6 +17,17 @@ const statusConfig: Record<string, { label: string; color: string }> = {
 
 export function DashboardPage({ onNewProject, onOpenProject, onDeleteProject }: DashboardPageProps) {
   const { projects, claudeInstalled } = useAppStore();
+  const [statsMap, setStatsMap] = useState<Record<string, ProjectStats>>({});
+
+  // 프로젝트별 통계 로드
+  useEffect(() => {
+    if (!window.harness?.data?.getProjectStats) return;
+    for (const p of projects) {
+      window.harness.data.getProjectStats(p.id).then((stats: ProjectStats) => {
+        setStatsMap((prev) => ({ ...prev, [p.id]: stats }));
+      }).catch(() => {});
+    }
+  }, [projects]);
 
   return (
     <div className="h-full overflow-y-auto p-6">
@@ -58,6 +69,7 @@ export function DashboardPage({ onNewProject, onOpenProject, onDeleteProject }: 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {projects.map((project: Project) => {
               const status = statusConfig[project.status] ?? statusConfig.planning;
+              const stats = statsMap[project.id];
               return (
                 <div
                   key={project.id}
@@ -90,8 +102,28 @@ export function DashboardPage({ onNewProject, onOpenProject, onDeleteProject }: 
                     </p>
                   )}
 
-                  <div className="text-[10px] text-text-muted">
-                    {new Date(project.createdAt).toLocaleDateString("ko-KR")}
+                  {/* 진행률 바 */}
+                  {stats && stats.totalTasks > 0 && (
+                    <div className="mb-2">
+                      <div className="flex items-center justify-between text-[10px] text-text-muted mb-1">
+                        <span>{stats.completedTasks}/{stats.totalTasks} 태스크</span>
+                        <span>{stats.progressPercent}%</span>
+                      </div>
+                      <div className="w-full h-1.5 bg-bg-hover rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-accent rounded-full transition-all"
+                          style={{ width: `${stats.progressPercent}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 비용 + 날짜 */}
+                  <div className="flex items-center justify-between text-[10px] text-text-muted">
+                    <span>{new Date(project.createdAt).toLocaleDateString("ko-KR")}</span>
+                    {stats && stats.totalCost > 0 && (
+                      <span>${stats.totalCost.toFixed(4)}</span>
+                    )}
                   </div>
                 </div>
               );

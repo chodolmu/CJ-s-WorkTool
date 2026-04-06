@@ -21,27 +21,45 @@ export function ProjectPage({ projectId }: ProjectPageProps) {
 
   const [projectName, setProjectName] = useState("프로젝트");
   const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    setLoaded(false);
+    setError(null);
     Promise.all([
       window.harness.data.getProjectTree(projectId),
       window.harness.data.getProjectStats(projectId),
     ])
       .then(([tree, stats]: [ProjectTree, ProjectStats]) => {
-        setProjectName(tree.project.name);
-        setProjectTree(tree.milestones);
+        setProjectName(tree?.project?.name ?? "프로젝트");
+        setProjectTree(tree?.milestones ?? []);
         setStats(stats);
         setLoaded(true);
       })
-      .catch(() => {
+      .catch((err: unknown) => {
+        setError(String(err));
         setLoaded(true);
       });
   }, [projectId]);
 
   if (!loaded) {
     return (
-      <div className="h-full flex items-center justify-center text-gray-400">
-        로딩중...
+      <div className="h-full flex items-center justify-center">
+        <div className="flex flex-col items-center gap-2">
+          <div className="w-6 h-6 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+          <span className="text-sm text-gray-400">프로젝트 로딩중...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="text-center space-y-2">
+          <p className="text-sm text-red-400">프로젝트를 불러올 수 없습니다</p>
+          <p className="text-xs text-gray-500">{error}</p>
+        </div>
       </div>
     );
   }
