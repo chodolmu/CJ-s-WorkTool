@@ -1,7 +1,7 @@
 {
   "name": "gamemaker-kit",
-  "version": "0.1.0",
-  "description": "Prototype game milestones in HTML, validate with Playwright bots + human testers, port only what passes both gates to Godot/Unity. Forces fun-validation discipline before any engine code.",
+  "version": "0.2.0",
+  "description": "Game development workflow plugin for Claude Code. Falsify un-fun in HTML before touching the engine: 28 skills + 4 domain agents covering 4 axes (time / discipline / validation / integration). Playwright bots with 4 procedural personas + your own self-test gate, then a 6-stage HTML→Godot/Unity port re-validation. Endpoint is 'development complete' — release and live-ops are out of scope by design.",
   "author": {
     "name": "Cho Jun"
   },
@@ -17,6 +17,11 @@
     "milestone-validation",
     "design-pillars",
     "indie-games",
-    "html-prototype"
+    "html-prototype",
+    "fun-falsification",
+    "procedural-personas",
+    "self-test",
+    "port-re-validation",
+    "merge-gate"
   ]
 }
