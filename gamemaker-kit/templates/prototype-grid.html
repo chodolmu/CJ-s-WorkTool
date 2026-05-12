@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>{{MILESTONE_NAME}} — gamemaker-kit prototype</title>
+<!--
+gamemaker-kit milestone: {{MILESTONE_ID}}
+Pillars targeted: {{PILLARS}}
+Hypothesis:
+  IF   {{HYP_IF}}
+  THEN {{HYP_THEN}}
+  MEASURED BY:
+{{HYP_MEASURED_BY}}
+Created: {{CREATED_AT}}
+Shape: grid
+-->
+<style>
+  html, body { margin: 0; padding: 0; background: #1a1a1a; color: #eee; font-family: monospace; }
+  #wrap { display: flex; flex-direction: column; align-items: center; padding: 16px; }
+  h1 { font-size: 14px; opacity: 0.6; margin: 0 0 8px 0; font-weight: normal; }
+  #board { display: grid; gap: 4px; background: #222; padding: 8px; border-radius: 4px; }
+  .cell {
+    width: 56px; height: 56px;
+    background: #2a2a2a;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: bold;
+    border-radius: 4px;
+    cursor: pointer;
+    user-select: none;
+    transition: transform 60ms ease-out;
+  }
+  .cell.empty { color: #444; }
+  .cell.filled { background: #4a90e2; color: #fff; }
+  .cell.selected { outline: 2px solid #f5a623; }
+  .cell.merging { transform: scale(1.15); background: #f5a623; }
+  #hud { margin-top: 12px; opacity: 0.7; font-size: 12px; }
+  #hud span { margin-right: 16px; }
+  #hint { margin-top: 8px; opacity: 0.4; font-size: 11px; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <h1>{{MILESTONE_ID}} — grid prototype</h1>
+  <div id="board"></div>
+  <div id="hud">
+    <span>Score: <b id="score">0</b></span>
+    <span>Moves: <b id="moves">0</b></span>
+    <span>Status: <b id="status">playing</b></span>
+  </div>
+  <div id="hint">Click two adjacent same-value cells to merge. Bot drives via window.__gmk_botHook__.</div>
+</div>
+
+<script src="./_bot_hook_lib.js"></script>
+<script>
+// =============================================================================
+// GAME LOGIC
+// =============================================================================
+// gamemaker-kit asks the implementer to fill in ONLY the marked sections below.
+// The bot hook block at the bottom binds to these — do not remove the binding.
+// =============================================================================
+
+// ---- Tunable constants -----------------------------------------------------
+// Edit these freely. They become the "feel" knobs.
+const GRID_W = 4;
+const GRID_H = 4;
+const START_TILES = 6;          // initial filled cells
+const MAX_MOVES = 40;           // run ends after this many merges
+const MERGE_FX_MS = 120;        // visual hit-stop for merge animation
+
+// ---- Game state -----------------------------------------------------------
+// The state object is the single source of truth. Bot reads via legalActions/
+// summary; user input writes via apply().
+let state = null;
+
+function newState(seed, rng) {
+  const cells = Array.from({ length: GRID_W * GRID_H }, () => 0);
+  // Seed initial tiles deterministically via the rng.
+  let placed = 0;
+  while (placed < START_TILES) {
+    const idx = rng.nextInt(cells.length);
+    if (cells[idx] === 0) {
+      cells[idx] = 1 + rng.nextInt(3); // values 1..3
+      placed++;
+    }
+  }
+  return {
+    seed,
+    cells,
+    moves: 0,
+    score: 0,
+    over: false,
+    over_reason: null,
+    selected: null,    // index of currently-selected cell (UI only)
+    fx: null,          // active visual fx, if any
+  };
+}
+
+// ---- Action shape ---------------------------------------------------------
+// Bot's legalActions() returns: [{ type: 'merge', from: idx, to: idx }, ...]
+// Human UI translates clicks into the same action shape.
+
+function neighbors(idx) {
+  const x = idx % GRID_W, y = Math.floor(idx / GRID_W);
+  const out = [];
+  if (x > 0)         out.push(idx - 1);
+  if (x < GRID_W-1)  out.push(idx + 1);
+  if (y > 0)         out.push(idx - GRID_W);
+  if (y < GRID_H-1)  out.push(idx + GRID_W);
+  return out;
+}
+
+function computeLegalActions(s) {
+  if (s.over) return [];
+  const actions = [];
+  for (let i = 0; i < s.cells.length; i++) {
+    if (s.cells[i] === 0) continue;
+    for (const j of neighbors(i)) {
+      if (j > i && s.cells[j] === s.cells[i]) {
+        actions.push({ type: 'merge', from: i, to: j });
+      }
+    }
+  }
+  return actions;
+}
+
+function applyAction(s, action) {
+  if (action.type !== 'merge') throw new Error('unknown action type: ' + action.type);
+  const v = s.cells[action.from];
+  if (v === 0 || s.cells[action.to] !== v) {
+    // Illegal — bot should not have proposed this. Crash-loud is fine; the hook
+    // wraps and surfaces it.
+    throw new Error('illegal merge: from=' + action.from + ' to=' + action.to + ' v=' + v);
+  }
+  s.cells[action.from] = 0;
+  s.cells[action.to] = v + 1;
+  s.score += (v + 1) * 10;
+  s.moves++;
+  if (s.moves >= MAX_MOVES) {
+    s.over = true;
+    s.over_reason = 'max-moves';
+  } else if (computeLegalActions(s).length === 0) {
+    s.over = true;
+    s.over_reason = 'no-moves';
+  }
+}
+
+function summarize(s) {
+  return {
+    score: s.score,
+    custom: {
+      moves: s.moves,
+      over_reason: s.over_reason,
+      max_tile: Math.max(...s.cells),
+      empty_cells: s.cells.filter((c) => c === 0).length,
+    },
+  };
+}
+
+// =============================================================================
+// RENDER (for human play; bot ignores)
+// =============================================================================
+
+const boardEl = document.getElementById('board');
+const scoreEl = document.getElementById('score');
+const movesEl = document.getElementById('moves');
+const statusEl = document.getElementById('status');
+
+function renderBoard() {
+  boardEl.style.gridTemplateColumns = 'repeat(' + GRID_W + ', 56px)';
+  boardEl.innerHTML = '';
+  for (let i = 0; i < state.cells.length; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'cell ' + (state.cells[i] === 0 ? 'empty' : 'filled');
+    if (state.selected === i) cell.classList.add('selected');
+    if (state.fx === i) cell.classList.add('merging');
+    cell.textContent = state.cells[i] === 0 ? '·' : state.cells[i];
+    cell.onclick = () => onCellClick(i);
+    boardEl.appendChild(cell);
+  }
+  scoreEl.textContent = state.score;
+  movesEl.textContent = state.moves;
+  statusEl.textContent = state.over ? ('over (' + state.over_reason + ')') : 'playing';
+}
+
+function onCellClick(idx) {
+  if (state.over) return;
+  if (state.selected === null) {
+    if (state.cells[idx] !== 0) state.selected = idx;
+  } else if (state.selected === idx) {
+    state.selected = null;
+  } else if (neighbors(state.selected).includes(idx) && state.cells[state.selected] === state.cells[idx]) {
+    // Valid merge
+    const action = { type: 'merge', from: state.selected, to: idx };
+    state.fx = idx;
+    applyAction(state, action);
+    state.selected = null;
+    renderBoard();
+    setTimeout(() => { state.fx = null; renderBoard(); }, MERGE_FX_MS);
+    return;
+  } else if (state.cells[idx] !== 0) {
+    state.selected = idx;
+  } else {
+    state.selected = null;
+  }
+  renderBoard();
+}
+
+// =============================================================================
+// BOT HOOK BINDING — DO NOT MODIFY
+// =============================================================================
+// The shared library at _bot_hook_lib.js exposes window.__gmk.makeHook.
+// We bind the standard 5-callback spec to our game logic. /gmk-validate
+// requires window.__gmk_botHook__ with this exact surface.
+
+window.__gmk_botHook__ = window.__gmk.makeHook({
+  reset(seed, rng) {
+    state = newState(seed, rng);
+    renderBoard();
+  },
+  isOver() {
+    return state.over;
+  },
+  legalActions() {
+    return computeLegalActions(state);
+  },
+  apply(action) {
+    applyAction(state, action);
+    // No render in apply() — bots run headless and don't need it.
+    // For human-driven play, onCellClick() calls renderBoard() itself.
+  },
+  collectSummary() {
+    return summarize(state);
+  },
+  // maxActions / maxDurationMs left at lib defaults (5000 / 600s sim).
+});
+
+// Initial state for human players (seed = wall-clock so each load is fresh)
+window.__gmk_botHook__.startGame(Date.now() & 0xffff);
+</script>
+</body>
+</html>

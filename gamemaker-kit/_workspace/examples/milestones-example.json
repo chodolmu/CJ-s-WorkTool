@@ -1,0 +1,223 @@
+{
+  "_comment": "milestones.json — v0.2 schema example. All v0.2 fields (tasks[], hypothesis.trials[], self_test, merge_gate, ported_to.re_validation) are OPTIONAL. A v0.1 milestone with only {id, name, pillars_targeted, hypothesis.{if,then,measured_by}, prototype, shape, created_at, validation, ported_to} still validates.",
+  "project_name": "ZooMerge",
+  "milestones": [
+    {
+      "id": "m1-merge-feel",
+      "name": "Merge feel — tactile satisfaction on every combine",
+      "pillars_targeted": ["tactile-satisfaction"],
+      "hypothesis": {
+        "if": "two dragons merging triggers 80ms hit-stop + screen shake amplitude 6px + 8-particle burst",
+        "then": "the player keeps merging without checking the clock — average uninterrupted session > 4 minutes",
+        "measured_by": [
+          {
+            "metric": "session_length_avg_ms",
+            "kind": "bot",
+            "target": { "op": ">", "value": 240000 },
+            "confidence": 0.90,
+            "sample_size": 200,
+            "baseline": { "source": "absolute", "value": 240000 },
+            "early_fail": { "after_runs": 30, "condition": "session_length_avg_ms < 60000" }
+          },
+          {
+            "metric": "self_test_says_satisfying",
+            "kind": "self-test",
+            "target": { "op": "==", "value": "PASS" },
+            "confidence": 0.80,
+            "sample_size": 1
+          }
+        ],
+        "trials": [
+          {
+            "trial_id": "t-2026-05-12-01",
+            "started_at": "2026-05-12T11:00:00Z",
+            "config": { "policy": "persona-mix", "runs": 200 },
+            "result": {
+              "metrics": { "session_length_avg_ms": 287000, "crash_rate": 0.0, "dominant_strategy_ratio": 0.31 },
+              "verdict": "PASS",
+              "pruned": false,
+              "pruned_reason": null,
+              "finished_at": "2026-05-12T11:08:00Z"
+            }
+          }
+        ]
+      },
+      "prototype": "prototypes/m1-merge-feel.html",
+      "shape": "grid",
+      "created_at": "2026-05-09T12:00:00Z",
+      "tasks": [
+        {
+          "id": "t-m1-design-merge-rules",
+          "discipline": "design",
+          "title": "Merge rule spec — adjacency, chain limits",
+          "status": "done",
+          "created_at": "2026-05-09T12:10:00Z",
+          "updated_at": "2026-05-09T18:00:00Z",
+          "completed_at": "2026-05-09T18:00:00Z"
+        },
+        {
+          "id": "t-m1-code-hit-stop",
+          "discipline": "code",
+          "title": "80ms hit-stop on merge resolve",
+          "status": "done",
+          "created_at": "2026-05-09T12:10:00Z",
+          "updated_at": "2026-05-10T15:00:00Z",
+          "completed_at": "2026-05-10T15:00:00Z"
+        },
+        {
+          "id": "t-m1-art-particles",
+          "discipline": "art",
+          "title": "8-particle burst sprite + palette lock",
+          "status": "done",
+          "created_at": "2026-05-09T12:10:00Z",
+          "updated_at": "2026-05-11T09:30:00Z",
+          "completed_at": "2026-05-11T09:30:00Z"
+        },
+        {
+          "id": "t-m1-audio-thud",
+          "discipline": "audio",
+          "title": "Merge-thud SFX (200ms, low-mid)",
+          "status": "blocked",
+          "blocked_by": ["t-m1-art-particles"],
+          "created_at": "2026-05-09T12:10:00Z",
+          "updated_at": "2026-05-11T10:00:00Z"
+        }
+      ],
+      "validation": {
+        "ran_at": "2026-05-12T11:08:00Z",
+        "runs": 200,
+        "policy": "persona-mix",
+        "metrics": {
+          "clear_rate": 0.67,
+          "crash_rate": 0.0,
+          "dominant_strategy_ratio": 0.31,
+          "session_length_avg_ms": 287000,
+          "actions_taken_avg": 142,
+          "state_coverage": 0.58,
+          "action_entropy": 1.72,
+          "custom": {}
+        },
+        "by_persona": {
+          "Runner":   { "clear_rate": 0.71, "dominant_strategy_ratio": 0.28 },
+          "Treasure": { "clear_rate": 0.62, "dominant_strategy_ratio": 0.33 },
+          "Survivor": { "clear_rate": 0.65, "dominant_strategy_ratio": 0.30 },
+          "Explorer": { "clear_rate": 0.70, "dominant_strategy_ratio": 0.34 }
+        },
+        "hypothesis_rows": [
+          { "metric": "session_length_avg_ms", "kind": "bot", "target": "> 240000", "actual": 287000, "passed": true }
+        ],
+        "suspicious_runs": [
+          { "seed": 17, "reason": "entropy-low",    "path": ".gamemaker-kit/validations/m1-merge-feel/suspicious/17.json" },
+          { "seed": 42, "reason": "entropy-low",    "path": ".gamemaker-kit/validations/m1-merge-feel/suspicious/42.json" },
+          { "seed": 88, "reason": "entropy-high",   "path": ".gamemaker-kit/validations/m1-merge-feel/suspicious/88.json" },
+          { "seed":  4, "reason": "duration-short", "path": ".gamemaker-kit/validations/m1-merge-feel/suspicious/4.json" },
+          { "seed": 199, "reason": "duration-long", "path": ".gamemaker-kit/validations/m1-merge-feel/suspicious/199.json" }
+        ],
+        "verdict": "PASS",
+        "guardrails": { "crash_rate_ok": true, "dominant_strategy_ok": true, "state_coverage_ok": true }
+      },
+      "validation_history": [],
+      "self_test": {
+        "sessions": [
+          {
+            "date": "2026-05-12",
+            "duration_min": 18,
+            "notes_path": ".gamemaker-kit/self-tests/m1-merge-feel/session-2026-05-12.md",
+            "suspicious_seeds_reviewed": [17, 42, 88],
+            "verdict": "PASS"
+          }
+        ],
+        "coded_themes": [
+          { "theme": "chunky-feedback", "mentions": 4, "examples": ["thud feels right", "satisfying clack"] },
+          { "theme": "wants-more-variety", "mentions": 2, "examples": ["all merges sound the same after 5 min"] }
+        ],
+        "latest_verdict": "PASS"
+      },
+      "merge_gate": {
+        "ran_at": "2026-05-12T15:00:00Z",
+        "regression_ok": true,
+        "asset_conflicts": [],
+        "secrets_detected": [],
+        "verdict": "PASS",
+        "warnings": []
+      },
+      "ported_to": {
+        "ported_at": "2026-05-12T17:00:00Z",
+        "engine": "godot",
+        "files_created": ["scenes/MergeBoard.tscn", "scripts/merge_board.gd"],
+        "files_modified": ["scenes/Main.tscn"],
+        "checklist": ".gamemaker-kit/port-checklists/m1-merge-feel.md",
+        "re_validation": {
+          "compile_ok": true,
+          "smoke_run_ok": true,
+          "metric_diff": {
+            "html_metrics":   { "clear_rate": 0.67, "dominant_strategy_ratio": 0.31, "action_entropy": 1.72 },
+            "engine_metrics": { "clear_rate": 0.71, "dominant_strategy_ratio": 0.34, "action_entropy": 1.65 },
+            "delta":          { "clear_rate": 0.04, "dominant_strategy_ratio": 0.03, "action_entropy": -0.07 },
+            "warnings": []
+          },
+          "visual_diff": null,
+          "verdict": "RE_PASS",
+          "verdict_reason": "All metric deltas within threshold; user confirmed engine feel matches HTML."
+        }
+      },
+      "killed": false
+    },
+    {
+      "_comment": "Second milestone: minimal v0.1-compatible entry (no v0.2 optional fields). Demonstrates backward compat — gmk skills MUST accept this shape.",
+      "id": "m2-dragon-evo",
+      "name": "Dragon evolution curve",
+      "pillars_targeted": ["discovery-joy"],
+      "hypothesis": {
+        "if": "every 5th merge unlocks a visibly distinct dragon species",
+        "then": "the player keeps merging to see the next species",
+        "measured_by": [
+          {
+            "metric": "merges_per_session",
+            "kind": "bot",
+            "target": { "op": ">", "value": 25 },
+            "confidence": 0.90,
+            "sample_size": 200
+          }
+        ]
+      },
+      "prototype": "prototypes/m2-dragon-evo.html",
+      "shape": "grid",
+      "created_at": "2026-05-11T10:00:00Z",
+      "validation": null,
+      "ported_to": null
+    },
+    {
+      "_comment": "Third milestone: killed example (Cleveland rule). Kept in milestones.json for learning trace; gmk-status excludes from active count.",
+      "id": "m0-roguelike-deckbuild",
+      "name": "Roguelike deckbuilder graft (KILLED)",
+      "pillars_targeted": ["discovery-joy"],
+      "hypothesis": {
+        "if": "merge runs spawn a card draft every 10 merges",
+        "then": "the player keeps playing for the deckbuilding loop",
+        "measured_by": [
+          {
+            "metric": "session_length_avg_ms",
+            "kind": "bot",
+            "target": { "op": ">", "value": 300000 },
+            "confidence": 0.80,
+            "sample_size": 200
+          }
+        ]
+      },
+      "prototype": "prototypes/m0-roguelike-deckbuild.html",
+      "shape": "grid",
+      "created_at": "2026-05-08T20:00:00Z",
+      "validation": {
+        "ran_at": "2026-05-09T01:00:00Z",
+        "runs": 200,
+        "policy": "random",
+        "metrics": { "session_length_avg_ms": 95000, "crash_rate": 0.0, "dominant_strategy_ratio": 0.82 },
+        "verdict": "FAIL",
+        "guardrails": { "crash_rate_ok": true, "dominant_strategy_ok": false }
+      },
+      "killed": true,
+      "_kill_reason": "Mechanic graft violates pillar 'tactile-satisfaction' — cards interrupt the merge flow. Cleveland rule: kill, log lesson, move on."
+    }
+  ]
+}

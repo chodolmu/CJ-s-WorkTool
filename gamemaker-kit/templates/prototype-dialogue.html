@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>{{MILESTONE_NAME}} — gamemaker-kit prototype</title>
+<!--
+gamemaker-kit milestone: {{MILESTONE_ID}}
+Pillars targeted: {{PILLARS}}
+Hypothesis:
+  IF   {{HYP_IF}}
+  THEN {{HYP_THEN}}
+  MEASURED BY:
+{{HYP_MEASURED_BY}}
+Created: {{CREATED_AT}}
+Shape: dialogue
+-->
+<style>
+  html, body { margin: 0; padding: 0; background: #1a1a1a; color: #eee; font-family: monospace; }
+  #wrap { max-width: 640px; margin: 0 auto; padding: 24px; }
+  h1 { font-size: 14px; opacity: 0.6; margin: 0 0 16px 0; font-weight: normal; }
+  #scene { background: #222; border-radius: 4px; padding: 20px; min-height: 120px; line-height: 1.6; }
+  #scene .speaker { color: #f5a623; font-weight: bold; margin-bottom: 6px; }
+  #scene .text { font-family: serif; font-size: 16px; }
+  #choices { margin-top: 16px; }
+  .choice {
+    display: block; width: 100%; text-align: left;
+    background: #2a2a2a; color: #eee; border: 1px solid #444;
+    padding: 12px 16px; margin-bottom: 8px;
+    cursor: pointer; border-radius: 4px; font-family: monospace; font-size: 13px;
+  }
+  .choice:hover { background: #333; border-color: #4a90e2; }
+  #hud { margin-top: 24px; opacity: 0.7; font-size: 12px; display: flex; gap: 16px; }
+  #hint { margin-top: 8px; opacity: 0.4; font-size: 11px; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <h1>{{MILESTONE_ID}} — dialogue prototype</h1>
+  <div id="scene">
+    <div class="speaker" id="speaker">—</div>
+    <div class="text" id="text">Loading...</div>
+  </div>
+  <div id="choices"></div>
+  <div id="hud">
+    <span>Node: <b id="node">—</b></span>
+    <span>Choices made: <b id="choicesMade">0</b></span>
+    <span>Status: <b id="status">playing</b></span>
+  </div>
+  <div id="hint">Click a choice. Bot drives via window.__gmk_botHook__.</div>
+</div>
+
+<script src="./_bot_hook_lib.js"></script>
+<script>
+// =============================================================================
+// GAME LOGIC
+// =============================================================================
+// Dialogue prototype — branch nodes and choices.
+// Replace the SCRIPT graph with your own. Each node has speaker, text, and
+// either choices (next nodes) or end: true.
+// =============================================================================
+
+// ---- Tunable: the dialogue graph ------------------------------------------
+const SCRIPT = {
+  start: {
+    speaker: 'Stranger',
+    text: "You're at a crossroads. The path forks — left descends into mist, right climbs toward smoke.",
+    choices: [
+      { label: 'Go left, into the mist', goto: 'mist' },
+      { label: 'Go right, toward the smoke', goto: 'smoke' },
+      { label: 'Stay here', goto: 'wait' },
+    ],
+  },
+  mist: {
+    speaker: 'You',
+    text: "The mist thickens. Something moves in it. You hear breathing.",
+    choices: [
+      { label: 'Call out', goto: 'mist_voice' },
+      { label: 'Hide', goto: 'mist_hide' },
+    ],
+  },
+  smoke: {
+    speaker: 'You',
+    text: "Smoke means people. Or it means fire. You're not sure which scares you more.",
+    choices: [
+      { label: 'Approach quietly', goto: 'end_meet' },
+      { label: 'Turn back', goto: 'start' },
+    ],
+  },
+  wait: {
+    speaker: 'You',
+    text: "Hours pass. The light changes. The fork is still here. You haven't moved.",
+    end: true,
+    end_label: 'paralysis',
+  },
+  mist_voice: {
+    speaker: '???',
+    text: "A voice answers. It sounds like yours.",
+    end: true,
+    end_label: 'mirror',
+  },
+  mist_hide: {
+    speaker: 'You',
+    text: "You crouch. Whatever it was passes. You walk on, alone.",
+    end: true,
+    end_label: 'survived',
+  },
+  end_meet: {
+    speaker: 'Traveler',
+    text: "Another person, by a fire. They look up, surprised, then nod you over.",
+    end: true,
+    end_label: 'company',
+  },
+};
+
+const START_NODE = 'start';
+const MAX_CHOICES = 50; // safety ceiling — bot can't loop forever
+
+// ---- State ----------------------------------------------------------------
+let state = null;
+
+function newState(seed, rng) {
+  return {
+    seed,
+    rng,
+    node: START_NODE,
+    history: [START_NODE],
+    choicesMade: 0,
+    over: false,
+    ending: null,
+  };
+}
+
+// ---- Action shape ---------------------------------------------------------
+// legalActions() returns: [{ type: 'choose', index: 0, goto: 'mist' }, ...]
+// Bot picks one; apply() advances state.
+
+function computeLegalActions(s) {
+  if (s.over) return [];
+  const node = SCRIPT[s.node];
+  if (!node) {
+    throw new Error('unknown node: ' + s.node);
+  }
+  if (node.end) return [];
+  return (node.choices || []).map((c, i) => ({
+    type: 'choose',
+    index: i,
+    goto: c.goto,
+    label: c.label,
+  }));
+}
+
+function applyAction(s, action) {
+  if (s.over) return;
+  if (action.type !== 'choose') throw new Error('unknown action: ' + action.type);
+  const node = SCRIPT[s.node];
+  const choice = node.choices[action.index];
+  if (!choice) throw new Error('invalid choice index: ' + action.index);
+  s.node = choice.goto;
+  s.history.push(s.node);
+  s.choicesMade++;
+
+  const newNode = SCRIPT[s.node];
+  if (newNode.end) {
+    s.over = true;
+    s.ending = newNode.end_label || s.node;
+  } else if (s.choicesMade >= MAX_CHOICES) {
+    s.over = true;
+    s.ending = 'max-choices-reached';
+  }
+}
+
+function summarize(s) {
+  return {
+    score: s.choicesMade, // weak proxy; real games override
+    custom: {
+      choices_made: s.choicesMade,
+      ending: s.ending,
+      path: s.history.join(' -> '),
+      unique_nodes_visited: new Set(s.history).size,
+    },
+  };
+}
+
+// =============================================================================
+// RENDER (human play)
+// =============================================================================
+
+const speakerEl = document.getElementById('speaker');
+const textEl = document.getElementById('text');
+const choicesEl = document.getElementById('choices');
+const nodeEl = document.getElementById('node');
+const choicesMadeEl = document.getElementById('choicesMade');
+const statusEl = document.getElementById('status');
+
+function render() {
+  const node = SCRIPT[state.node];
+  if (!node) {
+    speakerEl.textContent = '—';
+    textEl.textContent = 'BROKEN: unknown node "' + state.node + '"';
+    choicesEl.innerHTML = '';
+    return;
+  }
+  speakerEl.textContent = node.speaker;
+  textEl.textContent = node.text;
+  choicesEl.innerHTML = '';
+  if (node.end) {
+    const div = document.createElement('div');
+    div.style.opacity = '0.5';
+    div.style.marginTop = '12px';
+    div.textContent = '— ending: ' + (node.end_label || state.node) + ' —';
+    choicesEl.appendChild(div);
+  } else {
+    (node.choices || []).forEach((c, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'choice';
+      btn.textContent = (i + 1) + '. ' + c.label;
+      btn.onclick = () => {
+        window.__gmk_botHook__.act({ type: 'choose', index: i, goto: c.goto });
+        render();
+      };
+      choicesEl.appendChild(btn);
+    });
+  }
+  nodeEl.textContent = state.node;
+  choicesMadeEl.textContent = state.choicesMade;
+  statusEl.textContent = state.over ? ('over: ' + state.ending) : 'playing';
+}
+
+// =============================================================================
+// BOT HOOK BINDING — DO NOT MODIFY
+// =============================================================================
+
+window.__gmk_botHook__ = window.__gmk.makeHook({
+  reset(seed, rng) {
+    state = newState(seed, rng);
+    render();
+  },
+  isOver() {
+    return state.over;
+  },
+  legalActions() {
+    return computeLegalActions(state);
+  },
+  apply(action) {
+    applyAction(state, action);
+    // Render is for humans; bots skip it via headless drive.
+  },
+  collectSummary() {
+    return summarize(state);
+  },
+  maxActions: 50, // dialogue rarely needs the default 5000
+});
+
+window.__gmk_botHook__.startGame(Date.now() & 0xffff);
+</script>
+</body>
+</html>

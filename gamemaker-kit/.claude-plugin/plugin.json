@@ -1,0 +1,22 @@
+{
+  "name": "gamemaker-kit",
+  "version": "0.1.0",
+  "description": "Prototype game milestones in HTML, validate with Playwright bots + human testers, port only what passes both gates to Godot/Unity. Forces fun-validation discipline before any engine code.",
+  "author": {
+    "name": "Cho Jun"
+  },
+  "repository": "https://github.com/chodolmu/gamemaker-kit",
+  "license": "MIT",
+  "keywords": [
+    "game-development",
+    "prototyping",
+    "playtesting",
+    "godot",
+    "unity",
+    "playwright",
+    "milestone-validation",
+    "design-pillars",
+    "indie-games",
+    "html-prototype"
+  ]
+}

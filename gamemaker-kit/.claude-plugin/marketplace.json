@@ -1,0 +1,36 @@
+{
+  "name": "gamemaker-kit",
+  "owner": {
+    "name": "Cho Jun",
+    "email": "chodolmu@github.com"
+  },
+  "metadata": {
+    "description": "Game development workflow plugin for Claude Code. Prototype mechanics in single-file HTML, validate with Playwright bots and human testers, port only validated milestones to Godot/Unity. Forces fun-validation discipline before engine work.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "gamemaker-kit",
+      "source": "./",
+      "description": "HTML prototype + bot validation + human gating + engine port. Seven skills: gmk-init, gmk-prototype, gmk-validate, gmk-share, gmk-feedback, gmk-port, gmk-status.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Cho Jun"
+      },
+      "license": "MIT",
+      "keywords": [
+        "game-development",
+        "prototyping",
+        "playtesting",
+        "godot",
+        "unity",
+        "playwright",
+        "milestone-validation",
+        "design-pillars",
+        "indie-games",
+        "html-prototype"
+      ],
+      "category": "game-development"
+    }
+  ]
+}

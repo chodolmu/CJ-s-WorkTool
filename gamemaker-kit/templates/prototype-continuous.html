@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>{{MILESTONE_NAME}} — gamemaker-kit prototype</title>
+<!--
+gamemaker-kit milestone: {{MILESTONE_ID}}
+Pillars targeted: {{PILLARS}}
+Hypothesis:
+  IF   {{HYP_IF}}
+  THEN {{HYP_THEN}}
+  MEASURED BY:
+{{HYP_MEASURED_BY}}
+Created: {{CREATED_AT}}
+Shape: continuous
+-->
+<style>
+  html, body { margin: 0; padding: 0; background: #1a1a1a; color: #eee; font-family: monospace; }
+  #wrap { display: flex; flex-direction: column; align-items: center; padding: 16px; }
+  h1 { font-size: 14px; opacity: 0.6; margin: 0 0 8px 0; font-weight: normal; }
+  canvas { background: #111; border-radius: 4px; display: block; }
+  #hud { margin-top: 12px; opacity: 0.7; font-size: 12px; }
+  #hud span { margin-right: 16px; }
+  #hint { margin-top: 8px; opacity: 0.4; font-size: 11px; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <h1>{{MILESTONE_ID}} — continuous prototype</h1>
+  <canvas id="canvas" width="480" height="320"></canvas>
+  <div id="hud">
+    <span>Score: <b id="score">0</b></span>
+    <span>Ticks: <b id="ticks">0</b></span>
+    <span>Status: <b id="status">playing</b></span>
+  </div>
+  <div id="hint">Arrow keys = move. Survive. Bot drives via window.__gmk_botHook__ (one tick per act()).</div>
+</div>
+
+<script src="./_bot_hook_lib.js"></script>
+<script>
+// =============================================================================
+// GAME LOGIC
+// =============================================================================
+// Continuous-time prototype. Crucial design rule: ALL game-state advancement
+// happens inside apply() / one tick per action. NEVER inside requestAnimationFrame.
+// rAF is used ONLY for rendering the current state for human players.
+// This keeps bot runs deterministic and fast (no real-time waiting).
+// =============================================================================
+
+// ---- Tunable constants -----------------------------------------------------
+const W = 480, H = 320;
+const PLAYER_SIZE = 12;
+const PLAYER_SPEED = 4;          // px per tick
+const OBSTACLE_SIZE = 16;
+const OBSTACLE_SPEED = 3;        // px per tick
+const SPAWN_INTERVAL_TICKS = 18; // spawn one obstacle every N ticks
+const MAX_TICKS = 1800;          // ~30 sec at 60fps human play; bot runs cap here
+
+// ---- State ----------------------------------------------------------------
+let state = null;
+
+function newState(seed, rng) {
+  return {
+    seed,
+    rng,
+    px: W / 2, py: H - PLAYER_SIZE * 2,
+    obstacles: [], // {x, y, vx, vy}
+    ticks: 0,
+    score: 0,
+    over: false,
+    over_reason: null,
+    last_input: 'noop',
+  };
+}
+
+// ---- Action shape ---------------------------------------------------------
+// Continuous shape: every action is an input choice for ONE tick.
+// Actions: 'left' | 'right' | 'up' | 'down' | 'noop'
+// Bot calls act(action) at whatever rate it wants; one act = one sim tick.
+
+const ACTIONS = ['left', 'right', 'up', 'down', 'noop'];
+
+function computeLegalActions(s) {
+  if (s.over) return [];
+  // All directions always legal (movement is clamped at borders).
+  return ACTIONS.map((a) => ({ type: a }));
+}
+
+function applyAction(s, action) {
+  if (s.over) return;
+  s.last_input = action.type;
+  switch (action.type) {
+    case 'left':  s.px -= PLAYER_SPEED; break;
+    case 'right': s.px += PLAYER_SPEED; break;
+    case 'up':    s.py -= PLAYER_SPEED; break;
+    case 'down':  s.py += PLAYER_SPEED; break;
+    case 'noop':  break;
+    default: throw new Error('unknown action: ' + action.type);
+  }
+  // Clamp to bounds
+  s.px = Math.max(PLAYER_SIZE/2, Math.min(W - PLAYER_SIZE/2, s.px));
+  s.py = Math.max(PLAYER_SIZE/2, Math.min(H - PLAYER_SIZE/2, s.py));
+
+  // Spawn obstacles deterministically
+  if (s.ticks % SPAWN_INTERVAL_TICKS === 0) {
+    const fromTop = s.rng.nextInt(2) === 0;
+    s.obstacles.push({
+      x: s.rng.nextInt(W),
+      y: fromTop ? -OBSTACLE_SIZE : H + OBSTACLE_SIZE,
+      vx: 0,
+      vy: fromTop ? OBSTACLE_SPEED : -OBSTACLE_SPEED,
+    });
+  }
+
+  // Move obstacles, drop offscreen ones
+  for (const o of s.obstacles) {
+    o.x += o.vx;
+    o.y += o.vy;
+  }
+  s.obstacles = s.obstacles.filter((o) => o.y > -50 && o.y < H + 50);
+
+  // Collision check (AABB)
+  for (const o of s.obstacles) {
+    if (Math.abs(o.x - s.px) < (OBSTACLE_SIZE + PLAYER_SIZE) / 2 &&
+        Math.abs(o.y - s.py) < (OBSTACLE_SIZE + PLAYER_SIZE) / 2) {
+      s.over = true;
+      s.over_reason = 'collision';
+      return;
+    }
+  }
+
+  s.ticks++;
+  s.score = s.ticks; // survival score
+  if (s.ticks >= MAX_TICKS) {
+    s.over = true;
+    s.over_reason = 'max-ticks';
+  }
+}
+
+function summarize(s) {
+  return {
+    score: s.score,
+    custom: {
+      ticks_survived: s.ticks,
+      over_reason: s.over_reason,
+      obstacles_alive: s.obstacles.length,
+    },
+  };
+}
+
+// =============================================================================
+// RENDER (human play; bot ignores)
+// =============================================================================
+
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const scoreEl = document.getElementById('score');
+const ticksEl = document.getElementById('ticks');
+const statusEl = document.getElementById('status');
+
+function render() {
+  ctx.fillStyle = '#111';
+  ctx.fillRect(0, 0, W, H);
+
+  // Player
+  ctx.fillStyle = '#4a90e2';
+  ctx.fillRect(state.px - PLAYER_SIZE/2, state.py - PLAYER_SIZE/2, PLAYER_SIZE, PLAYER_SIZE);
+
+  // Obstacles
+  ctx.fillStyle = '#e24a4a';
+  for (const o of state.obstacles) {
+    ctx.fillRect(o.x - OBSTACLE_SIZE/2, o.y - OBSTACLE_SIZE/2, OBSTACLE_SIZE, OBSTACLE_SIZE);
+  }
+
+  scoreEl.textContent = state.score;
+  ticksEl.textContent = state.ticks;
+  statusEl.textContent = state.over ? ('over (' + state.over_reason + ')') : 'playing';
+}
+
+// Human input — translate keys into the same action shape the bot uses.
+// Then drive ticks at ~60Hz via rAF. Bot path bypasses this entirely.
+let humanKey = null;
+let humanRunning = true;
+window.addEventListener('keydown', (e) => {
+  switch (e.key) {
+    case 'ArrowLeft':  humanKey = 'left'; e.preventDefault(); break;
+    case 'ArrowRight': humanKey = 'right'; e.preventDefault(); break;
+    case 'ArrowUp':    humanKey = 'up'; e.preventDefault(); break;
+    case 'ArrowDown':  humanKey = 'down'; e.preventDefault(); break;
+  }
+});
+window.addEventListener('keyup', () => { humanKey = null; });
+
+let lastFrameMs = 0;
+function frame(t) {
+  if (!humanRunning) return;
+  if (t - lastFrameMs >= 16) {
+    if (!state.over) {
+      window.__gmk_botHook__.act({ type: humanKey || 'noop' });
+    }
+    render();
+    lastFrameMs = t;
+  }
+  requestAnimationFrame(frame);
+}
+
+// =============================================================================
+// BOT HOOK BINDING — DO NOT MODIFY
+// =============================================================================
+
+window.__gmk_botHook__ = window.__gmk.makeHook({
+  reset(seed, rng) {
+    state = newState(seed, rng);
+  },
+  isOver() {
+    return state.over;
+  },
+  legalActions() {
+    return computeLegalActions(state);
+  },
+  apply(action) {
+    applyAction(state, action);
+  },
+  collectSummary() {
+    return summarize(state);
+  },
+});
+
+// Initial state for human players
+window.__gmk_botHook__.startGame(Date.now() & 0xffff);
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
