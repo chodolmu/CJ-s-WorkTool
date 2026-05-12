@@ -42,16 +42,43 @@
   // Game-specific code provides callbacks; this returns the standard
   // window.__gmk_botHook__ object.
   //
-  // Required callbacks:
+  // Required callbacks (5):
   //   reset(seed, rng)    — set initial state, accept seed for determinism
   //   isOver()            — return true when run is finished
   //   legalActions()      — return array of action descriptors (any shape)
   //   apply(action)       — mutate state by applying action
   //   collectSummary()    — return { score, custom, ... } base metrics
   //
-  // Optional:
+  // Optional callbacks (4, Wave B — Procedural Personas in /gmk-validate use
+  // these if present; absent ones fall back to random / null signals):
+  //   stateSignature()        — string. State-coverage metric in gmk-validate.
+  //                             Should distinguish states cheaply (e.g.
+  //                             JSON.stringify([grid, score])). Don't fake.
+  //   riskEstimate(action)    — number 0..1. Survivor persona. Higher = more
+  //                             likely to lose. Omit if no honest signal.
+  //   progressEstimate()      — number 0..1. Runner persona. 0=start, 1=goal.
+  //                             Omit if "progress" is meaningless for the game.
+  //   noveltyScore(action)    — number 0..1. Explorer persona. Higher = state
+  //                             this action leads to is "less seen." Omit if
+  //                             you can't measure novelty cheaply.
+  //
+  // Behavior when an optional callback is missing:
+  //   - The hook exposes a corresponding query (hasPersonaSignal, etc.) so
+  //     /gmk-validate can detect absence and fall back to uniform-random
+  //     action choice for that persona. The validator records `fallback_used`
+  //     in the trial result so suspicious-run analysis isn't blamed on the
+  //     persona being toothless.
+  //   - Implementing fake signals (e.g. riskEstimate() = 0.5 always) is worse
+  //     than omitting: it pollutes the Survivor persona with noise that looks
+  //     like signal. Rule of thumb in gmk-prototype-rules §4.
+  //
+  // Other optional spec fields:
   //   maxActions          — override default 5000
   //   maxDurationMs       — override default 600000 (sim time, not wall)
+  //
+  // API version (`_gmkApiVersion`) stays at 1 — these additions are purely
+  // additive. v0.1 prototypes with only the five required callbacks remain
+  // fully compatible.
   //
   // The hook wraps these with crash containment, action counting, bounded-runs
   // safety, and the standard summary surface.
@@ -64,6 +91,19 @@
     let stuck = false;
     const maxActions = spec.maxActions || 5000;
     const maxDurationMs = spec.maxDurationMs || 600000;
+
+    const hasStateSignature    = typeof spec.stateSignature    === 'function';
+    const hasRiskEstimate      = typeof spec.riskEstimate      === 'function';
+    const hasProgressEstimate  = typeof spec.progressEstimate  === 'function';
+    const hasNoveltyScore      = typeof spec.noveltyScore      === 'function';
+
+    function safeNum(v) {
+      const n = Number(v);
+      if (!Number.isFinite(n)) return null;
+      if (n < 0) return 0;
+      if (n > 1) return 1;
+      return n;
+    }
 
     return {
       // ---- lifecycle ----
@@ -149,8 +189,53 @@
         };
       },
 
+      // ---- persona signals (Wave B, optional) ----
+      // Each returns null if the prototype omitted the callback. /gmk-validate
+      // reads these per legal action and falls back to uniform-random when
+      // the answer is null. Errors thrown by the user callback do NOT crash
+      // the run — they degrade to null and are logged at trial finish.
+      stateSignature() {
+        if (!hasStateSignature || crashed || stuck) return null;
+        try {
+          const s = spec.stateSignature();
+          return typeof s === 'string' ? s : (s == null ? null : String(s));
+        } catch (err) {
+          return null;
+        }
+      },
+      riskEstimate(action) {
+        if (!hasRiskEstimate || crashed || stuck) return null;
+        try {
+          return safeNum(spec.riskEstimate(action));
+        } catch (err) {
+          return null;
+        }
+      },
+      progressEstimate() {
+        if (!hasProgressEstimate || crashed || stuck) return null;
+        try {
+          return safeNum(spec.progressEstimate());
+        } catch (err) {
+          return null;
+        }
+      },
+      noveltyScore(action) {
+        if (!hasNoveltyScore || crashed || stuck) return null;
+        try {
+          return safeNum(spec.noveltyScore(action));
+        } catch (err) {
+          return null;
+        }
+      },
+
       // ---- introspection (for /gmk-validate preflight) ----
       _gmkApiVersion: 1,
+      _gmkPersonaCapabilities: {
+        stateSignature:    hasStateSignature,
+        riskEstimate:      hasRiskEstimate,
+        progressEstimate:  hasProgressEstimate,
+        noveltyScore:      hasNoveltyScore,
+      },
     };
   }
 
