@@ -1,63 +1,84 @@
 ---
 name: gmk-port
-description: Port a double-validated HTML prototype (bot PASS + human PASS) into the user's main engine project — Godot first (MVP), Unity in Phase 2. Translates mechanics to GDScript/C#, integrates into the existing project structure following its conventions, and emits a port-checklist.md listing things that don't auto-translate and need human re-tuning (game feel numbers, physics, audio, art). Refuses to run unless both validation gates passed. Use when the user says "/gmk-port <name>", "port to godot", "convert to engine", "프로토타입 포팅", or wants the validated mechanic to live in the real engine. Run AFTER both /gmk-validate and /gmk-feedback have passed.
+description: Port a milestone that passed both /gmk-validate (bot) and /gmk-self-test (the user's own playtest) into the main engine project — Godot first, Unity in Phase 2 — and re-validate the port through 5 stages: Generate, Compile, Smoke-run, Metric-diff (HTML 200 vs Engine 200), and human RE-PASS. Translates HTML mechanics to GDScript/C# following the host project's conventions, emits a port-checklist with re-tuning items, and refuses to run without both validation gates. Use when the user says "/gmk-port <name>", "port to godot", "convert to engine", "프로토타입 포팅", or after a milestone is double-validated and ready to leave HTML. Run AFTER /gmk-validate PASS AND /gmk-self-test PASS AND ideally after /gmk-merge-gate.
 model: opus
 ---
 
-# gmk-port — Cross the chasm to the real engine
+# gmk-port — Cross the chasm to the real engine, and re-prove it
 
-The previous five skills protected the user from porting bad ideas. This one is the only step where validated ideas leave the throwaway HTML world and touch the real game project.
+Every prior skill protected the user from porting bad ideas. This one is the only step where validated ideas leave the throwaway HTML world and touch the real game project. It's also the only step where validation has to be *re-done* — the HTML PASS verdict doesn't carry into Godot/Unity automatically. Engine frame timing, input pipeline, physics tick, and audio bus all change the answer.
 
-It's the most judgment-heavy step in the kit. Three reasons:
+Three reasons this is the most judgment-heavy skill in the kit:
 
 1. **API hallucination is constant.** Godot has ~850 classes; Unity has a package zoo. The right answer is "use this exact node + this exact signal," not a plausible-looking call that doesn't exist. Get this wrong and the user spends an afternoon decoding error messages.
-2. **Game feel numbers don't survive translation.** A 0.3s hit-stop in JS is not 0.3s hit-stop in Godot. Frame timing, input pipeline, and physics tick differ. Naive porting destroys the very thing validation just confirmed worked.
-3. **The host project has its own conventions.** Naming, folder structure, scene composition, decision: scenes vs. scripts as primary, signals vs. groups, Resource patterns. Ignoring these makes the port look like vendored junk and the user rewrites it anyway.
+2. **Game feel numbers don't survive translation.** A 0.3s hit-stop in JS is not 0.3s hit-stop in Godot. Naive porting destroys the very thing validation just confirmed.
+3. **The host project has its own conventions.** Naming, folder structure, scene composition, signals vs. groups, Resource patterns. Ignoring these makes the port look like vendored junk and the user rewrites it anyway.
 
-Use opus because all three of these need real judgment. Don't downgrade to sonnet to save tokens — the cost of a bad port is the user re-doing it.
+Opus because all three need real judgment. Don't downgrade to sonnet to save tokens — the cost of a bad port is the user re-doing it.
+
+The 5-stage re-validation (Stages 2-6 below) is what makes this skill different from "port and pray." The HTML prototype was validated by a bot and the user; the engine port has to clear the same bars.
 
 ## Preconditions
 
 1. **Milestone exists** in `.gamemaker-kit/milestones.json`.
 2. **Bot validation passed** — `validation.verdict === "PASS"`.
-3. **Human feedback passed** — `human_feedback.verdict === "PASS"`.
-   - If either failed: stop. *"This milestone hasn't passed both gates. Bot: {bot_verdict}, Human: {human_verdict}. The kit refuses to port unvalidated mechanics — that's the whole reason it exists. Fix and re-validate, or kill the milestone."*
-   - `--force` override is allowed but stamped `forced: true` in the port record AND prints a 3-line warning before generating any code.
-4. **Target engine declared** — read `pillars.json` `engine` field (set at `/gmk-init`). If not `godot` or `unity`:
-   - For other engines (Love2D, GameMaker Studio, etc.), don't generate code. Generate a port-checklist only and tell the user: *"Auto-port for {engine} isn't supported in MVP. Outputting a manual port checklist instead — it lists every mechanic, feel parameter, and asset slot you'll need to translate by hand."*
-5. **Engine project directory exists.** Look for:
-   - `godot/` subfolder containing `project.godot`, OR
-   - `unity/` subfolder containing `Assets/`, OR
-   - The current working directory IS a Godot/Unity project (project.godot at root, etc.).
-   - If none found: ask *"Where's the engine project? Either point me at the Godot/Unity project root, or run /gmk-init's engine step to set it up."*
-6. **Phase 2 gate for Unity.** If engine is `unity`, MVP behavior:
+   - If FAIL or INCONCLUSIVE: stop. *"This milestone hasn't passed bot validation. The kit refuses to port — that's the whole reason it exists. Fix and re-validate, or kill the milestone."*
+3. **Self-test passed** — `self_test.latest_verdict === "PASS"`.
+   - If FAIL or INCONCLUSIVE: stop. *"Bot PASS but your own self-test {verdict}. The bot can't catch feel; if you didn't agree it's worth porting, don't port. Replay suspicious runs or re-tune the prototype first."*
+   - `--force` override is allowed for either gate but stamps `forced: true` in the port record AND prints a 3-line warning before generating any code.
+4. **Merge gate ran recently (recommended).** Look for `.gamemaker-kit/merge-gates/<milestone-id>.md` with `verdict: PASS` modified ≤24h ago. If missing or FAIL or stale, warn but allow:
+   - *"No recent merge-gate PASS for this milestone. Stages 2-5 still run, but you're porting code that may have shared-file conflicts or pre-existing regressions. /gmk-merge-gate first is recommended."*
+5. **Target engine declared** — read `pillars.json` `engine` field (set at `/gmk-init`). If not `godot` or `unity`:
+   - For other engines (Love2D, GameMaker Studio, etc.), don't generate code. Generate a port-checklist only. *"Auto-port for {engine} isn't supported in MVP. Outputting a manual port checklist instead — it lists every mechanic, feel parameter, and asset slot you'll need to translate by hand. Stages 2-6 also don't run for unsupported engines."*
+6. **Engine project directory exists.** Look for `godot/` with `project.godot`, OR `unity/` with `Assets/`, OR a project root with those at top-level. If none: ask *"Where's the engine project? Either point me at the Godot/Unity project root, or run /gmk-init's engine step to set it up."*
+7. **Phase 2 gate for Unity.** If engine is `unity`, MVP behavior:
    - Generate the port-checklist (always).
-   - Skip code generation; tell the user *"MVP port skill targets Godot only. Unity code generation lands in Phase 2. The checklist below covers everything that needs to translate; the C# implementation is yours to write — kit will validate the result if you re-share an HTML prototype of any change."*
-   - Continue this skill from Step 4 onward (checklist generation), skip Step 3 (code generation).
+   - Skip Stage 1 code generation; tell the user *"MVP port skill targets Godot only. Unity code generation lands in Phase 2."*
+   - Stages 2-6 still run if the user manually writes the C# (re-invoke with `--re-validate-only` after writing).
+8. **Engine CLI on PATH for Stages 2-3.** For Godot: `godot --version` works. For Unity: `Unity -version` works. If missing, Stage 2 prints the install command and stops the re-validation at Stage 1.
+9. **Playwright available for Stage 4** (same dep as `/gmk-validate`). Missing Playwright skips Stage 4 with a warning.
 
 ## Flow
 
-### Step 1 — Read everything load-bearing
+The skill runs **Stage 1 (generate)** then a **6-step re-validation** (Stages 2-6) end-to-end by default. Each stage can be re-run in isolation via `--stage N`. Stage 6 (human RE-PASS) is interactive.
+
+```
+Stage 1 — Generate          (this skill, plus optional systems-designer agent in Wave D)
+Stage 2 — Compile           (engine CLI; 1 retry)
+Stage 3 — Smoke-run         (engine bot; 5 runs; 1 retry)
+Stage 4 — Metric diff       (HTML 200 runs vs Engine 200 runs)
+Stage 5 — (port checklist)  (always written; not a verdict)
+Stage 6 — Human RE-PASS     (user plays the engine port; verdict input)
+```
+
+---
+
+### Stage 1 — Generate
+
+Three sub-steps. Don't skip the conventions read.
+
+#### 1a — Read everything load-bearing
 
 Read in order:
 
-1. `.gamemaker-kit/milestones.json` → milestone entry (hypothesis, validation metrics, human feedback themes, pillar bindings).
-2. `prototypes/<name>.html` → the actual code being ported. Parse for:
+1. `.gamemaker-kit/milestones.json` → milestone entry (hypothesis, validation metrics, self_test themes, pillar bindings).
+2. `prototypes/<name>.html` → the actual code being ported. Parse:
    - Game state shape (variables, constants).
    - Action handlers (what happens on each `act()` case).
    - Render code (what gets drawn, when, in response to what).
    - Animation/feel timings (hit-stop durations, particle counts, easing curves).
    - The `__gmk_botHook__` block — discardable in the port; was scaffolding.
-3. `.gamemaker-kit/pillars.json` → pillar IDs and anti-examples (used for Step 5 checklist).
+3. `.gamemaker-kit/pillars.json` → pillar IDs and anti-examples (used for Stage 5 checklist).
 4. **Host project conventions:**
-   - **Godot:** look for any existing `scripts/`, `scenes/`, `resources/` layout. Read 2-3 existing `.gd` files to learn naming (snake_case vs CamelCase for resources), signal style (`signal foo_happened` connected explicitly vs. autoloaded bus), node tree depth preferences. If `_workspace/conventions.md` exists, read it.
-   - If the project is empty (no .gd files yet), use Godot 4.x defaults: snake_case files and signals, PascalCase scene/class names, `scripts/<feature>/` and `scenes/<feature>/` layout.
+   - **Godot:** look for existing `scripts/`, `scenes/`, `resources/` layout. Read 2-3 existing `.gd` files to learn naming (snake_case vs CamelCase for resources), signal style (`signal foo_happened` connected explicitly vs. autoloaded bus), node tree depth preferences. If `_workspace/conventions.md` exists, read it.
+   - **Unity:** look for existing `Assets/Scripts/`, `Assets/Scenes/`. Read 2-3 existing `.cs` files for naming, MonoBehaviour patterns, ScriptableObject usage.
+   - If the project is empty, use engine defaults: Godot 4.x → snake_case files/signals, PascalCase scenes/class names; Unity 6 → PascalCase for class names + methods, camelCase for fields.
 
 Do NOT skip the conventions step. Generated code that ignores existing conventions is worse than asking.
 
-### Step 2 — Plan the port (don't write code yet)
+#### 1b — Plan the port (don't write code yet)
 
-Output a plain-language port plan and **wait for user confirmation** before generating any code:
+Output a plain-language plan and **wait for user confirmation** before generating any code:
 
 ```
 Port plan for m1-merge-feel → godot/
@@ -81,48 +102,51 @@ Port plan for m1-merge-feel → godot/
     InputEventScreenDrag / InputEventMouseMotion (for drag)
 
   Things I will NOT auto-translate (port-checklist will list them):
-    1. Hit-stop duration (0.3s in JS)  — Godot's frame timing is different;
-                                          re-tune by feel.
+    1. Hit-stop duration (0.3s in JS)  — Godot's frame timing is different; re-tune by feel.
     2. Screen shake amplitude/decay    — viewport size/DPI changes the perception.
-    3. Particle visuals                — JS used filled circles; Godot will
-                                          need a real texture or a Shader.
-    4. Sound (none in HTML prototype)  — pillar 'tactile-satisfaction' is
-                                          half-broken without it. Add SFX
-                                          before the next playtest.
-    5. Difficulty curve, score scaling — needs re-tuning against actual
-                                          target devices.
+    3. Particle visuals                — JS used filled circles; Godot will need a real texture.
+    4. Sound (none in HTML prototype)  — pillar 'tactile-satisfaction' is half-broken without it.
+    5. Difficulty curve, score scaling — needs re-tuning against actual target devices.
 
   Coupling to existing project:
-    - Found existing scene 'godot/scenes/main.tscn'. Will NOT auto-add the
-      merge_grid scene to it; you decide where it lives.
-    - Found existing 'event_bus.gd' with signals — will register 'tile_merged'
-      there following the same naming pattern.
+    - Found existing scene 'godot/scenes/main.tscn'. Will NOT auto-add the merge_grid
+      scene to it; you decide where it lives.
+    - Found existing 'event_bus.gd' with signals — will register 'tile_merged' there
+      following the same naming pattern.
+
+  Re-validation plan after generate:
+    Stage 2 Compile     — godot --headless --check-only
+    Stage 3 Smoke       — 5 runs via engine bot hook (Godot autoload, no UI render)
+    Stage 4 Metric diff — HTML 200 runs vs Engine 200 runs, clear_rate / dominant_strategy
+                          / action_entropy compared
+    Stage 5 Checklist   — port-checklists/m1-merge-feel.md
+    Stage 6 You RE-PASS — open Godot, play it, type your verdict back to me
 
 Proceed?
 ```
 
 If the user says no or wants changes, iterate. Don't generate code under a wrong plan.
 
-### Step 3 — Generate the code
+#### 1c — Generate the code
 
 Once the plan is confirmed, write the files. Rules:
 
-#### General
+**General:**
 
-- **Idiomatic to the engine, not the prototype.** A prototype's `for` loops over flat arrays might want to become signals + groups in Godot. A prototype's monolithic state object might split into a `Resource`-backed `GameState`. Use the engine's primitives.
-- **Don't transcribe magic numbers.** When the HTML has `const HITSTOP = 300` (ms), don't translate to `const HITSTOP = 0.3` and call it done. Mark it with a comment `# TUNE: hit-stop duration — re-feel after first run` and put it in the checklist. The number is a placeholder until human re-tuning.
-- **Comments at the top of each generated file** that name the source milestone:
+- **Idiomatic to the engine, not the prototype.** A prototype's `for` loops over flat arrays might want to become signals + groups in Godot. A monolithic state object might split into a `Resource`-backed `GameState`. Use engine primitives.
+- **Don't transcribe magic numbers.** When the HTML has `const HITSTOP = 300` (ms), don't translate to `const HITSTOP = 0.3` and call it done. Mark it `# TUNE: hit-stop duration — re-feel after first run` and put it in the checklist. The number is a placeholder until human re-tuning.
+- **Comments at the top of each generated file:**
   ```gdscript
   # Ported from gamemaker-kit milestone m1-merge-feel
-  # Validated: bot PASS (200 runs), human PASS (4/5 said "satisfying")
+  # Validated: bot PASS (200 runs), self-test PASS (user verdict 2026-05-09)
   # Pillars targeted: tactile-satisfaction
-  # See port-checklists/m1-merge-feel-port.md for re-tuning items.
+  # See port-checklists/m1-merge-feel.md for re-tuning items.
   ```
   This is the only multi-line comment block the kit allows. Future-you reads this when finding the file in 6 months.
-- **No `__gmk_botHook__`.** That was scaffolding. Drop it.
-- **Determinism.** The HTML prototype was deterministically seeded for the bot. Production game probably wants `randomize()` on game start. Default to `randomize()` but leave a comment `# DEV: replace with seeded RandomNumberGenerator if you want deterministic playthroughs`.
+- **No `__gmk_botHook__` block, but DO emit an engine-side bot hook** — see Stage 3 below. The HTML hook was JS; the engine hook is a small autoload (Godot) or static class (Unity) that exposes `state_signature()` / `legal_actions()` / `apply(action)` for headless smoke runs.
+- **Determinism.** The HTML prototype was deterministically seeded for the bot. Production game probably wants `randomize()` on game start. Default to `randomize()` but leave a comment `# DEV: replace with seeded RandomNumberGenerator if you want deterministic playthroughs`. The engine bot hook injects a seed at Stage 3.
 
-#### HTML → Godot translation map (quick reference for the model)
+**HTML → Godot translation map:**
 
 | HTML/JS pattern | Godot 4.x idiom |
 |---|---|
@@ -131,27 +155,59 @@ Once the plan is confirmed, write the files. Rules:
 | `setTimeout(fn, 300)` for feel | `await get_tree().create_timer(0.3).timeout` OR `Tween` |
 | Manual collision check between rects | `Area2D` + `CollisionShape2D` + signal connections |
 | `addEventListener('pointerdown')` | `_input(event)` or `_unhandled_input(event)` checking `InputEventMouseButton`/`InputEventScreenTouch` |
-| Drag with `pointermove` | `InputEventMouseMotion` / `InputEventScreenDrag`, or `Draggable` pattern with `_input` |
+| Drag with `pointermove` | `InputEventMouseMotion` / `InputEventScreenDrag` |
 | Inline `<style>` CSS animations | `AnimationPlayer` track OR `Tween` for one-off |
-| `localStorage.setItem` | `ResourceSaver.save()` to `user://savegame.tres` (Resource-based save) |
-| Vanilla `class` for game state | `class_name GameState extends Resource` (saveable, inspector-editable) |
+| `localStorage.setItem` | `ResourceSaver.save()` to `user://savegame.tres` |
+| Vanilla `class` for game state | `class_name GameState extends Resource` |
 | Particle burst (manual loop drawing dots) | `GPUParticles2D` with a one-shot emitter |
-| Screen shake (translate canvas) | `Camera2D` + `Tween` on `offset`, OR shader on viewport |
-| Audio (HTMLAudioElement, WebAudio) | `AudioStreamPlayer` (UI/non-positional) or `AudioStreamPlayer2D` (positional) |
+| Screen shake (translate canvas) | `Camera2D` + `Tween` on `offset` |
+| Audio (HTMLAudioElement, WebAudio) | `AudioStreamPlayer` or `AudioStreamPlayer2D` |
 | Game loop step counter | `_process(delta)` accumulator OR `Timer` node |
 
 When the prototype uses something not in this table: pick the simplest Godot equivalent and document the choice as a comment. Don't reach for plugins.
 
-#### Action interface translation
+**Action interface translation:**
 
-The prototype's `legalActions()`/`act(action)` API was for the bot. In Godot, this becomes:
+The prototype's `legalActions()` / `act(action)` API was for the bot. In production code:
 
 - For input-driven mechanics: real input events (`_input`, `_unhandled_input`).
 - For state-machine / turn-based: a state machine on the relevant Node, with methods named after the action types.
 
-Don't preserve the `legalActions/act` shape in production code — it's a test harness, not a game architecture.
+Don't preserve the `legalActions/act` shape in production code — it's a test harness, not a game architecture. But **do** emit a parallel hook for Stage 3 (see below).
 
-#### Pillar-aware code comments
+**Engine-side bot hook (for Stage 3 smoke + Stage 4 metric diff):**
+
+In addition to the production code, generate a `bot_hook.gd` autoload (Godot) or `BotHook.cs` static class (Unity) that exposes the same surface as `__gmk_botHook__`:
+
+```gdscript
+# godot/autoload/_gmk_bot_hook.gd — DO NOT modify; regenerated by /gmk-port
+extends Node
+
+const _gmk_api_version: int = 1
+
+func reset(seed: int) -> void:
+    # Set up the mechanic deterministically. Call into MergeGrid.reset_with_seed(seed).
+    ...
+
+func legal_actions() -> Array:
+    ...
+
+func apply(action) -> void:
+    ...
+
+func is_terminal() -> bool:
+    ...
+
+func state_signature() -> String:
+    # Optional. Return null-string if not implemented.
+    return ""
+
+# (Other optional callbacks: risk_estimate, progress_estimate, novelty_score)
+```
+
+The engine bot hook is **a separate file** from the production code. The user's normal game flow doesn't touch it; only Stages 3-4 do.
+
+**Pillar-aware code comments:**
 
 For each major function/scene that strengthens a specific pillar, add ONE comment line:
 
@@ -163,180 +219,403 @@ func _on_merge() -> void:
     _spawn_burst_particles()
 ```
 
-This makes the pillar binding survive into the codebase, so future-you doesn't refactor the feel out of it without realizing what was load-bearing.
+This makes the pillar binding survive into the codebase.
 
-### Step 4 — Generate the port checklist
+---
 
-Always write `port-checklists/<name>-port.md` (in the gamemaker-kit folder, not the engine project). Even for Unity / unsupported engines, the checklist is the deliverable.
+### Stage 2 — Compile
+
+Run the engine's headless compile check.
+
+**Godot:**
+
+```bash
+godot --headless --path godot/ --check-only
+```
+
+Exit code 0 = pass. Non-zero or stderr contains "Parser Error" / "Failed to load" → FAIL.
+
+**Unity:**
+
+```bash
+Unity -batchmode -projectPath unity/ -quit -logFile -
+```
+
+Parse log for compile errors. Exit code 0 + no "error CS" lines = pass.
+
+**Retry policy:** on first failure, re-read the failure output, attempt one targeted fix to the generated files (typo, missing import, wrong API name), then re-run. **One retry, that's it.** If still failing, stop Stages 3-4 and print:
+
+```
+Stage 2 (Compile) — FAIL after 1 retry.
+  Last error:
+    res://scripts/merge/merge_grid.gd:42 — Function "tween_property" not found in base "Tween".
+
+  Likely cause: Godot 4 renamed `Tween.tween_property` parameters between 4.0 and 4.3.
+  This isn't auto-fixable from the prototype alone. Hand-fix the generated file
+  (or the translation map in this skill's source if this is a systemic miss),
+  then re-run /gmk-port --stage 2 to resume from here.
+
+Stages 3-5 skipped. Stage 6 (you RE-PASS) is still available — but probably
+moot until the code compiles.
+```
+
+Don't auto-revert generated files. The user's hand-fix is the floor; treat it as authoritative.
+
+---
+
+### Stage 3 — Smoke-run
+
+Boot the engine in headless mode and run **5 trials** of the engine bot hook. Each trial: reset(seed=i), step through `legal_actions` / `apply` with the same persona-mix sampler `/gmk-validate` uses, until `is_terminal()` or a step cap (1000).
+
+**Godot:**
+
+```bash
+godot --headless --path godot/ --script res://_gmk_smoke.gd -- --runs 5 --seeds 1,2,3,4,5
+```
+
+The skill writes `godot/_gmk_smoke.gd` once (a temporary entry point that calls into `_gmk_bot_hook`). Keep it small; don't depend on it long-term.
+
+**Crash detection:**
+
+- Any non-zero exit: crash.
+- Any step throws an exception: counts as crash for that trial.
+- Hard timeout (60s per trial): kill, count as stuck.
+
+**Retry policy:** on first crash (any trial), re-run the entire 5 once. If second pass also crashes, FAIL Stage 3:
+
+```
+Stage 3 (Smoke) — FAIL after 1 retry.
+  Trial results (retry pass):
+    seed=1   PASS, 124 steps, terminal
+    seed=2   CRASH at step 47 — NullReferenceException in _on_merge (tile.tscn)
+    seed=3   PASS, 89 steps, terminal
+    seed=4   PASS, 132 steps, terminal
+    seed=5   STUCK at step 1000 — no terminal reached
+
+  The crash on seed=2 looks like a missing-null-check in the merge handler.
+  The stuck on seed=5 may be a soft lock; check legal_actions() returns at least
+  one action even in edge states.
+
+Stage 4 (metric diff) skipped — meaningful comparison needs all 5 trials clean.
+Stage 5 (checklist) still written. Stage 6 (you RE-PASS) is still available
+but probably premature; fix the crash first.
+```
+
+If all 5 pass on first or second try, Stage 3 PASS.
+
+---
+
+### Stage 4 — Metric diff
+
+The expensive check. Run **HTML 200 runs** and **Engine 200 runs** with matching persona-mix configs, then compare three load-bearing metrics:
+
+| Metric | Why it matters | Threshold |
+|---|---|---|
+| `clear_rate` | Did the bot finish the mechanic the same fraction of the time? | ±10 pp drift → ⚠ flag, ±25 pp → FAIL |
+| `dominant_strategy_ratio` | Did the engine port accidentally introduce or remove an exploit? | ±15 pp drift → ⚠ flag, ±30 pp → FAIL |
+| `action_entropy` | Is the bot doing roughly the same variety of things? | ±25% relative → ⚠ flag, ±50% → FAIL |
+
+(Thresholds are the same as `/gmk-regression`'s drift thresholds for clear_rate, looser for the others because engine input/timing differences can move them more without breaking the mechanic.)
+
+**Procedure:**
+
+1. Re-run HTML 200 via `/gmk-validate`'s runner against `prototypes/<name>.html` (read fresh, not cached — feel timings may have edited since baseline).
+2. Run Engine 200 by booting the engine 200 times, each time invoking the bot hook with the persona-mix index 0..199. (For Godot: 200 `godot --headless --script _gmk_metric.gd -- --seed N` calls, in a sequential loop — Chromium-level parallelism isn't safe here.)
+3. Aggregate into the same `aggregated.json` shape as `/gmk-validate`, but tagged `source: html` and `source: engine`.
+4. Compute deltas per metric. Apply thresholds.
+
+**Wall time:** roughly 2× a `/gmk-validate` run plus engine startup overhead. Tell the user upfront (~10-30 min for typical prototypes). Allow `--metric-runs 50` for a quick check (looser thresholds because of smaller N).
+
+**Result:**
+
+```
+Stage 4 (Metric diff) — FLAG (1 metric drifted past warning threshold)
+
+  Metric                       HTML         Engine       Delta       Status
+  ----------------------------------------------------------------------------
+  clear_rate                   67%          61%          -6 pp        OK (<10pp)
+  dominant_strategy_ratio      31%          48%          +17 pp       FLAG (>15pp)
+  action_entropy               4.2 bits     4.0 bits     -5%          OK (<25%)
+
+  The dominant_strategy drift suggests the engine port introduced (or made
+  easier) a path the bot now favors. Common causes:
+    - Input timing differs — a feature was hard to trigger in HTML, easy in engine
+    - State machine ordering — Godot's _process call order surfaced a frame-1 exploit
+    - Tween/easing made a previously-hard action reliable
+
+  Stage 4 verdict: FLAG (not FAIL). User judgment from Stage 6 settles whether
+  the drift is acceptable.
+```
+
+The FLAG vs FAIL distinction matters: FAIL means the mechanic isn't recognizably the same; FLAG means it's drifted but might still be fine — your eyes (Stage 6) decide.
+
+---
+
+### Stage 5 — Port checklist
+
+Always written. Path: `.gamemaker-kit/port-checklists/<name>.md`. (Earlier kit versions used `port-checklists/<name>-port.md` — the new path is the simpler one. If the older file exists, leave it; write the new one.)
 
 Template:
 
 ```markdown
 # Port checklist: m1-merge-feel → godot
 
-Generated 2026-05-09. Source: prototypes/m1-merge-feel.html. Validation: bot PASS, human PASS.
+Generated 2026-05-12. Source: prototypes/m1-merge-feel.html.
+Validation: bot PASS (200 runs), self-test PASS (2026-05-09).
+Re-validation so far: Stage 2 PASS, Stage 3 PASS, Stage 4 FLAG (1 metric drifted).
+
+## Stage 6 — what YOU re-verify by playing
+
+This is the human RE-PASS. Open Godot, run merge_grid.tscn (F6), play for 5 minutes.
+
+- [ ] **Feel parity**: does the Godot version feel like the HTML version, or different?
+      The pillar 'tactile-satisfaction' depends on this. If it feels weightless / silent
+      / instant — that's the anti-example, and the port half-failed.
+- [ ] **Metric-drift gut-check**: Stage 4 flagged dominant_strategy_ratio +17pp.
+      Try to play *against* the strategy the bot favored. If it's now trivially exploitable,
+      that's why it drifted; tune before declaring PASS.
+- [ ] **Anti-example check (last)**: pillar 'tactile-satisfaction' anti-example:
+      "Merging two dragons feels like clicking a button on a spreadsheet — silent,
+      instant, weightless." Play the Godot port. Does it match? If yes, re-tune
+      timings and audio before considering this milestone done.
+
+After playing, run `/gmk-port <id> --stage 6 --verdict RE_PASS|RE_FAIL|NEEDS_TUNING` to record.
 
 ## DO NOT auto-translate — these need human re-tuning
 
 ### Game feel timings
 - [ ] Hit-stop duration. JS prototype used 300ms. Godot version uses placeholder 0.3s — re-feel.
-      Test with `Engine.time_scale = 0` for true freeze, vs. `0.05` for slow-mo. The pillar
-      'tactile-satisfaction' depends on this — get it wrong, you broke the milestone.
+      Test with `Engine.time_scale = 0` for true freeze, vs. `0.05` for slow-mo.
 - [ ] Screen shake amplitude. JS used canvas translate ±4px. Godot's Camera2D offset is in
-      world units; tune against actual viewport size, not pixel count.
+      world units; tune against actual viewport size.
 - [ ] Tween easing curves. JS used `cubic-bezier`. Godot Tweens default to linear; pick
       `Tween.TRANS_BACK / EASE_OUT` for chunky-feel decay, then re-feel.
 
 ### Physics
-- [ ] (List physics-affecting mechanics here, if any. For pure grid games, write "none".)
+- [ ] (List physics-affecting mechanics here. For pure grid games, write "none".)
 
 ### Audio
 - [ ] HTML prototype had no audio. Pillar 'tactile-satisfaction' is incomplete without sound.
       Suggested: 1 short chunky merge SFX (~150ms), 1 ambient bed loop, 1 fail/clear sound.
-      Generate via Phase 3 ElevenLabs integration, or use freesound.org for MVP.
 
 ### Art
 - [ ] HTML prototype used canvas-drawn shapes. Replace with sprites/textures per your
-      visual direction. Don't ship the placeholder shapes to testers in v2 — they'll
-      tester-respond to art, not mechanic, and pollute your next feedback round.
+      visual direction. Don't ship placeholders to testers in v2 — they'll respond to
+      art, not mechanic, and pollute your next feedback round.
 
 ## Integration with existing project
 
 - [ ] Decide where `merge_grid.tscn` is instanced. The port did NOT auto-attach it to
       `main.tscn`. Likely candidates: a level select, a debug menu, or main directly.
 - [ ] If using `event_bus.gd` autoload: confirm `tile_merged` signal is registered there.
-      Other features (achievements, score, juice) may want to subscribe.
 - [ ] Naming: ported files use snake_case to match existing project. Verify your team's
       convention if working with collaborators.
 
-## Things the bot validated, that the human-played port should re-verify
+## What the bot validated (Stages 3-4 confirmed mostly intact)
 
-- [ ] Bot reached 4m47s avg session length on random play. Manual playtest the Godot port:
-      can YOU sustain a 4-min session, or does input lag / Godot tween difference make it
-      feel different?
-- [ ] No dominant strategy detected by bot. Quickly check that the Godot port hasn't
-      introduced one accidentally (e.g. an exploit from `_process` timing differences).
-
-## Anti-example check (last before merging this branch)
-
-The pillar 'tactile-satisfaction' anti-example: "Merging two dragons feels like clicking
-a button on a spreadsheet — silent, instant, weightless."
-
-- [ ] Play the Godot port. Does it match the anti-example? If yes, re-tune timings and
-      audio before considering this milestone shipped. The HTML version cleared this gate;
-      losing it in port is the most common kit-failure mode.
+- [x] Bot reached terminal in 5/5 smoke trials (Stage 3 PASS).
+- [x] clear_rate: 67% (HTML) vs 61% (Engine) — within threshold.
+- [ ] dominant_strategy_ratio drifted +17pp. **Investigate during Stage 6.**
 ```
 
-The checklist is the **deliverable** alongside code. Without it, the user has the mechanic but not the re-tuning map.
+---
 
-### Step 5 — Update milestone record
+### Stage 6 — Human RE-PASS (interactive)
+
+Two modes:
+
+**Default**: the skill prints what to do, then halts.
+
+```
+Port complete for m1-merge-feel.
+
+  Re-validation summary:
+    Stage 2 Compile      PASS
+    Stage 3 Smoke (5)    PASS
+    Stage 4 Metric diff  FLAG (dominant_strategy_ratio +17pp)
+    Stage 5 Checklist    written → port-checklists/m1-merge-feel.md
+
+  Stage 6 is on you. Open Godot:
+    cd godot/
+    godot --editor
+
+  Play merge_grid.tscn (F6) for ~5 minutes. Walk the checklist's
+  "Stage 6" section. Then come back and run:
+
+    /gmk-port m1-merge-feel --stage 6 --verdict RE_PASS
+    /gmk-port m1-merge-feel --stage 6 --verdict RE_FAIL --reason "feel lost in port"
+    /gmk-port m1-merge-feel --stage 6 --verdict NEEDS_TUNING --reason "hit-stop needs +20ms"
+
+  The kit doesn't pretend to know which one fits. You play; you call it.
+```
+
+**With `--verdict`**: directly record the verdict and exit.
+
+```
+Recorded m1-merge-feel Stage 6 — RE_PASS at 2026-05-12T23:55Z.
+
+milestones.json updated:
+  ported_to.re_validation.verdict = RE_PASS
+  ported_to.re_validation.tuned_at = (unset — RE_PASS implies no further tuning needed)
+
+If RE_PASS: the port is considered double-validated. Move on.
+If RE_FAIL: this port is broken. Either /gmk-port --force-rebuild (re-runs Stage 1)
+            or hand-edit the generated files and re-run --stage 4 to re-measure.
+If NEEDS_TUNING: the port is conceptually right but needs feel work. The checklist
+                 is your map. When done tuning, re-run --stage 6 --verdict RE_PASS.
+```
+
+---
+
+### Stage 5 (continued) — Update milestone record
+
+Write the complete `ported_to` block to `milestones.json`:
 
 ```json
 {
   "id": "m1-merge-feel",
   "ported_to": {
-    "ported_at": "2026-05-09T18:30:00Z",
+    "ported_at": "2026-05-12T23:30:00Z",
     "engine": "godot",
     "files_created": [
       "godot/scripts/merge/merge_grid.gd",
       "godot/scripts/merge/tile.gd",
       "godot/scenes/merge/merge_grid.tscn",
-      "godot/scenes/merge/tile.tscn"
+      "godot/scenes/merge/tile.tscn",
+      "godot/autoload/_gmk_bot_hook.gd",
+      "godot/_gmk_smoke.gd"
     ],
     "files_modified": ["godot/project.godot"],
-    "checklist": "port-checklists/m1-merge-feel-port.md",
-    "forced": false
+    "checklist": ".gamemaker-kit/port-checklists/m1-merge-feel.md",
+    "forced": false,
+    "re_validation": {
+      "compile_ok": true,
+      "smoke_run_ok": true,
+      "smoke_trials": 5,
+      "smoke_retried": false,
+      "metric_diff": {
+        "html_metrics": { "clear_rate": 0.67, "dominant_strategy_ratio": 0.31, "action_entropy": 4.2 },
+        "engine_metrics": { "clear_rate": 0.61, "dominant_strategy_ratio": 0.48, "action_entropy": 4.0 },
+        "delta": { "clear_rate": -0.06, "dominant_strategy_ratio": +0.17, "action_entropy": -0.05 },
+        "warnings": ["dominant_strategy_ratio drifted +17pp (> 15pp threshold)"]
+      },
+      "verdict": "RE_PASS",
+      "verdict_reason": "feel parity OK; the drifted strategy is exploitable but doesn't break the mechanic.",
+      "tuned_at": null
+    }
   }
 }
 ```
 
-### Step 6 — Print the port report
+`re_validation.verdict` reflects Stage 6's user input. Until Stage 6 runs, the field is `null`. The port isn't considered done until `verdict in {RE_PASS}`.
+
+---
+
+### Final summary print
+
+After all stages run (whether interactive or not):
 
 ```
 m1-merge-feel — PORTED to godot/
 
-  Files created (4):
+  Files created (6):
     godot/scripts/merge/merge_grid.gd
     godot/scripts/merge/tile.gd
     godot/scenes/merge/merge_grid.tscn
     godot/scenes/merge/tile.tscn
+    godot/autoload/_gmk_bot_hook.gd     — DO NOT modify (regenerated)
+    godot/_gmk_smoke.gd                  — temp; safe to delete after Stage 6 done
 
   Files modified (1):
     godot/project.godot   — registered input action 'tile_drag'
 
-  Port checklist: port-checklists/m1-merge-feel-port.md
-    11 items to manually re-tune. The first 5 are game-feel critical
-    (hit-stop, shake, ease curves, audio, art). Don't skip.
+  Re-validation:
+    Stage 2 Compile       PASS
+    Stage 3 Smoke         PASS (5/5 trials)
+    Stage 4 Metric diff   FLAG (dominant_strategy_ratio +17pp)
+    Stage 5 Checklist     written
+    Stage 6 You RE-PASS   pending — see above
 
-Next:
-  1. Open the Godot project. Run merge_grid.tscn directly (F6) to feel it.
-     Compare to the HTML prototype side-by-side — feel parity is the goal.
-  2. Walk the port checklist. The pillar's anti-example check is the
-     last item — if it fails, re-tune before integrating.
-  3. /gmk-status   — see all milestones at a glance.
+  Port checklist: .gamemaker-kit/port-checklists/m1-merge-feel.md
 
-The HTML prototype at prototypes/m1-merge-feel.html stays put. Don't delete
-it — it's the reference for "what the validated version felt like."
+The HTML prototype at prototypes/m1-merge-feel.html stays put — it's the
+reference for "what the validated version felt like." Don't delete it.
 ```
 
 ## Edge cases & policy
 
 ### Re-porting a milestone
 
-User edits the HTML prototype, re-validates, re-shares, re-feedbacks (all PASS again), re-ports. The skill should:
+User edits the HTML prototype, re-validates, re-self-tests (all PASS again), re-ports. The skill:
 
-1. Detect existing `ported_to` entry.
-2. Diff the previously generated files against current generation.
-3. Show the user *which files would change* before overwriting.
-4. **Never silently overwrite user edits** to the ported files. If the user has touched a generated file (detect via git status or content hash), warn loudly: *"You've edited godot/scripts/merge/merge_grid.gd since the last port. Re-porting will OVERWRITE your edits. Options: (a) commit your edits and re-port (likely what you want), (b) skip re-porting that file and only update the others, (c) abort."*
+1. Detects existing `ported_to` entry.
+2. Diffs the previously generated files against current generation.
+3. Shows the user *which files would change* before overwriting.
+4. **Never silently overwrites user edits** to the ported files. If the user has touched a generated file (detect via git status or content hash), warn loudly: *"You've edited godot/scripts/merge/merge_grid.gd since the last port. Re-porting will OVERWRITE your edits. Options: (a) commit your edits and re-port, (b) skip re-porting that file and only update the others, (c) abort."*
+5. Re-runs Stages 2-6 from scratch. Prior `re_validation` is pushed into `re_validation_history[]`.
 
 ### Multiple milestones porting to the same engine project
 
-The kit allows it. The model should be aware that prior milestones may have created a `merge_grid.gd` already; if porting a new milestone that also wants to write `merge_grid.gd`, **don't collide** — name the new one after the new milestone (`merge_grid_v2.gd` or `merge_grid_chained.gd`) and tell the user.
+Allowed. The model should be aware that prior milestones may have created `merge_grid.gd`; if porting a new milestone that also wants to write `merge_grid.gd`, **don't collide** — name the new one after the new milestone (`merge_grid_v2.gd` or `merge_grid_chained.gd`) and tell the user. Asset-conflict detection is `/gmk-merge-gate`'s job; this skill just doesn't overwrite without naming.
 
 ### Prototype using web-only APIs
 
-If the prototype used Web Speech, WebGL shaders, WebSockets, etc., flag in the plan: *"Prototype uses {API} which has no direct Godot equivalent. Options: (a) skip this feature in port and replace with placeholder, (b) write a Godot-native equivalent (more work — out of MVP port scope), (c) defer milestone until Godot has the capability."* Wait for user choice; don't assume.
+If the prototype used Web Speech, WebGL shaders, WebSockets, etc., flag in the plan: *"Prototype uses {API} which has no direct Godot equivalent. Options: (a) skip this feature in port and replace with placeholder, (b) write a Godot-native equivalent (more work — out of MVP port scope), (c) defer milestone until Godot has the capability."* Wait for user choice.
 
 ### Engine project has its own conventions file
 
-If the project has `_workspace/conventions.md` (TaskForge Pro convention) or a CLAUDE.md, read it before generating code. Conventions there override the defaults in this skill.
+If the project has `_workspace/conventions.md` or a CLAUDE.md, read it before generating code. Conventions there override the defaults in this skill.
 
 ### Unity port (Phase 2 placeholder)
 
-Generate the checklist; print: *"MVP doesn't auto-generate C#. Here's the checklist; the implementation is your hour. The kit will revalidate any HTML prototype changes the same way."* Don't apologize repeatedly — one mention is enough.
+Generate the checklist; print: *"MVP doesn't auto-generate C#. Here's the checklist; the implementation is your hour. Once you write it, /gmk-port <id> --stage 2 will run Stages 2-6 against it."* Don't apologize repeatedly.
 
-### Test the port?
+### Stage 4 wall-time bites
 
-This skill writes code; it doesn't run the engine. The user opens Godot and tests by hand. The Phase 2 vision includes "Godot headless playtest harness" — out of scope for MVP.
+Allow `--skip-stage-4` if the user explicitly says so. The Stage 5 checklist notes the skip; Stage 6's verdict still applies. The kit's contract is "the bot validated the prototype; you validate the port" — Stage 4 is the bot's port-side check, and skipping it means you're trusting your eyes alone. Allowed but flagged in the milestone record (`re_validation.metric_diff = null, skipped_stages: ["4"]`).
 
 ### Failed / killed milestones
 
-The skill refuses to port FAIL/INCONCLUSIVE milestones unless `--force`. If forced, stamps `forced: true` and includes a reason field for the audit trail. Lifecycle:
+The skill refuses to port FAIL/INCONCLUSIVE milestones unless `--force`. If forced, stamps `forced: true` and includes a reason field:
 
 ```json
-"ported_to": {
-  "forced": true,
-  "force_reason": "User overrode FAIL — wants to keep the rough shape and rebuild from there"
-}
+"ported_to": { "forced": true, "force_reason": "User overrode FAIL — wants to keep the rough shape and rebuild" }
 ```
+
+### `--stage N` re-entry
+
+Lets the user re-run a single stage. The skill reads existing artifacts from prior stages:
+
+- `--stage 2` — re-runs compile only.
+- `--stage 3` — re-runs smoke (5 trials).
+- `--stage 4` — re-runs metric diff (200×2).
+- `--stage 5` — regenerates checklist from the most recent results.
+- `--stage 6 --verdict X` — records Stage 6 verdict.
+
+The skill validates that prior stages are recorded as PASS (or FLAG) before allowing later stages — `--stage 4` when Stage 3 hasn't run yet errors out and tells the user to start from Stage 1 or `--stage 3`.
+
+### Determinism mismatch between HTML and Engine bot hooks
+
+If Stage 4 metric diff produces wildly different results (e.g., HTML clear_rate 0.67 vs Engine clear_rate 0.04), suspect a determinism break first, not a mechanic break. Surface: *"Engine clear_rate is implausibly low. Likely cause: engine bot hook isn't seeded properly, OR `apply()` reads from `randf()` / time-based input. Check `_gmk_bot_hook.gd` and the production code's RNG; align before trusting Stage 4."*
 
 ## What this skill does NOT do
 
-- **Doesn't run the engine.** No `godot --headless` calls, no `unity -batchmode`. Compile errors from the generated code surface when the user runs it.
-- **Doesn't generate art assets.** Placeholder shapes/textures only. ComfyUI integration is Phase 2.
-- **Doesn't generate audio.** Same — placeholder silence; ElevenLabs integration is Phase 3.
-- **Doesn't write tests.** GameTest / GUT setup is out of scope; generated code is unit-test-friendly but no tests are written.
 - **Doesn't auto-commit to git.** The user reviews and commits. Auto-commits hide what changed.
-- **Doesn't refactor existing project code.** Only adds new files (and registers signals/inputs in existing autoloads when the user confirmed in Step 2).
+- **Doesn't refactor existing project code.** Only adds new files (and registers signals/inputs in existing autoloads when the user confirmed in Stage 1b).
+- **Doesn't generate art assets.** Placeholder shapes/textures only. `/gmk-art-gen` is a separate skill if the user wants generated art.
+- **Doesn't generate audio.** Same — placeholder silence; `/gmk-sound-plan` for the spec.
+- **Doesn't write production game tests.** GameTest / GUT setup is out of scope. The Stage 3 smoke is throwaway scaffolding, not unit tests.
+- **Doesn't suppress Stage 6.** The interactive RE-PASS is the whole reason this skill is opus and not sonnet. Eyes-on is non-negotiable.
 
 ## Notes for the model running this skill
 
 - **API hallucination is the #1 way to lose the user's afternoon.** When in doubt about a Godot 4.x API, prefer well-known paths: `Node2D`, `Tween`, `AnimationPlayer`, `AudioStreamPlayer`, `Area2D`, `CollisionShape2D`, `GPUParticles2D`. If you're tempted to use something exotic, stop and ask: is this in Godot 4.x specifically? Was it renamed from 3.x?
-- **Read existing project files before generating.** The user's existing code is your style guide. Mimic it. If they use `class_name` everywhere, you use `class_name`. If they prefer signals over groups, you prefer signals.
-- **Game feel is sacred.** Every translated timing/easing/value gets a `# TUNE` comment AND a checklist entry. The whole reason the prototype passed validation is the feel — losing it in port is the worst-case failure.
-- **Pillar comments survive into prod.** The one-line `# Pillar: <id> — <intent>` comment per critical function is the breadcrumb trail back to why the code looks this way. Don't strip them in "cleanup."
-- **The checklist is the most under-valued deliverable.** Treat it with the same care as the code. It's the user's manual re-tuning map; if it's terse or vague, the port half-fails.
-- **One milestone, one port.** Don't try to "while we're here, also port m2." The skill ports one milestone at a time. If the user wants both, they run twice.
+- **Read existing project files before generating.** The user's existing code is your style guide. Mimic it.
+- **Game feel is sacred.** Every translated timing/easing/value gets a `# TUNE` comment AND a checklist entry.
+- **Pillar comments survive into prod.** The one-line `# Pillar: <id> — <intent>` comment per critical function is the breadcrumb trail back. Don't strip them in "cleanup."
+- **The checklist is the most under-valued deliverable.** Treat it with the same care as the code.
+- **One milestone, one port.** Don't try to "while we're here, also port m2." The skill ports one milestone at a time.
 - **`--force` is the user's call to override, not yours to recommend.** Don't suggest forcing through a FAIL gate. The kit's discipline is the value prop.
+- **Stages 2-6 are the kit's only re-validation surface.** Take them seriously — the FLAG vs PASS distinction in Stage 4, the retry policies in Stages 2-3, and the verdict capture in Stage 6 all exist to make "ported and works" mean something beyond "ported and compiles."
 - **When the prototype is small and the host project is empty**, a port can be 60 lines. Resist the urge to add menus, settings, save systems. Ports preserve mechanic; they don't expand scope.
+- **The Stage 4 thresholds are calibrated for grid/continuous shapes**, the kit's bread and butter. Dialogue shape metrics are different (clear_rate becomes branches_visited; entropy is replaced by branch_distribution). Shader shape Stage 4 is partial in v0.2 — surface the limitation in the report and let Stage 6 do more of the work for shader ports.
