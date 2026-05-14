@@ -6,6 +6,77 @@ Versioning follows [SemVer](https://semver.org/).
 
 ---
 
+## [0.3.0] — 2026-05-14
+
+v0.2 shipped ~28 skills + 4 domain agents — the *forms* were there. v0.3 is a **skeleton-completion** release: a 7-axis audit identified that the agents had no wired entry points from the SKILLs, the project-level "development complete" endpoint promise had no SKILL behind it, and structure.md had drifted 11+ file kinds out of date. v0.3 closes all of that. **No new feature axes, no new agent types, no schema breaking changes.** One new SKILL (`gmk-dev-complete`) and many cross-skill wirings.
+
+This release was driven by audit, not by dogfood. The v0.2 dino-run dogfood findings (11 items) were intentionally deferred to a v0.4 backlog candidates list — they describe behaviors of a specific game, not skeleton holes of the plugin.
+
+### Added
+
+**New SKILL (1)**
+- `gmk-dev-complete` NEW — project-level endpoint. Reads `pillars.json` + `milestones.json` and runs 6 structural checks (live milestones, all shipped, every pillar covered by ≥1 shipped milestone, no unresolved merge-gates, no unacknowledged forced overrides, pillars locked). Writes `_workspace/dev-complete-report.md` and prints `DEV_COMPLETE | COMPLETE_WITH_WARNINGS | NOT_COMPLETE`. Read-only on canonical state; no agents invoked. **Past `DEV_COMPLETE`, gamemaker-kit deliberately does nothing further** — release / live-ops / external feedback live outside the plugin per CONCEPT §1.
+
+**Agent wiring (★★★ K)** — the largest defect identified by v0.3 audit. v0.2 declared 4 agents but no SKILL referenced them. v0.3 wires the 4 agents into the SKILL workflow as recommended routing destinations (SKILLs surface the route; user runs `@agent` themselves — never auto-invoked, preserving `max-iteration=1` single-supervisor model):
+- `gmk-design-system` → `systems-designer` (≥4 systems / ≥5-state machine / ≥3 couplings)
+- `gmk-prototype` → `feel-engineer` (continuous/shader/sensory pillar) + `economy-balancer` (numeric bot rows)
+- `gmk-content-plan` → `economy-balancer` (curve has numeric knobs)
+- `gmk-validate` → `playtest-analyst` (crash/persona/state-starvation FAIL) + `economy-balancer` (dominant strategy)
+- `gmk-self-test` → `feel-engineer` (sensation-word FAIL) + `playtest-analyst` (diffuse FAIL)
+- `gmk-regression` → `playtest-analyst` (REGRESSION or drift >25%)
+- `gmk-port` Stage 1 → `systems-designer` (non-trivial system spec needed; blocks until spec written)
+- `gmk-port` Stage 4 → `playtest-analyst` (FLAG/FAIL metric diff)
+- `gmk-port` Stage 6 → `feel-engineer` / `economy-balancer` / `systems-designer` (routed by `--reason` keywords)
+- `gmk-loop` dispatch table — surfaces the agent routes downstream SKILLs prepared
+
+Verification: `grep -l systems-designer|feel-engineer|economy-balancer|playtest-analyst skills/` now returns 8 SKILLs (was 2).
+
+**Endpoint wiring (★★★ S)**
+- `gmk-port` Stage 6 RE_PASS now suggests `/gmk-dev-complete` if last in-flight milestone
+- `gmk-status` dashboard.md adds "Project dev-complete progress" section
+- `gmk-status` priority ladder adds case 8 "all shipped → /gmk-dev-complete"
+- `gmk-status` "No active milestone" message specialized by reason (shipped / killed / none yet)
+- `gmk-loop` shipped-state message references project-level endpoint
+
+**structure.md ground-truth refresh (★★ L+M)**
+- 11 new file-kind sections covering SKILL outputs (`design-system.md` / `content-plan.md` / `art-spec.md` / `sound-plan.md` / `ux-flow.md` / `narrative.md` / `refactor-check.md` / `save-migration.md`) and agent outputs (`system-spec.md` / `feel-numbers.md` / `feel-edits.md` / `economy-numbers.md` / `economy-edits.md` / `balance-rationale.md` / `playtest-diagnosis-{date}.md`)
+- Plus `dev-complete-report.md`, `regression-report-{date}.md`, `.loop.lock`, `-mocked.html` siblings, engine-side `save-schema.json` location
+- CONCEPT.md endpoint definition now references `/gmk-dev-complete` as the structural check
+
+**Call-graph reinforcement (★)**
+- `gmk-self-test` Step 1 reads `ux-flow.md` if present and surfaces FTUE checklist (C)
+- `gmk-self-test` Step 2 optional FTUE-check field producing `ftue-miss` theme on FAIL
+- `gmk-kill-milestone` Step 6 (new) refreshes `_workspace/roadmap.md` on kill or revive (I)
+- `gmk-prototype-rules` Rule 11 (new) names per-shape validation path. Shader prototypes have *no* bot gate by design; self-test is the only gate; `dev-complete` accepts `validation.skipped: 'shader shape'` (U)
+- `gmk-prototype-rules` Rule 12 (new) clarifies HTML code-generation policy — `/gmk-prototype` produces a scaffold, the user writes the mechanic body. Engine port (`gmk-port` Stage 1) is the place for autonomous code generation, not the prototype skill. (A)
+
+### Changed
+
+- `gmk-port` Stage 1 description: "optional systems-designer agent in Wave D" → wired as default for non-trivial systems
+- 8 SKILL files now reference at least one domain agent (was 2)
+
+### Not changed (intentional)
+
+- **No schema changes.** `pillars.json` / `milestones.json` / agent output formats — all v0.2 files validate without modification.
+- **No new agent types.** 4 agents from v0.2 are sufficient; the defect was wiring, not coverage.
+- **No 4-axis model changes.** v0.2's time/discipline/validation/integration model holds.
+- **dogfood-findings-v0.2.md renamed → `v0.4-backlog-candidates.md`** — explicit non-inclusion in v0.3 scope. Dogfood findings describe one game's behavior; v0.3 is about plugin skeleton completion.
+
+### Migration notes from v0.2
+
+- v0.2 milestones.json / pillars.json / validations / self-tests / port checklists — all read identically. No migration step needed.
+- v0.2 prototypes (`prototypes/<name>.html`) — no changes needed.
+- v0.2 `_bot_hook_lib.js` — no API changes (still `_gmkApiVersion: 1`, additive).
+- Users who previously wondered "what does `@feel-engineer` actually trigger?" — the answer is now in the relevant SKILL's Step N.5 routing block; agents are reachable from the workflow rather than only via direct invocation.
+
+### v0.3 skeleton audit + backlog docs
+
+For the rationale + the audit-driven backlog, see:
+- `_workspace/v0.3-skeleton-audit.md` — 7-axis structural audit identifying 18 defects (★★★/★★/★)
+- `_workspace/v0.3-backlog.md` — Wave A-E plan derived from audit
+
+---
+
 ## [0.2.0] — 2026-05-12
 
 v0.1 was 7 skills around the MVP loop (init → prototype → validate → share → feedback → port → status). v0.2 generalizes that loop into a **4-axis development model** (time · discipline · validation · integration) and expands to **~28 skills + 4 domain agents**, while staying inside the same endpoint: *development completion*. Release, live-ops, and external sharing remain explicitly out of scope.

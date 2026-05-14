@@ -1,7 +1,7 @@
 {
   "name": "gamemaker-kit",
-  "version": "0.2.0",
-  "description": "Game development workflow plugin for Claude Code. Falsify un-fun in HTML before touching the engine: 28 skills + 4 domain agents covering 4 axes (time / discipline / validation / integration). Playwright bots with 4 procedural personas + your own self-test gate, then a 6-stage HTML→Godot/Unity port re-validation. Endpoint is 'development complete' — release and live-ops are out of scope by design.",
+  "version": "0.3.0",
+  "description": "Game development workflow plugin for Claude Code. Falsify un-fun in HTML before touching the engine: 29 skills + 4 domain agents covering 4 axes (time / discipline / validation / integration). Playwright bots with 4 procedural personas + your own self-test gate, then a 6-stage HTML→Godot/Unity port re-validation. Domain agents wired into SKILL routing (v0.3). Project-level dev-complete endpoint via /gmk-dev-complete (v0.3). Endpoint is 'development complete' — release and live-ops are out of scope by design.",
   "author": {
     "name": "Cho Jun"
   },
