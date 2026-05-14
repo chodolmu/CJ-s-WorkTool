@@ -147,6 +147,20 @@ Move the previous `killed_at` / `kill_reason` / `kill_followup` / `kill_category
 
 This preserves the full trace. A milestone that's been killed twice and revived once shows the full lineage.
 
+### Step 6 — Refresh `_workspace/roadmap.md` (kill or revive)
+
+After writing to `milestones.json`, refresh `_workspace/roadmap.md` so the roadmap reflects the new state. The roadmap template (`structure.md` → roadmap section) has two relevant places:
+
+| Roadmap section | On kill | On revive |
+|---|---|---|
+| Milestones table | Move the row's Status to `KILLED` with the kill date | Move row back from "Killed milestones" to "Milestones"; restore last verdict |
+| `## Killed milestones (learning trace)` | Append the row: `\| {id} \| {name} \| {killed_at} \| {kill_reason} \|` | Remove the row from this section |
+| Dependencies | Remove edges where this milestone was a parent/child (kill); restore on revive | |
+
+If `roadmap.md` doesn't exist, do **not** create it — this skill is read-aware of `gmk-roadmap`'s output, not its replacement. Print a one-line note: *"roadmap.md missing — run `/gmk-roadmap` after this to regenerate the dependency graph with the killed/revived state."*
+
+If `roadmap.md` exists but has been hand-edited (kit can't detect this reliably), use the *minimum* update — only flip the killed milestone's status and append to the learning trace. Don't reformat other parts of the file.
+
 ### Step 6 — Update `_workspace/roadmap.md`
 
 The kill/revive changes how roadmap.md renders the milestone (in the "Killed milestones" section vs. "Milestones" table). Update roadmap.md to reflect the new state.

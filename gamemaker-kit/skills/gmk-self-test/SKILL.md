@@ -66,6 +66,8 @@ Ready to play? When you finish, run /gmk-self-test <name> --record and I'll prom
 
 If `validation.suspicious_seeds` is empty (rare — usually means a tiny trial or no outliers detected), surface a single line saying "no suspicious seeds — open-play only" and continue.
 
+If `_workspace/milestones/<id>/ux-flow.md` exists, read it and surface its FTUE checklist alongside the play menu — these are things the user authored as "what should happen the first time someone plays". The user verifies those during the session and reports back in Step 2 (one of the optional prompt fields). Without the file, this section is silently skipped.
+
 If the user runs the skill without `--record` flag, this is all the skill does — print the play menu and stop. Recording happens in the next invocation. (Splitting "plan the session" from "code my notes" keeps the play session itself screen-free of the kit.)
 
 ### Step 2 — Record the session (`--record` flag)
@@ -84,6 +86,7 @@ Required fields (the skill refuses to save until all four are populated; the use
 Optional fields the skill prompts for but doesn't require:
 - Suspicious-run-by-run notes (what the bot saw vs what the user saw)
 - "Quotes from yourself you want to remember" — things the user blurted out while playing
+- **FTUE check** (only if `ux-flow.md` exists): for each item in the ux-flow's FTUE checklist, did it land? `pass | fail | n/a`. A FAIL here is flagged in Step 4 as a `ftue-miss` theme so the user can correlate "felt off" with "the first 60 seconds didn't go as planned".
 
 Save to `.gamemaker-kit/self-tests/<m>/session-{YYYY-MM-DD}.md`. If a file with the same date already exists, append a `-{HH-MM}` suffix to disambiguate. **Session notes are immutable** once written — re-running this skill the same day creates a new session.
 

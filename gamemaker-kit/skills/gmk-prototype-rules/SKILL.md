@@ -265,6 +265,40 @@ If a v0.1 prototype's hypothesis header has `human:` rows, treat them as `self-t
 
 ---
 
+## Rule 11 — Shape determines bot tractability
+
+A prototype declares a **shape** in the hypothesis header (Rule 8): `grid | continuous | dialogue | shader`. The shape determines what `/gmk-validate` can do — and crucially what it *cannot*:
+
+| Shape | Bot validation | Path when bot is weak |
+|---|---|---|
+| `grid` | Full — discrete action space, bot can enumerate `legalActions()` meaningfully. Default. | n/a (bot is the gate) |
+| `continuous` | Partial — bot can sample but not exhaustively. Feel parameters dominate. | `feel-engineer` agent for sensory tuning; `/gmk-self-test` for the verdict |
+| `dialogue` | Branch-coverage style — bot can walk every branch but can't judge whether the dialogue is *good*. | `/gmk-narrative` for spec; `/gmk-self-test` is the gate |
+| `shader` | **None** — no decision space, no `act()` calls. `gmk-validate` immediately returns `INCONCLUSIVE` with reason `shader-shape-not-bot-gateable`. | The full chain becomes: `/gmk-prototype` (shader scaffold) → user iterates → `@feel-engineer` for parameter sweeps (uniform values, color anchors, motion timing) → `/gmk-self-test` is the *only* gate that produces PASS/FAIL. The dev-complete endpoint accepts a shader milestone with `validation: {skipped: true, reason: 'shader shape'}` + `self_test: PASS`. |
+
+**Why this rule exists**: v0.2 introduced `shape: 'shader'` with a stub template but didn't name the validation path. Without an explicit path, users hit `/gmk-validate` → INCONCLUSIVE → silence. Rule 11 names the path so the user knows what gate replaces the bot gate.
+
+---
+
+## Rule 12 — HTML code generation is collaborative, not autonomous
+
+`/gmk-prototype` produces a **scaffolded HTML file** — hypothesis header, single `<style>` block, single `<canvas>` or `<div>`, library reference, hook scaffold with required callbacks stubbed, line-cap enforcement. It does **not** produce a fully playable mechanic.
+
+After scaffold generation, the user implements the actual mechanic logic by hand — usually in 30-150 lines of vanilla JS inside the `<script>` block. The kit deliberately leaves this part to the user:
+
+| Why this is the line | Reason |
+|---|---|
+| Mechanics that survive validation are usually 200 lines or less | A human writing those 200 lines in their own head models the mechanic better than reading 200 lines a model wrote. |
+| Prototypes evolve mid-implementation | The "ah, this isn't quite right" moment happens *while writing*, not before. Auto-generated mechanics shortcut that thinking. |
+| Validation FAIL is honest only if the user wrote what was validated | A FAIL on auto-generated code is a debugging session about the *kit*, not the mechanic. |
+| Engine port is the place for autonomous code generation | `/gmk-port` Stage 1 *does* generate code (with `systems-designer` agent for non-trivial systems). Engine code is the autonomous step; prototype code is the human step. |
+
+This is consistent with `gmk-loop`'s Build gate, which says *"user writes"* — the prototype skill produces the spec + the scaffolding; the user writes the mechanic body. If the user wants help on a specific snippet inside the prototype, they ask Claude Code directly (outside this skill) — gmk doesn't have a "fill in the mechanic" subcommand and won't.
+
+**Future direction**: if a future Wave wants to add active code generation here, it should be an explicit subcommand (`/gmk-prototype <id> --autocode`) with its own opt-in. The default remains scaffold-only.
+
+---
+
 ## What violates these rules → what the kit does
 
 | Violation | Detected by | Kit response |
