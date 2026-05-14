@@ -1,207 +1,242 @@
-# Handoff: gamemaker-kit v0.5.0 — Post-v0.4 Hotfix 완료
+# Handoff: gamemaker-kit — v0.5.0 origin 동기화 완료, v0.6 backlog 대기
 
-**Generated**: 2026-05-15 (01:35 KST)
-**Branch**: main (push 전)
-**Latest commit (pre-v0.5)**: `e98b72b feat(gamemaker-kit): v0.4.0 quality-of-life`
-**Status**: v0.5.0 모든 G-A~G-G 구현 완료. 미커밋 (다음 단계: 단일 commit + push + tag v0.5.0).
+**Generated**: 2026-05-15 (01:40 KST)
+**Branch**: main
+**Latest commit**: `87595bc fix(gamemaker-kit): v0.5.0 hotfix — 7 regressions from v0.4 half-applied deprecations`
+**Tag**: `v0.5.0` (origin 동기화 완료)
+**Status**: v0.5.0 release 완료. **외부 evaluator 재검증 결과: v0.5도 OVERSTATED** (mildly) — 같은 half-applied 패턴이 *새 형태*로 2번 재발. v0.6 backlog 대기.
 
 ---
 
 ## Goal (지속)
 
-게임 개발 자동화 Claude Code 플러그인 `gamemaker-kit`. 4축 (시간·직군·검증·통합) × 개발 완료 체크포인트. 외부 사용자 0%, 외부 계정 0개.
-
-v0.5의 한 줄 약속: **"v0.4가 *주장한* 'no data loss / 9 fields safe to drop'이 실제로 그렇게 되도록 한다. 외부 evaluator가 잡은 7 regression을 닫는다."**
+게임 개발 자동화 Claude Code 플러그인. 4축 × release-readiness checkpoint. v0.6의 한 줄 약속: **"v0.5가 *선언*만 한 두 standardization을 *전 SKILL에 실제 적용*한다. 그리고 같은 함정이 또 반복되지 않도록 structural guard를 추가한다."**
 
 ---
 
-## v0.5 — 왜 즉시 release 됐나
+## v0.5 evaluator 결과 (재검증, 2026-05-15)
 
-v0.4 release 직후 사용자가 두 외부 evaluator를 돌림:
-1. **general-purpose**: 외부 비교 — gamemaker-kit이 *진짜* 차별점 있는지. **결과: YES**, 5-stage 통합 계약이 unoccupied niche.
-2. **evaluator agent**: 내부 일관성 — v0.4 audit이 *놓친* 결함 있는지. **결과: 7 regressions found**.
+외부 evaluator가 v0.5 직후 재audit:
 
-이 7개는 *v0.4가 자신의 deprecation을 반만 적용한 채로* release한 결과. evaluator의 OVERSTATED 판정 받아들이고 즉시 hotfix.
+| Part | 결과 |
+|---|---|
+| **Part 1: 7 fix (G-A~G-G)** | 모두 **CLOSED** — cite된 file:line 위치 정확 |
+| **Part 2: v0.5 신규 결함 2 MAJOR + 2 MINOR** | half-applied 패턴 재발 |
+| **Part 3: v0.5 self-audit 등급** | **OVERSTATED (mildly)** — F18 교훈 또 재발 |
 
----
-
-## v0.5 fixes (완료)
-
-| 코드 | 위치 | v0.5 처리 |
-|---|---|---|
-| **G-A** | prototype-rules Rule 14 | "in model's reasoning" → grep 가능한 `[Rule 14]` / `[Rule 14 — CYCLE]` 토큰 mandatory. self-test §2에 shader INCONCLUSIVE + `--skip` 명시적 acceptance 추가. |
-| **G-B** | gmk-kill-milestone (4곳) | line 68/182/193/238의 "preserved in kill_history" 모두 git history 기반 표현으로 교체 |
-| **G-C** | gmk-self-test (3곳) | Sub-flags `--record` + `--thin-ok` + line 351 edge case에서 sessions[]/coded_themes write 제거 |
-| **G-D** | gmk-validate line 478 | "appends to validation_history" → "overwrites top-level validation directly" |
-| **G-E** | prototype-rules Rule 10 | self-test 데이터 landing site를 sessions[] → latest_verdict 등 + 디스크 파일로 정정. **룰북이 ground truth**이므로 가장 load-bearing 수정 |
-| **G-F** | structure.md merge_gate + port-checklist template | `warnings_acknowledged_at` 필드 명시 + 무효화 규칙 |
-| **G-G** | gmk-dev-complete C5 | double-force (validation+self-test 둘 다 forced) → FAIL (acknowledge 불가). 단일 force는 WARN 유지 |
-| endpoint 카피 | CONCEPT.md, gmk-dev-complete | "endpoint" → "release-readiness checkpoint". checkpoint는 recomputable임을 명시 |
+핵심 인사이트: *v0.4가 deprecation을 반만 적용했고, v0.5는 그것을 cite-by-cite 닫았지만, v0.5 자신이 만든 새 규약 두 개를 다시 반만 적용함*. 같은 defect class.
 
 ---
 
-## v0.5가 *안* 한 것
+## v0.6 backlog (확정)
+
+### MAJOR-1: Rule 14 토큰 15 SKILL sweep ★★
+
+**문제**: v0.5가 `[Rule 14]` / `[Rule 14 — CYCLE]`를 *mandatory*로 prototype-rules:398에 선언. 실제 적용은 `gmk-prototype-rules` + `gmk-self-test` 2곳만. 나머지 15 SKILL이 "Run /gmk-X first" refuse 출력하면서 토큰 부재.
+
+**영향 SKILL** (evaluator 적시):
+- gmk-port, gmk-merge-gate, gmk-roadmap, gmk-save-migrate, gmk-validate, gmk-regression, gmk-dev-complete, gmk-status, gmk-loop, gmk-design-system, gmk-shape-advisor, gmk-mock-inject, gmk-brainstorm, gmk-art-gen, gmk-prototype
+
+**작업**:
+- 각 SKILL의 refuse-with-recommendation 라인 식별 — grep `"Run /gmk-"` 또는 `"run \`/gmk-"`
+- 매 라인 끝에 `[Rule 14] /gmk-<this> → /gmk-<target> — verified target's preconditions can be satisfied from current state.` 토큰 추가
+- 또는 cycle 경우: `[Rule 14 — CYCLE]` 형태로 두 exit 명시
+- 검증: `grep -L "\[Rule 14" skills/*/SKILL.md` → 토큰 없는 SKILL 0 (refuse-with-recommendation 가진 한)
+
+**중요**: 이 작업을 *모든 SKILL에 일괄* 적용. 일부만 적용하면 v0.5와 같은 함정 재발.
+
+### MAJOR-2: endpoint → checkpoint 8+ 위치 정정 ★★
+
+**문제**: v0.5 CHANGELOG가 3곳 정정 청구. 실제 8+ 위치에 "endpoint" 잔존.
+
+**위치** (evaluator 적시):
+- `README.md:4` — "Endpoint: 'development complete'"
+- `CONCEPT.md:67` — ASCII 다이어그램의 "🏁 development complete (gmk endpoint — user-declared)"
+- `skills/gmk-dev-complete/SKILL.md:3` — frontmatter description
+- `skills/gmk-dev-complete/SKILL.md:59` — "The endpoint is reached"
+- `skills/gmk-dev-complete/SKILL.md:228` — "not at the endpoint"
+- `skills/gmk-dev-complete/SKILL.md:248` — "stops at the endpoint"
+- `skills/gmk-loop/SKILL.md:128`
+- `skills/gmk-status/SKILL.md:68, 117, 132`
+- `skills/gmk-port/SKILL.md:493`
+- `_workspace/structure.md:48, 532`
+
+**작업**: 각 위치를 *맥락별로* 판단해 "checkpoint" 또는 "release-readiness checkpoint"로. CHANGELOG의 v0.4 / v0.3 섹션은 *역사 기록*이라 정정 안 함 (Keep-a-Changelog 규약).
+
+### MINOR-3: gmk-dev-complete "doesn't write canonical state" 라인 정정 ★
+
+**문제**: `skills/gmk-dev-complete/SKILL.md:249`이 *"Doesn't write to milestones.json or pillars.json. Read-only on canonical state."* 라고 함. 그런데 같은 SKILL의 `--accept-warnings` (line 216/222)가 `warnings_acknowledged_at`을 *merge_gate/port-checklist 파일*에 씀. 모순 아닌 의도된 것이지만 모델이 line 249만 읽으면 write를 안 할 가능성.
+
+**작업**: line 249를 *"Read-only on milestones.json / pillars.json; writes only the dev-complete report and `warnings_acknowledged_at` into merge_gate / port-checklist files."*로 정정.
+
+### MINOR-4: v0.4 CHANGELOG inline footnote ★
+
+**문제**: v0.4 CHANGELOG 섹션이 *"v0.4 skills no longer write these"* + *"No data loss"* 그대로. v0.5 honesty note는 같은 파일에 있지만 cross-reference 없음.
+
+**작업**: v0.4 섹션의 해당 라인에 `(see v0.5 honesty note — applied half-way until v0.5)` 인라인 각주. Keep-a-Changelog 규약상 *과거 entry는 안 고친다*가 원칙이지만 *작은 cross-ref*은 허용 범위.
+
+### STRUCTURAL GUARD: `check-plugin-meta.sh` 확장 ★★
+
+**문제**: v0.4와 v0.5가 *같은 실수*를 했음 — declared standard를 partial하게 적용. structural audit script가 *자동으로* 잡아야 다음 release에서 같은 함정 차단.
+
+**작업**: `scripts/check-plugin-meta.sh`에 두 체크 추가:
+1. **Rule 14 token check**: `grep -l "Run /gmk-\|run \`/gmk-" skills/*/SKILL.md`에 매치하는 SKILL은 *반드시* `[Rule 14` 토큰을 ≥1 가짐. 위반 시 release block.
+2. **Endpoint terminology check**: `skills/`, `CONCEPT.md`, `README.md`, `structure.md`에서 dev-complete state를 가리키는 "endpoint" 출현 시 warning (false positive 가능 — API endpoint 등은 별개).
+
+스크립트 실행이 v0.6+의 *release pre-flight*가 되도록 README 또는 CHANGELOG에 명시.
+
+### v0.6에서 *안* 할 것
 
 | 항목 | 이유 |
 |---|---|
-| 새 audit wave | v0.4 audit framework 유지. v0.5는 *적용*만 수정 |
-| 새 SKILL / agent | 0개 — v0.4 원칙 유지 |
+| 새 SKILL / 새 agent | 0개 — v0.4/v0.5 유지 |
 | dogfood | 영영 차단 (W24) |
-| `kit_version` read-enforcement | v0.6 이후 (v0.4 결정 4 유지) |
-| CR-5 / AD-7 재분류 | grade 조정만 *문서상*, 작업 변경 없음 |
+| `kit_version` read-enforcement | v0.7+ 이월 (v0.4 결정 4 유지) |
+| 추가 audit (cold-read 등 새로 돌리기) | v0.5 evaluator가 적시한 작업만 완수가 목표 |
 
 ---
 
-## Failed Approaches (이번 세션 신규)
+## v0.6 실행 protocol (F18 함정 방지)
 
-이전 세션의 F1-F17 그대로 유효. v0.5 신규:
+v0.4 → v0.5 → v0.6 패턴에서 **self-audit이 매번 OVERSTATED 판정**. v0.6은 다른 protocol로:
 
-### F18 — "audit이 끝났다"고 *자기 self-audit*으로 결론내지 말 것
+### Protocol 1 — Work-start checkpoint
 
-v0.4가 3-view audit (cold-read / adversarial / schema) 후 "28 → 0 ★★★ → all fixed"로 self-publish했음. 외부 evaluator가 같은 SKILL을 보고 **7 regression**을 즉시 발견. 
+작업 시작 *전*에 evaluator 한 번 호출:
+- 입력: "v0.6 backlog (이 HANDOFF의 MAJOR-1, MAJOR-2 등) 그대로 작업할 건데 *놓친 위치*나 *부수 영향*이 있는지 보라"
+- 결과 받아 backlog 보강 후 작업 시작
 
-교훈: *자신의 작업을 자신의 audit이 grade하면 OVERSTATED 위험 영구 존재*. 큰 결정 후엔 외부 evaluator agent를 *습관적으로* 부르는 게 안전.
+### Protocol 2 — Mid-work checkpoint
 
-### F19 — Deprecation은 "전부 다" 아니면 안 한 것
+MAJOR-1 (Rule 14 sweep) 작업 *중간* (예: 8/15 SKILL 처리 후) evaluator 한 번:
+- "지금까지 8 SKILL 처리. 나머지 7개에 부수 영향 있을까? 토큰 형식 일관성 깨졌나?"
+- *현재 작업 방식*이 옳은지 검증
 
-v0.4 Wave γ가 9 필드 deprecate하면서 *Step 7만* 정정하고 *Sub-flags 표 / Edge cases / 룰북 anchor*는 안 만짐. 같은 파일에서 ground truth가 *모순*되면 어느 라인을 모델이 따를지 비결정적.
+### Protocol 3 — Pre-release checkpoint
 
-교훈: deprecation은 grep으로 *모든* mention을 한 번에 정정해야 함. *일부분만* 정정한 deprecation은 결함을 *도입*하는 행위.
+전체 작업 끝난 후 release *전* evaluator 한 번:
+- "v0.6이 backlog의 모든 항목을 닫았고 새 결함 도입 안 했나?"
+- ACCURATE 판정 받기 전엔 release 안 함
 
----
+### Protocol 4 — Post-release verification
 
-## Key Decisions (이번 세션)
+release 후 마지막 evaluator (v0.5에서 한 것과 같음):
+- 진짜 닫혔는지 git-based 검증
 
-| 결정 | 근거 |
-|---|---|
-| **v0.5 = external-evaluator-driven hotfix** | evaluator가 7 regression을 cite한 file:line으로 적시. 모두 v0.4가 *주장한* 약속을 *실행*만 안 한 것 — 결정 사항 변경 없이 *적용 완료*가 목적 |
-| **endpoint → checkpoint 용어 변경** | evaluator가 정확히 적시. 3개 SKILL (roadmap / kill --revive / accept-regression)이 project 재오픈 가능 — "endpoint"는 오버셀링 |
-| **double-force = FAIL (acknowledge 불가)** | evaluator G-G — validation도 self-test도 forced면 *zero evidence*. C5를 WARN으로 두는 건 안 됨 |
-| **Rule 14 token mandatory** | evaluator G-A — falsifiable 안 되는 룰은 v0.5+ 룰북 표준 못 됨. `[Rule 14]` 토큰 grep으로 검증 가능 |
-| **dogfood 영구 차단 (W24 확인)** | F18이 다시 발생해도 dogfood로 검증하지 않음. 외부 evaluator agent로 *audit*. |
-
----
-
-## Current State
-
-**Working** (v0.5.0 모든 구현 완료, 미커밋):
-- 29 skills + 4 agents — 변경 없음 (v0.4 인벤토리 유지)
-- 7 G-A~G-G regression 모두 fix
-- "endpoint" 카피 5개 위치 정정
-- CHANGELOG v0.5 섹션
-- plugin.json + marketplace.json v0.5.0
-- 이 HANDOFF
-
-**Uncommitted Changes** (gamemaker-kit/): 8 파일. 단일 commit + push 권장.
-
-**dino-run 상태**: **readonly** — 손 안 댐.
+**3-4번 호출. 비용 들지만 OVERSTATED 패턴 차단 가치 > 비용.**
 
 ---
 
-## Files Touched in v0.5
+## Failed Approaches 누적
 
-| 파일 | 변경 |
-|---|---|
-| `skills/gmk-kill-milestone/SKILL.md` | G-B: 4곳 kill_history 표현 정정 |
-| `skills/gmk-self-test/SKILL.md` | G-C: 3곳 sessions[]/coded_themes write 제거 + G-A: §2 shader/skip acceptance 추가 |
-| `skills/gmk-validate/SKILL.md` | G-D: line 478 validation_history append 제거 |
-| `skills/gmk-prototype-rules/SKILL.md` | G-E: Rule 10 self-test landing site 정정 + G-A: Rule 14 grep 가능 토큰 |
-| `_workspace/structure.md` | G-F: merge_gate / port-checklist template에 warnings_acknowledged_at 추가 |
-| `skills/gmk-dev-complete/SKILL.md` | G-G: C5 double-force FAIL 분기 + endpoint 카피 정정 |
-| `CONCEPT.md` | endpoint → checkpoint 카피 정정 |
-| `CHANGELOG.md` | v0.5 섹션 |
-| `.claude-plugin/plugin.json` + `marketplace.json` | 0.5.0 |
-| `HANDOFF.md` | 이 파일 |
+F1-F19 (이전 세션들) 전부 유효. F20 신규:
+
+### F20 — Self-audit은 ANCHORING bias에 영원히 취약
+
+v0.4 audit → "all 28 fixed" → OVERSTATED.  
+v0.5 audit → cite-driven self-verify → 7 fix 닫혔다고 self-publish → 여전히 OVERSTATED.  
+
+같은 *작업자*가 *작업한 범위만* 보기 때문에 *놓친 위치*는 매번 누락. v0.6은 **작업 시작 *전*에 evaluator로 scope 보강**해야 함. Protocol 1.
+
+교훈: self-audit은 *작업이 끝났는지* 묻지 *작업 범위가 옳았는지* 묻지 않음. evaluator는 두 질문 모두 가능.
 
 ---
 
 ## Resume Instructions (다음 세션)
 
-### Step 0 — Single commit + push + tag
+### Step 0 — v0.6 작업 시작 *전* evaluator (Protocol 1)
 
-```bash
-git add -A
-git commit -m "fix(gamemaker-kit): v0.5.0 hotfix — 7 regressions from v0.4 half-applied deprecations"
-git push origin main
-git tag v0.5.0
-git push origin v0.5.0
-```
+작업 안 하고 evaluator 먼저 호출. backlog의 MAJOR-1/MAJOR-2/MINOR-3/MINOR-4/STRUCTURAL GUARD가 *놓친 부수 위치* 있는지 점검. 결과 받아 backlog 보강.
 
-### Step A — v0.5 sanity verification
+### Step 1 — STRUCTURAL GUARD 먼저
 
-1. `grep -rn "appends to.*kill_history\|preserved in kill_history\[\]" skills/gmk-kill-milestone/SKILL.md` → 0 (deprecation 명시문 제외)
-2. `grep -n "sessions\[\]\|coded_themes" skills/gmk-self-test/SKILL.md` → write 명령 0
-3. `grep -n "validation_history" skills/gmk-validate/SKILL.md` → write 명령 0
-4. `grep -n "\[Rule 14\]" skills/` → ≥2 hit (gmk-self-test §2 등)
-5. dev-complete C5 분기 + double_forced_gates 도출 확인
+가장 작은 부피의 변경 + *나머지 작업의 검증 도구*. `check-plugin-meta.sh` 확장이 다음 단계의 grep audit 가능하게 함. 이걸 먼저 만들면 MAJOR-1, MAJOR-2 작업의 *완료 여부*를 자동으로 확인 가능.
 
-### Step B — 또 외부 evaluator 부를지 결정
+### Step 2 — MAJOR-1 Rule 14 토큰 sweep
 
-v0.4가 self-audit OVERSTATED였음. v0.5도 self-audit이면 *같은 함정* 가능. 두 옵션:
-- (a) v0.5도 외부 evaluator로 검증 — **권장** (F18 교훈)
-- (b) v0.5는 v0.4 evaluator의 *cite를 그대로 따라간* 작업이므로 self-verify로 충분
+15 SKILL 일괄. 작업 중간에 Protocol 2 호출.
 
-**현재 시점 권고**: Step 0 commit + push 먼저. 그 다음 (a) 외부 evaluator를 한 번 더 부르거나, (b) 다른 작업으로 이동.
+### Step 3 — MAJOR-2 endpoint 카피 정정
 
-### Step C — `kit_version` read enforcement는 v0.6
+8+ 위치 일괄.
 
-여전히 v0.5에서 미도입. v0.4 결정 4 유지.
+### Step 4 — MINOR-3, MINOR-4
 
-### Path D — 다른 프로젝트
+작은 정정.
 
-TaskForge Pro / ZooMerge / 다른 게임으로 이동. v0.4 + v0.5로 gamemaker-kit은 *외부 evaluator도 PASS한* 상태가 됨 (Step B-a 실행 시 확정).
+### Step 5 — Pre-release evaluator (Protocol 3)
+
+ACCURATE 받기 전까진 release 안 함.
+
+### Step 6 — Release + Post-release evaluator (Protocol 4)
+
+CHANGELOG v0.6 / plugin meta 0.6.0 / HANDOFF / commit / push / tag.
+
+---
+
+## Files to Know (v0.6 시작 시 권장 정독)
+
+| 파일 | 왜 |
+|---|---|
+| `CHANGELOG.md` v0.5.0 섹션 | v0.5의 honest note 포함. v0.4 → v0.5 사이 *무엇이 missed였는지* 본문 |
+| `skills/gmk-prototype-rules/SKILL.md` Rule 14 (lines 385-398) | mandatory 토큰 정의. v0.6은 이 정의를 *적용*만 함 |
+| `skills/gmk-self-test/SKILL.md` Preconditions §2 (lines 29-38) | Rule 14 토큰 *모범 적용* 사례. 다른 15 SKILL이 따라야 할 형식 |
+| evaluator 결과 (이 HANDOFF의 "v0.5 evaluator 결과" 섹션) | 어떤 작업이 *왜* 필요한지 근거 |
+
+---
+
+## Current State
+
+**Working (v0.5.0 release 완료, origin 동기화)**:
+- 29 skills + 4 agents
+- 7 v0.5 fix 모두 cite 위치에서 PASS
+- CHANGELOG v0.5 entry
+- plugin.json + marketplace.json v0.5.0
+- tag v0.5.0 origin 동기화
+- 이 HANDOFF (v0.6 backlog 대기)
+
+**Uncommitted Changes** (gamemaker-kit/): 이 HANDOFF 갱신 하나만. 다음 세션 시작 시 *작은 commit* 또는 v0.6 작업과 함께.
+
+**dino-run**: readonly 유지.
 
 ---
 
 ## Setup Required
 
-v0.4와 동일. plugin reinstall 권장 (v0.5.0 Rule 14 토큰 + C5 double-force 동작 반영).
+v0.5와 동일. plugin reinstall 권장.
 
 ---
 
-## Warnings
+## Warnings (누적)
 
-### W1-W22 — 이전 세션들에서 누적
+### W1-W28
 이전 HANDOFF.md / git history 참조. 전부 유효.
 
-### W23 (v0.4) — 영구 부재 회귀 검증
-v0.3 W19와 같은 종류. dogfood 정책상 영구 미검증. v0.4 → v0.5는 *외부 evaluator agent*로 부분 보완 — but 실 게임 회귀는 여전히 0.
+### W29 (v0.6 신규) — Self-audit ANCHORING은 매번 OVERSTATED
 
-### W24 — dogfood-findings 영영 차단
-F18/F19와 별개로 정책 유지.
+F20 정책화. v0.6 시작 전 *반드시* Protocol 1 (work-start evaluator)부터.
 
-### W25 — v0.4 deprecated 9 필드 데이터는 *읽기* 정상
-v0.5도 동일. 사용자 데이터 자동 삭제 안 함.
+### W30 (v0.6 신규) — Rule 14 토큰 일괄 적용 안 하면 v0.6도 OVERSTATED
 
-### W26 — `kit_version`은 *write만*
-v0.5도 동일. read enforcement는 v0.6+.
-
-### W27 — v0.5 신규: self-audit은 OVERSTATED 위험 영구
-v0.5가 외부 evaluator의 cite를 따라가서 작업했지만, *v0.5 자체*도 self-audit으로 PASS 판정 내릴 수 없음. 외부 evaluator를 v0.5에 한 번 더 부를지가 다음 결정 (Resume Step B).
-
-### W28 — Rule 14 token은 v0.5+에서만 mandatory
-v0.4 또는 이전 세션이 만든 refuse-message는 `[Rule 14]` 토큰 부재해도 호환. v0.5 SKILL이 *새로* 만드는 출력만 토큰 필수. grep audit는 v0.5 이후 출력에만 적용.
+mandatory 선언만 하고 부분 적용은 *defect 도입* 행위. 15 SKILL 모두 토큰 부착할 의지 있을 때만 v0.6 시작. 일부만 할 거면 *mandatory* 선언부터 풀어야 함 (룰북 정정 + CHANGELOG honest note).
 
 ---
 
-## Task List 상태 (이번 세션 종료 시점)
+## Task List (이번 세션 종료 시점)
 
 이번 세션 완료:
-- #22 G-B kill_history 4곳 정리
-- #23 G-C self-test 3곳 정리
-- #24 G-D validate line 478
-- #25 G-E rulebook Rule 10
-- #26 G-F warnings_acknowledged_at schema
-- #27 G-G double-force FAIL
-- #28 G-A Rule 14 falsifiable + self-test §2 shader 예외
-- #29 endpoint 카피 정정
-- #30 CHANGELOG + plugin meta + HANDOFF — **진행 중 (이 commit이 끝)**
+- v0.5 G-A~G-G 7 fix + endpoint 카피 + CHANGELOG/plugin meta/HANDOFF
+- commit `87595bc` + tag v0.5.0 + push 완료
+- evaluator 재검증 (Part 1 CLOSED + Part 2 MAJOR 2개 발견 + Part 3 OVERSTATED)
+- 이 HANDOFF에 v0.6 backlog 정리 완료
 
 다음 세션:
-- Step 0 commit/push/tag
-- Step A sanity verify
-- Step B 외부 evaluator 한 번 더 (or 다른 작업)
+- Step 0 Protocol 1 (work-start evaluator) — *작업 전*
+- Step 1 STRUCTURAL GUARD 먼저
+- Step 2-4 MAJOR/MINOR sweep
+- Step 5 Protocol 3 (pre-release)
+- Step 6 release + Protocol 4
 
 ---
 
-*이 HANDOFF는 v0.5.0 *구현 완료* 시점 기록. commit 후 reflection HANDOFF는 추가 안 함 (v0.4 reflection commit이 sufficient pattern).*
+*v0.5.0 origin 동기화 완료. v0.6 작업 시작 전 evaluator 호출이 첫 단계.*
