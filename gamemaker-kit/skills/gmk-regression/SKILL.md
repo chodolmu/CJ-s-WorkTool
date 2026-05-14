@@ -180,9 +180,27 @@ Regression check complete
 
 Next:
   - Read the report for the REGRESSION's likely culprits.
-  - /gmk-merge-gate (Wave C, when available) reads this report as part of the
-    merge decision.
+  - @playtest-analyst <regressing-milestone-id> — diagnose the drift / regression
+    pattern (which persona, which metric, which suspicious cluster). The analyst
+    is the only agent allowed to read trial-level logs, so this is the cleanest
+    next step for "what does this drift mean?"
+  - /gmk-merge-gate reads this report as part of the merge decision.
 ```
+
+### Step 8.5 — Route to `playtest-analyst` on REGRESSION or significant drift
+
+When any milestone shows **REGRESSION** (PASS → FAIL) OR a metric drift > 25% of baseline, the "Next:" block must recommend `playtest-analyst`. The analyst is the *only* agent allowed to read trial-level logs (one-way verification — MAST FM-2.x), and its "Time-to-clear drift" pattern is the canonical match.
+
+Routing rules:
+
+| Condition | Recommended agent | Notes |
+|---|---|---|
+| Any milestone went PASS → FAIL | `playtest-analyst` | Full diagnosis run on the regressing milestone — the analyst correlates baseline trials with the regression trial and routes downstream (systems-designer for invariant breaks, economy-balancer for balance drift, etc.). |
+| Drift > 25% on a metric without verdict change | `playtest-analyst` (optional) | Capture-but-don't-apply is in effect, but the user may want a diagnosis before deciding to `--accept-regression`. |
+| Multiple milestones drift together | `playtest-analyst` (high-value) | Often signals a shared-file change (`_bot_hook_lib.js`) — the analyst can spot the cross-milestone pattern faster than the user. |
+| All milestones unchanged | (none) | No agent needed; the regression report is the deliverable. |
+
+The route is a recommendation; do not auto-invoke. The analyst's preconditions (`milestones.json` validation summary, structured hypothesis rows) are satisfied automatically since this skill just wrote them.
 
 ## Edge cases & policy
 

@@ -130,7 +130,22 @@ Template:
 - {/gmk-prototype <id> — implement the first 1-2 checkpoints of content}
 - {/gmk-task-split <id> — split content production by discipline}
 - {/gmk-art-spec <id> — name the visual assets for each species/wave/branch}
+- {@economy-balancer <id> — set the actual numbers underneath the curve shape (XP per tier, drop rates, cap tightness), if Step 6.5 fires}
 ```
+
+### Step 6.5 — Route to `economy-balancer` when the curve has numeric knobs
+
+A curve shape (`stairs`, `ramp`, `wave`, `bell`) is a *shape* — the numbers underneath (how many XP per tier, what drop rate, what cap value) need separate decision-making. The `economy-balancer` agent owns that.
+
+| Trigger | Recommend `economy-balancer`? |
+|---|---|
+| Curve shape is `stairs` AND the table has tier counts / unlocks / numeric thresholds | Yes |
+| Curve shape is `ramp` OR `wave` AND the underlying mechanic has costs / drop rates / numeric tunables | Yes |
+| Curve shape is `bell` with a numeric climax (boss HP, peak spawn rate, etc.) | Yes |
+| Curve shape is `flat` AND no numeric knobs in the mechanic | Skip — nothing to balance |
+| Hypothesis lacks a `kind: 'bot'` numeric `measured_by` row | Skip — `economy-balancer` will refuse anyway (no anchor metric). The user must add a row via `/gmk-prototype` first. |
+
+If routing: surface in the "Next" block. Don't auto-invoke; the user calls `@economy-balancer <id>`. The agent's preconditions (numeric measured_by row, system spec) must be satisfied — name them in the recommendation so the user knows what to set up first.
 
 ### Step 7 — Don't touch milestones.json
 

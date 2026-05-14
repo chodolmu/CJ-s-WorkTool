@@ -109,13 +109,18 @@ Run exactly one downstream skill based on the gate:
 |---|---|---|
 | Plan: hypothesis missing | `/gmk-prototype <milestone>` | The prototype skill prompts for hypothesis if missing |
 | Plan: tasks not split | `/gmk-task-split <milestone>` | |
+| Plan: system spec needed (≥3 systems or ≥4-state machine in design-system.md) | `/gmk-design-system <milestone>` THEN recommend `@systems-designer <milestone>` | The agent's strict spec lands `system-spec.md` which gmk-port Stage 1 will need anyway |
 | Build: prototype missing | Stop and tell the user to write it (this is a *human* task — `/gmk-prototype` produces the *spec*, but a real prototype often needs the user to iterate on the HTML by hand) | |
 | Build: hook broken | Stop. Tell the user to fix the hook; point at `gmk-prototype-rules` for the API spec | |
 | Validate: bot not run / FAIL / INCONCLUSIVE | `/gmk-validate <milestone>` | Bot is rerun (FAIL/INCONCLUSIVE → user may want to fix the prototype first; ask) |
+| Validate: bot FAIL (crash/dominant/persona) | After `/gmk-validate` produces FAIL, surface its Step 8.5 agent route — typically `@playtest-analyst <milestone>` | Loop doesn't auto-invoke the agent; it surfaces the route the validate skill already prepared |
 | Validate: self-test missing / FAIL | `/gmk-self-test <milestone>` | |
+| Validate: self-test FAIL (sensory) | Surface self-test Step 8.5 route — `@feel-engineer <milestone>` for sensation-word notes, `@playtest-analyst <milestone>` otherwise | Same — agent is recommended, never auto-invoked |
+| Integrate: regression drift / REGRESSION | `/gmk-regression` THEN surface `@playtest-analyst` route for drift > 25% or PASS→FAIL | |
 | Integrate: merge-gate not run / FAIL | `/gmk-merge-gate <milestone>` | |
 | Integrate: port missing / RE_FAIL | `/gmk-port <milestone>` | |
-| Shipped | Stop. Print: *"m2-dragon-evo is dev-complete. Next: pick another milestone (`/gmk-status`)."* | |
+| Integrate: port NEEDS_TUNING | Surface port Stage 6 route — `@feel-engineer` or `@economy-balancer` based on the user's `--reason` text | |
+| Shipped (this milestone) | Print: *"m2-dragon-evo is dev-complete. Next: pick another milestone (`/gmk-status`) or, if this was the last one, run `/gmk-dev-complete` for the project-level endpoint."* | The project-level endpoint (`gmk-dev-complete`) is a separate SKILL — see Wave B |
 
 **Dispatch is not auto-execution.** Surface the skill name and let the user invoke it. If the user wants the loop to *actually run* the next skill, the next iteration of `/gmk-loop` will do it (after the user confirms again).
 
@@ -218,6 +223,7 @@ Don't auto-delete. The lock is a safety contract; auto-clearing it defeats the p
 
 - **Doesn't auto-recurse.** One gate per call. The user is the recursion.
 - **Doesn't run multiple skills in one invocation.** Even if Plan-stage tasks (gmk-prototype + gmk-task-split) feel like one logical unit, the loop runs them as separate iterations.
+- **Doesn't auto-invoke domain agents.** The dispatch table *surfaces* agent routes that downstream skills (gmk-validate, gmk-self-test, gmk-regression, gmk-port) already prepared. The user invokes `@feel-engineer` / `@economy-balancer` / `@systems-designer` / `@playtest-analyst` themselves. Reasoning: agents have `max-iteration=1` and require user-supervised input; auto-invocation from a dispatcher would violate the single-supervisor model.
 - **Doesn't validate validators.** Only `playtest-analyst` agent does that, and only single-direction.
 - **Doesn't track milestone *between* loops.** Each call re-reads `milestones.json` fresh. Stateful between calls = bugs.
 - **Doesn't write to `milestones.json` itself** — downstream skills do that. The loop just orchestrates the order.

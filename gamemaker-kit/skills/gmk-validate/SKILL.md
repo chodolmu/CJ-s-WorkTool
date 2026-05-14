@@ -388,6 +388,35 @@ Next: don't /gmk-self-test this. Either:
 
 Whatever the verdict, **do not** automatically call `/gmk-self-test` or `/gmk-port`. Verdicts are advisory; the user owns the GO/NO-GO call. Print "Next:" suggestions and stop.
 
+### Step 8.5 — Route to domain agents on FAIL / borderline metrics
+
+When the verdict is **FAIL** or **INCONCLUSIVE**, the "Next:" block must include a routing recommendation to one of the four domain agents. The user owns the routing decision; this skill just surfaces the highest-value match.
+
+Routing table (apply *in order*, stop at first match):
+
+| Condition | Recommended agent | Why |
+|---|---|---|
+| `crash_rate >= 0.05` OR `stuck_rate >= 0.05` | `playtest-analyst` | Crashes/stuck states are *systemic* failures. The analyst will read suspicious runs and route further to `systems-designer` (invariant violation) or `gmk-prototype` (re-spec). |
+| Any persona's `clear_rate` is 2σ+ away from the others | `playtest-analyst` | Persona-specific failure. The analyst diagnoses *which* persona and routes accordingly. |
+| `dominant_strategy_ratio >= 0.7` OR `action_entropy < 1.0` | `economy-balancer` | Single dominant play = numeric balance problem. The agent's "Dominant strategy" archetype applies directly. (Note: agent requires structured measured_by row.) |
+| `state_coverage < 0.5` (where available) | `playtest-analyst` | State starvation — analyst routes to `systems-designer` (missing transition?) after reading suspicious runs. |
+| Any bot row FAILs its CI check, no other guardrail tripped | `playtest-analyst` | Metric-specific failure; analyst diagnoses *why* the target was missed. |
+| INCONCLUSIVE only (no guardrail tripped) | (none — recommend re-run with `--sample-size 400` OR `/gmk-self-test` for sensory check) | Not enough signal for an agent. Get more samples or human signal first. |
+| Self-test row FAIL while bot rows PASS (rare at validate time, more common at self-test time) | `feel-engineer` | Sensory miss — handled by `gmk-self-test`'s own routing; surface here only if the user is jumping straight to fix without running self-test. |
+
+**Format for the Next: block on FAIL**:
+
+```
+Next: don't /gmk-self-test this. Either:
+  - @playtest-analyst m1-merge-feel  — diagnose which pattern (persona / dominant / starvation / crash) and route
+  - /gmk-kill-milestone m1-merge-feel  — log the lesson, move on
+  - Edit the prototype and re-run /gmk-validate
+```
+
+**Do not auto-invoke the agent.** The user reads the suggestion, then runs `@playtest-analyst <id>` (or `@economy-balancer <id>`) themselves. Playtest-analyst's preconditions (validation result exists, hypothesis structured) are already satisfied by the time this verdict prints.
+
+Reasoning: this routing turns a FAIL verdict into an actionable next step. v0.2 left FAIL verdicts as "user-figures-it-out"; v0.3 wires the closest domain expert in.
+
 ## Edge cases & policy
 
 ### `legalActions()` returns empty but `isOver()` is false

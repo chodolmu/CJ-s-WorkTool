@@ -287,13 +287,31 @@ Why FAIL:
 Next:
   - Re-read your own session note — that's the most expensive piece of
     feedback in this round.
-  - Decide: tighten the prototype (likely needs more weight/audio/haptic-
-    equivalent feedback in the merge moment), then /gmk-validate and
-    /gmk-self-test again. OR
+  - @feel-engineer m1-merge-feel — sensory FAIL. Agent reads your notes for
+    sensation words (weak, limp, 휙, 둔탁) and proposes hit-stop / shake /
+    particle adjustments with auditable range sweeps.
+  - @playtest-analyst m1-merge-feel — if you want a structured diagnosis of
+    what pattern (sensory miss vs. systemic vs. balance) before fixing.
   - /gmk-kill-milestone m1-merge-feel  — log the lesson, advance.
 
   Do NOT /gmk-port until this gate flips to PASS.
 ```
+
+### Step 8.5 — Route to domain agents on FAIL
+
+When the verdict is **FAIL**, the "Next:" block must include the closest domain-agent route. Routing rules (apply in order, stop at first match):
+
+| Condition | Recommended agent | Why |
+|---|---|---|
+| Pillar-violation flag fired AND the pillar is sensory (tactile / responsiveness / juicy / chunky language) | `feel-engineer` | Sensory miss — agent's catalog of feel parameters applies directly. The pillar's anti-example already named the failure word. |
+| User's notes mention sensation words (`limp`, `weak`, `미적지근`, `휙`, `둔탁`, `no impact`) | `feel-engineer` | Same as above; sensation words are the agent's trigger. |
+| Bot validation PASS but self-test FAIL | `feel-engineer` first, `playtest-analyst` second | "Sensory miss" pattern (bot OK + self-test FAIL on sensation). If the language isn't clearly sensory, route to playtest-analyst for diagnosis. |
+| User explicitly says "I don't know why it feels off" | `playtest-analyst` | The analyst reads logs + your notes and routes — useful when you have a FAIL gut but no clear cause word. |
+| Self-test row about decision tension / engagement (non-sensory) FAILed | `playtest-analyst` | Engagement issues often need log-level diagnosis (state coverage, persona spread). |
+
+The route is a **recommendation**, never auto-invoke. The user reads, decides, runs `@feel-engineer <id>` or `@playtest-analyst <id>` themselves.
+
+Reasoning: v0.2 left self-test FAIL as "user-figures-out". v0.3 wires the closest expert. Sensory miss has a specific agent (`feel-engineer`); diffuse FAIL has the diagnostic agent (`playtest-analyst`).
 
 ## Edge cases & policy
 

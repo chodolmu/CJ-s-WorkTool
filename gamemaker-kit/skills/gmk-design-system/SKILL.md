@@ -157,11 +157,27 @@ Template:
 - {/gmk-task-split <id> — translate this spec into per-discipline tasks}
 - {/gmk-prototype <id> — implement the systems in HTML if not already done}
 - {/gmk-shape-advisor <id> — pick the prototype shape if not chosen yet}
+- {@systems-designer <id> — produce strict system-spec.md, if Step 9 heuristics fired}
 ```
 
 ### Step 8 — Don't touch milestones.json
 
 This skill writes only the markdown file. It does NOT add fields to `milestones.json`. The spec is a working document for the user (and for `/gmk-task-split` to read); it's not part of the gating data model.
+
+### Step 9 — Hand off to `systems-designer` when the system is non-trivial
+
+`gmk-design-system` produces the **user-facing** design spec. The `systems-designer` agent produces a **stricter** system spec (`_workspace/milestones/<id>/system-spec.md`) that downstream skills cite: `gmk-prototype` reads it before coding the prototype, and `gmk-port` Stage 1 reads it before generating engine code.
+
+After writing `design-system.md`, decide whether to route to `systems-designer`:
+
+| Condition | Action |
+|---|---|
+| Systems count ≥ 4, OR any system has ≥ 5 named states, OR ≥ 3 coupling lines | Recommend `@systems-designer <milestone-id>` next. The downstream skills (`gmk-prototype`, `gmk-port`) will be cleaner with a strict spec. |
+| Systems count ≤ 3 AND no state machine has > 3 states AND ≤ 2 coupling lines | Skip — the spec you just wrote is enough. Adding `system-spec.md` here is overhead. |
+| Milestone has `shape: 'shader'` | Skip — shader milestones have a single tiny system; `system-spec.md` is overkill. |
+| User explicitly asks for the strict spec | Route to `systems-designer` regardless of the heuristics above. |
+
+If routing: the recommendation goes in the "Next" block (Step 7 template). Don't auto-invoke — surface the route and let the user decide. The user runs `@systems-designer <milestone-id>` themselves.
 
 ## Output: tell the user what happens next
 

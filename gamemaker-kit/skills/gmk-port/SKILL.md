@@ -43,12 +43,12 @@ The 5-stage re-validation (Stages 2-6 below) is what makes this skill different 
 The skill runs **Stage 1 (generate)** then a **6-step re-validation** (Stages 2-6) end-to-end by default. Each stage can be re-run in isolation via `--stage N`. Stage 6 (human RE-PASS) is interactive.
 
 ```
-Stage 1 — Generate          (this skill, plus optional systems-designer agent in Wave D)
+Stage 1 — Generate          (this skill; calls `systems-designer` agent for the engine-side plan when system spec is non-trivial)
 Stage 2 — Compile           (engine CLI; 1 retry)
 Stage 3 — Smoke-run         (engine bot; 5 runs; 1 retry)
-Stage 4 — Metric diff       (HTML 200 runs vs Engine 200 runs)
+Stage 4 — Metric diff       (HTML 200 runs vs Engine 200 runs; routes to `playtest-analyst` on outside-threshold diff)
 Stage 5 — (port checklist)  (always written; not a verdict)
-Stage 6 — Human RE-PASS     (user plays the engine port; verdict input)
+Stage 6 — Human RE-PASS     (user plays the engine port; routes to `feel-engineer` / `economy-balancer` on NEEDS_TUNING)
 ```
 
 ---
@@ -75,6 +75,19 @@ Read in order:
    - If the project is empty, use engine defaults: Godot 4.x → snake_case files/signals, PascalCase scenes/class names; Unity 6 → PascalCase for class names + methods, camelCase for fields.
 
 Do NOT skip the conventions step. Generated code that ignores existing conventions is worse than asking.
+
+#### 1a.5 — Invoke `systems-designer` for the engine-side structural plan
+
+The `systems-designer` agent's second entry point (per its SKILL.md) is `/gmk-port` Stage 1 — produce the engine-side structural plan before code generation. Routing rule:
+
+| Condition | Action |
+|---|---|
+| `_workspace/milestones/<id>/system-spec.md` exists | Read it; use it as the input to step 1b's plan. Don't re-invoke the agent. |
+| Spec missing AND mechanic is non-trivial (≥ 3 systems in `design-system.md`, OR any state machine with ≥ 4 states, OR ≥ 3 coupling lines) | Invoke `@systems-designer <id>` and **wait for its output** before proceeding to 1b. Print: *"Invoking systems-designer for engine-side plan — non-trivial system needs strict spec before code. Once it writes `system-spec.md`, re-run `/gmk-port <id>` to continue."* Stop. |
+| Spec missing AND mechanic is trivial (single state machine, ≤ 2 couplings) | Skip — proceed to step 1b. The HTML prototype + `design-system.md` (if present) is enough context. |
+| User explicitly passes `--no-systems-designer` | Skip — proceed straight to 1b. The user owns the choice. |
+
+This is the **only** stage where this skill blocks on an agent. The block is intentional: porting non-trivial systems without an engine-side spec is exactly when API-hallucinated code wastes the most time. The agent's `system-spec.md` (which it writes to `_workspace/milestones/<id>/system-spec.md`) gives this skill a strict structural target before any GDScript / C# is generated.
 
 #### 1b — Plan the port (don't write code yet)
 
@@ -349,6 +362,18 @@ Stage 4 (Metric diff) — FLAG (1 metric drifted past warning threshold)
 
 The FLAG vs FAIL distinction matters: FAIL means the mechanic isn't recognizably the same; FLAG means it's drifted but might still be fine — your eyes (Stage 6) decide.
 
+#### Stage 4 routing — `playtest-analyst` on FLAG / FAIL
+
+When Stage 4 produces **FLAG** or **FAIL**, surface a `playtest-analyst` route in the report. Per the analyst's own entry-point spec, `/gmk-port` Stage 4 metric diff outside thresholds is a canonical trigger:
+
+| Stage 4 verdict | Recommend | Why |
+|---|---|---|
+| FAIL (mechanic drifted past hard threshold on any metric) | `@playtest-analyst <id>` | The mechanic is no longer recognizably the same — analyst diagnoses which metric pattern (state starvation, dominant strategy, persona-specific) and routes to the right fix agent. |
+| FLAG (1 metric in warning band) | `@playtest-analyst <id>` (optional, recommended before Stage 6) | Get a focused diagnosis of *which* metric drifted and *why* before the user spends 15 minutes playing. Sharpens what to watch for in Stage 6. |
+| PASS (all metrics within thresholds) | (none) | Proceed to Stage 5. |
+
+The route is a recommendation; the user invokes `@playtest-analyst <id>` themselves. The analyst's preconditions (validation result, structured hypothesis) are already satisfied; it will read both the HTML baseline and the engine trial and produce one diagnosis doc.
+
 ---
 
 ### Stage 5 — Port checklist
@@ -463,7 +488,32 @@ If RE_FAIL: this port is broken. Either /gmk-port --force-rebuild (re-runs Stage
             or hand-edit the generated files and re-run --stage 4 to re-measure.
 If NEEDS_TUNING: the port is conceptually right but needs feel work. The checklist
                  is your map. When done tuning, re-run --stage 6 --verdict RE_PASS.
+
+                 Tuning route (recommended):
+                   - If your --reason mentions sensation words (hit-stop, shake,
+                     particle, easing, lerp, juicy, weak, 둔탁):
+                       @feel-engineer <id> — agent re-runs feel pass against the
+                       engine port, producing feel-numbers.md + feel-edits.md you
+                       apply to the engine code.
+                   - If your --reason mentions balance words (dominant, too easy,
+                     too hard, drop rate, XP, curve, pacing):
+                       @economy-balancer <id> — agent re-balances against the
+                       engine port's measured metrics.
+                   - If both, route feel-engineer first then economy-balancer.
 ```
+
+#### Stage 6 routing — `feel-engineer` / `economy-balancer` on NEEDS_TUNING
+
+NEEDS_TUNING is the canonical "the port works structurally but needs domain-agent work" verdict. Apply routing automatically when recording the verdict:
+
+| `--reason` content | Recommended agent | Why |
+|---|---|---|
+| Sensation words: hit-stop, shake, particle, easing, lerp, juicy, weak, limp, 둔탁, 미적지근, 휙 | `feel-engineer` | Agent's catalog of feel parameters maps directly. Engine-side tuning is its Stage 6 entry point per its own SKILL.md. |
+| Balance words: dominant strategy, too easy, too hard, drop rate, XP, curve, pacing, cap, tier | `economy-balancer` | Agent re-balances the engine port using engine-side measured metrics. |
+| Structural words: state, transition, invariant, missing, broken | `systems-designer` (then `--force-rebuild` Stage 1) | The port has structural drift — usually means the engine-side spec was incomplete. |
+| Unclear / mixed | `playtest-analyst` (read engine smoke + Stage 4 logs, diagnose, route) | Same as Stage 4 FLAG/FAIL routing. |
+
+Print the route in the verdict-recorded message. Do not auto-invoke.
 
 ---
 

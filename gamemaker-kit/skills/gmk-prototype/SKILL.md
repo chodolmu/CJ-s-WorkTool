@@ -96,6 +96,22 @@ A prototype must declare one of: `grid | continuous | dialogue | shader`. Ask th
 
 Flag `--type=shader` is equivalent to setting `shape: 'shader'` in the hypothesis interactively.
 
+### Step 4.5 — Route to domain agents when shape/hypothesis fits
+
+After the shape is chosen and the hypothesis is schema-strict, decide whether downstream tuning is best done by a domain agent rather than freehand:
+
+| Trigger | Recommended agent | Why |
+|---|---|---|
+| `shape: 'continuous'` OR `shape: 'shader'` | `feel-engineer` | Continuous + shader prototypes live or die on sensory parameters (lerp, hit-stop, particle counts, easing curves). The agent produces `feel-numbers.md` + `feel-edits.md` with auditable range sweeps. |
+| Any sensory pillar (`tactile-satisfaction`, `responsiveness`, sensation language in pillar text) | `feel-engineer` | Same reason — sensory layer needs the agent's catalog of typical ranges. |
+| Any `kind: 'bot'` row whose `metric` ∈ `{dominant_strategy_ratio, action_entropy, clear_rate, frustration_proxy}` AND the milestone involves numeric balance (costs, drop rates, tier curves, XP) | `economy-balancer` | Numeric balance needs metric-anchored knobs. The agent refuses to balance without a structured `target: {op, value}` row — which Step 3 just enforced. |
+| `shape: 'grid'` with no numeric balance content AND no sensory pillar | (none) | The base SKILL flow is enough. |
+| `shape: 'dialogue'` | (route to `gmk-narrative` SKILL, not an agent) | Dialogue spec is a SKILL, not an agent. |
+
+If a trigger fires, **do not auto-invoke**. Add the recommendation to the "Next" message in Step 7 (the user invokes `@feel-engineer <id>` or `@economy-balancer <id>` themselves). The agent's preconditions (system spec exists, hypothesis is schema-strict) are already satisfied by the time this skill finishes its own steps.
+
+If both `feel-engineer` and `economy-balancer` triggers fire (rare — a prototype that combines a sensory feedback loop with an economy curve), recommend **`feel-engineer` first** then `economy-balancer`. Feel and economy can interact (reward-feel coupling), and tuning feel first gives economy clean ground.
+
 ### Step 5 — Generate the HTML file
 
 The file structure follows `gmk-prototype-rules` §4 (hook API), §7 (library inline vs `<script src>`), §8 (hypothesis header), §9 (bounded runs). Rather than restating the rules here, this section names the parts:
@@ -213,6 +229,12 @@ Next:
   3. /gmk-validate m1-merge-feel — runs 200 headless bot games (persona-mix), reports
      metrics + suspicious seeds for self-test.
   4. /gmk-self-test m1-merge-feel — your own play session against the suspicious seeds.
+
+  (Optional, only if Step 4.5 triggers fired)
+  5. @feel-engineer m1-merge-feel — draft initial feel numbers (hit-stop / shake /
+     particles / easing) before validation. Continuous + shader prototypes especially.
+  6. @economy-balancer m1-merge-feel — tune numeric balance against the bot rows
+     (dominant strategy / pacing / drop rates). Requires structured measured_by row.
 ```
 
 ## Notes for the model running this skill
