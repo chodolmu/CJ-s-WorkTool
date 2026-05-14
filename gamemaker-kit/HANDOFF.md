@@ -1,9 +1,10 @@
-# Handoff: gamemaker-kit v0.3 — 스켈레톤 완성 릴리스 완료
+# Handoff: gamemaker-kit v0.3.0 — 스켈레톤 완성 릴리스 완료 + origin 동기화 완료
 
-**Generated**: 2026-05-14 (23:30 KST)
+**Generated**: 2026-05-14 (23:35 KST)
 **Branch**: main
-**Latest commits**: Wave A `41aa658` → Wave B `821d12d` → Wave C `e650d68` → Wave D `1629555` → Wave E (about to commit)
-**Status**: v0.3.0 모든 Wave (A/B/C/D) 완료. Wave E (CHANGELOG + version bump + 이 HANDOFF) 마무리 중. dogfood 안 함 (v0.3 audit-driven).
+**Latest commit**: `321618c chore(gamemaker-kit): v0.3.0 release — CHANGELOG, version bump, HANDOFF`
+**Remote**: origin 동기화 완료 (`14ee45a..321618c main -> main` push 완료)
+**Status**: v0.3.0 모든 Wave (A/B/C/D/E) 완료 + origin 푸시 완료. dogfood 안 함 (v0.3 audit-driven). **종료 상태.**
 
 ---
 
@@ -23,7 +24,7 @@ v0.3의 한 줄 약속: **"v0.2 뼈대를 *작동 가능*하게 만든다. v0.2�
 | B | `821d12d` | `gmk-dev-complete` NEW + endpoint 호출 경로 wiring |
 | C | `e650d68` | structure.md drift — 15+ file kinds 추가 + CONCEPT endpoint 동기화 |
 | D | `1629555` | 호출 그래프 보강 (ux-flow→self-test, kill→roadmap, shader path, HTML 정책) |
-| E | (this commit) | CHANGELOG v0.3 + plugin/marketplace 0.3.0 + HANDOFF |
+| E | `321618c` | CHANGELOG v0.3 + plugin/marketplace 0.3.0 + HANDOFF |
 
 최종: **29 skills (28 + dev-complete) + 4 domain agents**. plugin.json + marketplace.json 모두 v0.3.0.
 
@@ -131,13 +132,13 @@ audit 중 발견: 두 산출물 모두 milestone의 system을 다루는데, 어�
 
 ## Current State
 
-**Working** (v0.3 완전):
+**Working** (v0.3.0 완전 출시):
 - 29 skills + 4 agents 전부 install 가능
 - CHANGELOG.md / CONCEPT.md v0.3 기준
 - plugin.json + marketplace.json v0.3.0
-- 모든 wave (A/B/C/D) committed; Wave E (이 커밋) 진행 중
+- 모든 wave (A/B/C/D/E) origin 푸시 완료
 
-**Uncommitted Changes** (gamemaker-kit/): Wave E (CHANGELOG + version bump + 이 HANDOFF) 만.
+**Uncommitted Changes** (gamemaker-kit/): 이 HANDOFF 갱신 (push-completed reflection) 하나만 남음. 다음 세션에서 사소한 정정 commit으로 처리.
 
 **dino-run 상태**: **readonly** — 손 안 댐 (F10 함정 차단). m1-m4 그대로, m5 미진행.
 
@@ -244,4 +245,4 @@ DEV_COMPLETE 도달 후 매번 같은 warnings 재출력. 사용자가 한 번 a
 
 ---
 
-*마지막 커밋: Wave E (이 커밋이 origin 동기화 시점)*
+*마지막 커밋: `321618c` Wave E. origin/main 동기화 완료 (push `14ee45a..321618c`).*
