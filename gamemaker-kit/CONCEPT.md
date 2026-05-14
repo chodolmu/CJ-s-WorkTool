@@ -35,6 +35,8 @@ Outside this envelope, the kit still runs — but validation gates degrade (bots
 
 The kit's endpoint is the user's explicit declaration: *"this game is ready for release prep"*. Everything after that — Steam-page text, marketing, build pipelines, telemetry, live-ops, patch notes, community channels — is **outside the kit**. The kit does not bundle, integrate with, or recommend release tooling. It is opinionated about what it does, and it does development. (See §13 for the 4-axis frame.)
 
+Structurally, the endpoint is reached when **`/gmk-dev-complete`** returns `DEV_COMPLETE`. The SKILL is read-only on canonical state; it runs 6 structural checks (live milestones, all shipped, every pillar covered by ≥1 shipped milestone, no unresolved merge-gates, no unacknowledged forced overrides, pillars locked) and emits a release-readiness report at `_workspace/dev-complete-report.md`. Past `DEV_COMPLETE`, the kit deliberately does nothing further.
+
 ---
 
 ## 2. Workflow

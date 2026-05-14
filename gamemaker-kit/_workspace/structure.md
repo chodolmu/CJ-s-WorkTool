@@ -16,8 +16,10 @@ If you find yourself wanting to put state somewhere else, stop. Either it belong
 ```
 {game-project-root}/                       # e.g. C:/GameMaking/Godot/ZooMerge/
 ├─ godot/                                  # user's engine project (gmk does not touch)
+│   └─ save-schema.json                    # OPTIONAL — user-maintained current save schema (gmk-save-migrate reads)
 ├─ prototypes/                             # HTML single-file prototypes (gmk-prototype writes)
 │   ├─ m1-merge-feel.html
+│   ├─ m1-merge-feel-mocked.html           # OPTIONAL — gmk-mock-inject sibling (never overwrites original)
 │   ├─ m2-dragon-evo.html
 │   └─ ...
 │
@@ -25,6 +27,7 @@ If you find yourself wanting to put state somewhere else, stop. Either it belong
 │   ├─ pillars.json                        # user-editable (locked by gmk-init)
 │   ├─ milestones.json                     # gmk-updated (schema in _workspace/examples/milestones-example.json)
 │   ├─ integrations.toml                   # reserved for future (gitignore)
+│   ├─ .loop.lock                          # transient — gmk-loop concurrency lock (auto-released)
 │   │
 │   ├─ validations/<milestone-id>/
 │   │   ├─ trial-{trial-id}.json           # per-run trial data
@@ -42,11 +45,32 @@ If you find yourself wanting to put state somewhere else, stop. Either it belong
     ├─ vision.md                           # north star (Pillars in human-readable form)
     ├─ roadmap.md                          # milestone list + priority + deps
     ├─ dashboard.md                        # overwritten every gmk-status run
+    ├─ dev-complete-report.md              # overwritten every gmk-dev-complete run (project endpoint)
+    ├─ regression-report-{YYYY-MM-DD-HHMM}.md   # gmk-regression roll-up (one per run, accumulates)
     ├─ brainstorms/                        # optional, gmk-brainstorm output
     │   └─ M{n}-{slug}.md
     └─ milestones/<milestone-id>/
         ├─ kanban.md                       # per-discipline tasks (backed by milestones.json tasks[])
-        └─ notes.md                        # user's free notes (gmk never overwrites)
+        ├─ notes.md                        # user's free notes (gmk never overwrites)
+        │
+        │   ── SKILL outputs (per-milestone working docs) ──
+        ├─ design-system.md                # gmk-design-system writes
+        ├─ content-plan.md                 # gmk-content-plan writes
+        ├─ art-spec.md                     # gmk-art-spec writes
+        ├─ sound-plan.md                   # gmk-sound-plan writes
+        ├─ ux-flow.md                      # gmk-ux-flow writes
+        ├─ narrative.md                    # gmk-narrative writes (dialogue shape only)
+        ├─ refactor-check.md               # gmk-refactor-check writes (pre-port audit)
+        ├─ save-migration.md               # gmk-save-migrate writes (post-port migration plan)
+        │
+        │   ── Agent outputs (strict specs, written by domain agents) ──
+        ├─ system-spec.md                  # systems-designer agent writes
+        ├─ feel-numbers.md                 # feel-engineer agent writes (numbers table)
+        ├─ feel-edits.md                   # feel-engineer agent writes (edit list)
+        ├─ economy-numbers.md              # economy-balancer agent writes (numbers table)
+        ├─ economy-edits.md                # economy-balancer agent writes (edit list)
+        ├─ balance-rationale.md            # economy-balancer agent writes (prose rationale)
+        └─ playtest-diagnosis-{YYYY-MM-DD}.md   # playtest-analyst agent writes (one per invocation; accumulates)
 ```
 
 ---
@@ -427,6 +451,79 @@ Output of `gmk-port` stage 5. **Template:**
 - Verdict: RE_PASS / RE_FAIL / NEEDS_TUNING
 - Reason: {user's own words}
 ```
+
+### `_workspace/milestones/<id>/design-system.md`
+
+Output of `gmk-design-system`. Per-milestone working spec — systems, state machines, coupling, invariants, risk callouts. Read by `gmk-task-split`, `gmk-prototype`, `gmk-port` Stage 1. Overwrites on re-run; git history preserves older versions. Template lives in the SKILL's Step 7.
+
+### `_workspace/milestones/<id>/content-plan.md`
+
+Output of `gmk-content-plan`. Curve shape (flat/stairs/ramp/wave/bell), checkpoint table, intensity bumps, cliff. Read by `gmk-prototype` (volume awareness), `gmk-art-spec` (asset count). Overwrites on re-run.
+
+### `_workspace/milestones/<id>/art-spec.md`
+
+Output of `gmk-art-spec`. Asset list + palette lock + style anchors + consistency-risk list. Read by `gmk-art-gen` (prompt building) and `gmk-mock-inject` (placeholder generation). Overwrites on re-run.
+
+### `_workspace/milestones/<id>/sound-plan.md`
+
+Output of `gmk-sound-plan`. SFX/BGM cue list with trigger / duration / intent, adaptive-music layers, mix conflicts. Spec only — gmk does not generate audio. Read by `gmk-mock-inject` (placeholder beeps). Overwrites on re-run.
+
+### `_workspace/milestones/<id>/ux-flow.md`
+
+Output of `gmk-ux-flow`. Menus, FTUE timeline, input mapping, accessibility checks. Read by `gmk-self-test` (FTUE verification) and `gmk-port` Stage 5 (checklist enrichment). Overwrites on re-run.
+
+### `_workspace/milestones/<id>/narrative.md`
+
+Output of `gmk-narrative`. Branch tree, dialogue volume per branch, tone constraints, visible divergence points. **Only for milestones with `shape: 'dialogue'`** — most kit projects never produce this file. Overwrites on re-run.
+
+### `_workspace/milestones/<id>/refactor-check.md`
+
+Output of `gmk-refactor-check`. Per-function complexity table, unreferenced paths, comment drift, untouched regions. Pre-port tech-debt audit. Read by `gmk-port` (informs Stage 1 plan). Overwrites on re-run.
+
+### `_workspace/milestones/<id>/save-migration.md`
+
+Output of `gmk-save-migrate`. Schema delta, migration function pseudocode, rollback strategy, test cases. **Post-port only** — HTML prototypes don't persist (`gmk-prototype-rules` §6 forbids localStorage). Read by `gmk-merge-gate` (warns if missing for milestones that touch persistent data). Overwrites on re-run.
+
+### `_workspace/milestones/<id>/system-spec.md`
+
+Output of **`systems-designer` agent**. Strict structural spec — narrower than `design-system.md`, more contract-shaped. Read by `gmk-prototype` (pre-implementation) and `gmk-port` Stage 1 (engine-side plan). The agent refuses to write without `pillars.json` and a target milestone. Overwrites on re-invocation.
+
+### `_workspace/milestones/<id>/feel-numbers.md` + `feel-edits.md`
+
+Outputs of **`feel-engineer` agent**. Two files per invocation:
+- `feel-numbers.md` — single Markdown table, one row per number (Parameter / Current / Proposed / Unit / Range checked / Rationale / Pillar / Self-test signal word).
+- `feel-edits.md` — edit list (file / locator / change / why). At most 7 edits per invocation.
+
+User reads, applies edits manually. Agent never runs Edit itself. Overwrites on re-invocation.
+
+### `_workspace/milestones/<id>/economy-numbers.md` + `economy-edits.md` + `balance-rationale.md`
+
+Outputs of **`economy-balancer` agent**. Three files per invocation:
+- `economy-numbers.md` — knobs table (Knob / Current / Proposed / Unit / Anchors-to-metric / Target / Sweep / Confidence).
+- `economy-edits.md` — same shape as `feel-edits.md`. ≤7 edits per invocation.
+- `balance-rationale.md` — 5-section prose (Diagnosis / Hypothesis / Proposed changes / What I won't touch / Re-validation recommendation).
+
+Agent refuses without a structured numeric `measured_by` row + system spec. Overwrites on re-invocation.
+
+### `_workspace/milestones/<id>/playtest-diagnosis-{YYYY-MM-DD}.md`
+
+Output of **`playtest-analyst` agent**. One file per invocation; filename includes date so successive diagnoses accumulate as a timeline. 5-section schema (TL;DR / Evidence cited / Diagnosis / Routing recommendation / What I won't say). Read budget: ≤20 trial files, ≤3 self-test sessions per invocation. Never overwrites — new diagnoses live alongside old ones.
+
+### `_workspace/regression-report-{YYYY-MM-DD-HHMM}.md`
+
+Output of `gmk-regression`. Roll-up across all PASS milestones re-validated. Timestamp in filename means reports accumulate; `gmk-merge-gate` reads the most recent (and if older than 24h, re-runs `gmk-regression` itself).
+
+### `_workspace/dev-complete-report.md`
+
+Output of `gmk-dev-complete`. Project-level endpoint report — pillar coverage, milestone status table, C1-C6 check results. Overwrites every run (git keeps history).
+
+### `.gamemaker-kit/.loop.lock`
+
+Transient concurrency lock written by `gmk-loop`. Contains `{started_at, milestone_id, step}`. Auto-released on exit (success / failure / abort). If older than 1 hour, considered stale — the user manually deletes after confirming no other `/gmk-loop` is running.
+
+### `<engine-root>/save-schema.json`
+
+**User-maintained** schema file living in the user's engine project root (e.g., `godot/save-schema.json`). gmk does not auto-create or auto-update this — `gmk-save-migrate` reads it to detect schema deltas. Format is user's choice; the SKILL accepts a JSON object describing current persistent fields. If absent, `gmk-save-migrate` offers to write a baseline as part of its first migration plan.
 
 ---
 
