@@ -256,8 +256,10 @@ Hypothesis `measured_by` rows declare `kind: 'bot' | 'self-test'`. **`kind: 'hum
 
 | Kind | Who runs it | Where it lands |
 |---|---|---|
-| `bot` | `/gmk-validate` headless bots | `validation.metrics`, `validation.by_persona` |
-| `self-test` | The **user themselves** playing | `self_test.sessions[]`, `self_test.latest_verdict` |
+| `bot` | `/gmk-validate` headless bots | `validation.metrics`, `validation.by_persona` (milestones.json); per-trial trace at `.gamemaker-kit/validations/<m>/trial-{id}.json` |
+| `self-test` | The **user themselves** playing | `self_test.latest_verdict`, `self_test.latest_session_path`, `self_test.latest_session_at`, `self_test.verdict_reason` (milestones.json); full session history on disk at `.gamemaker-kit/self-tests/<m>/session-{date}.md` + `coded.md` |
+
+(v0.2 declared `self_test.sessions[]` + `self_test.coded_themes` as in-file arrays; both were deprecated in v0.4 because no skill ever read them. The canonical trace for self-test sessions is now on disk, not in milestones.json. See `structure.md` § v0.4 deprecated fields.)
 
 No external-human kind. No "send link to testers" channel. The kit's scope is **development complete**, which the user can attest to themselves; external feedback collection (Discord, Steam reviews, beta groups) is *outside* gmk. The user can collect that feedback through their own channels, but gmk has no skill for ingesting it.
 
@@ -375,15 +377,25 @@ Example of (b): *"This milestone has shape='shader' and validate returned INCONC
 
 v0.3 audit (AD-5) found that refuse-chain cycles are silent: each skill is locally correct but the *chain* dead-ends. The rule forces skills to check the chain before recommending.
 
-### Citation pattern
+### Citation pattern (falsifiable, grep-able)
 
-Skills that refuse with "Run /gmk-X first" messages should include in their refuse path:
+Skills that refuse with "Run /gmk-X first" messages **must end the refuse block** with a one-line check that names both skills and the precondition direction. The line is part of the user-visible refuse text:
 
 ```
-(Rule 14 check: /gmk-X's preconditions are satisfied given current state.)
+[Rule 14] /gmk-<this-skill> → /gmk-<target-skill> — verified target's preconditions can be satisfied from current state.
 ```
 
-The check itself is in the model's reasoning, not in the user-visible message.
+If the chain *cannot* close (target skill also refuses in the same state), the refuse message must instead use Example (b) above — name the cycle and point at a third option:
+
+```
+[Rule 14 — CYCLE] /gmk-<this-skill> ↔ /gmk-<target-skill> on <named state>. Exits: (1) <option a>, (2) <option b>.
+```
+
+Examples of named states gmk-cycle-tracks:
+- `shape: 'shader'` + bot INCONCLUSIVE — `/gmk-validate` returns INCONCLUSIVE, `/gmk-self-test` accepts INCONCLUSIVE for shader shape only (see gmk-self-test Preconditions §2).
+- `validation: null` AND mechanic is bot-trivial — `/gmk-validate --skip --reason "..."` writes a skipped record that `/gmk-self-test` accepts.
+
+The `[Rule 14]` / `[Rule 14 — CYCLE]` tags are **mandatory tokens** so an audit can grep `\[Rule 14` in any SKILL body and verify every refuse-with-recommendation has the check attached. Skills missing the token fail the v0.5+ refuse-chain audit.
 
 ---
 

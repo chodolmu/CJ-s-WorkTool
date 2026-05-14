@@ -4,7 +4,7 @@ description: Check whether the project has reached gamemaker-kit's dev-complete 
 model: sonnet
 ---
 
-# gmk-dev-complete — Has the project reached gmk's endpoint?
+# gmk-dev-complete — Has the project reached gmk's release-readiness checkpoint?
 
 This skill answers one question:
 
@@ -12,17 +12,17 @@ This skill answers one question:
 
 The answer is **structural**, not vibes. The skill reads canonical state (`pillars.json` + `milestones.json` + the port checklists + the merge-gate records) and checks a small set of conditions. The output is a release-readiness report the user can read in 60 seconds.
 
-This SKILL is the **project-level endpoint** of the kit. Marathon-style milestone gates (validate / self-test / port / merge-gate) check one milestone at a time. This one checks the project as a whole.
+This SKILL is the **project-level release-readiness checkpoint** of the kit. Marathon-style milestone gates (validate / self-test / port / merge-gate) check one milestone at a time. This one checks the project as a whole — and the verdict is recomputable: adding a milestone, reviving a killed one, or accepting a regression will re-open the project on the next run. Checkpoint, not terminus.
 
 Past `gmk-dev-complete` returning PASS, gamemaker-kit has nothing more to do. **Steam pages, marketing, wishlist management, live-ops patch notes, external-human feedback collection — none of that lives in this plugin.** The kit's job is over.
 
 ## Preconditions
 
 1. **`pillars.json` exists.** Without pillars, "dev-complete" has no meaning — there's nothing to verify coverage against.
-   - Missing: *"No pillars.json. The endpoint check needs a vision to verify against. Run `/gmk-init` first if you're starting a new project, or you're in the wrong directory."*
+   - Missing: *"No pillars.json. The release-readiness check needs a vision to verify against. Run `/gmk-init` first if you're starting a new project, or you're in the wrong directory."*
 
 2. **`milestones.json` exists** with at least one non-killed milestone.
-   - Missing or all-killed: *"No live milestones. Either the project hasn't started (run `/gmk-roadmap` + `/gmk-prototype`), or every milestone was killed (the project is in a re-design moment, not at the endpoint)."*
+   - Missing or all-killed: *"No live milestones. Either the project hasn't started (run `/gmk-roadmap` + `/gmk-prototype`), or every milestone was killed (the project is in a re-design moment, not at the checkpoint)."*
 
 3. **`.gamemaker-kit/` exists.** (Sanity — same as `gmk-status`.)
 
@@ -51,7 +51,8 @@ Derive these facts:
 | `pillar_coverage[pid]` | count of shipped milestones with `pid` in `pillars_targeted` |
 | `pillars_with_zero_shipped` | pillars where `pillar_coverage[pid] === 0` |
 | `unresolved_merge_gates` | shipped milestones where `merge_gate?.verdict !== 'PASS'` |
-| `forced_gates` | shipped milestones with `forced: true` on any gate |
+| `forced_gates` | shipped milestones with `forced: true` on any *single* gate |
+| `double_forced_gates` | shipped milestones with `forced: true` on **both** validation AND self-test (the two evidence-bearing gates) |
 
 ### Step 2 — Run the dev-complete checks
 
@@ -63,13 +64,13 @@ The endpoint is reached when **all** of the following pass. The checks are delib
 | **C2 — All live milestones are shipped** | `len(in_flight_milestones) === 0` | FAIL — list which milestones are at which gate (Plan / Build / Validate / Integrate) |
 | **C3 — Every pillar has ≥1 shipped milestone** | `pillars_with_zero_shipped.length === 0` | FAIL — name the uncovered pillars; suggest `/gmk-roadmap` to plan or `/gmk-kill-milestone` if the pillar is being abandoned |
 | **C4 — No unresolved merge-gates** | `unresolved_merge_gates.length === 0` | WARN — shipped milestones with FAIL or missing merge-gate. User decides whether to override |
-| **C5 — No forced overrides on critical gates** | `forced_gates.length === 0` | WARN — shipped milestones that bypassed validation. Print the forced records; don't block but make the user acknowledge |
+| **C5 — No forced overrides on critical gates** | `forced_gates.length === 0` AND `double_forced_gates.length === 0` | Two sub-cases: (a) `double_forced_gates.length > 0` → **FAIL** (cannot be acknowledged via `--accept-warnings` — a milestone whose *both* validation and self-test were forced has zero evidence behind it; reaching DEV_COMPLETE on it would be vacuous). (b) `forced_gates.length > 0` AND `double_forced_gates.length === 0` → **WARN** (one gate was forced, the other holds; user acknowledges via `--accept-warnings`). |
 | **C6 — Pillars file lock** | `pillars.json.created_at` is set AND no `skipped: true` flag | WARN — pillars were skipped at init; the dev-complete declaration is on shaky ground |
 
 **Verdict aggregation**:
-- **DEV_COMPLETE** — all C1-C3 PASS AND no C4-C6 active WARN that the user hasn't acknowledged
-- **NOT_COMPLETE** — any C1-C3 FAIL
-- **COMPLETE_WITH_WARNINGS** — C1-C3 PASS but C4-C6 has unresolved warnings; user can mark `--accept-warnings` to upgrade to DEV_COMPLETE
+- **DEV_COMPLETE** — all C1-C3 PASS AND C5 not in FAIL state AND no C4-C6 active WARN that the user hasn't acknowledged
+- **NOT_COMPLETE** — any C1-C3 FAIL, OR C5 in FAIL state (double-forced milestone present)
+- **COMPLETE_WITH_WARNINGS** — C1-C3 PASS AND C5 not in FAIL state, but C4 / C5-WARN / C6 has unresolved warnings; user can mark `--accept-warnings` to upgrade to DEV_COMPLETE
 
 ### Step 3 — Write the release-readiness report
 
@@ -220,7 +221,7 @@ If the user wants persistence (e.g., a git tag), suggest `git tag` — don't wri
 
 As of v0.4 the acceptance is **persisted**: each warned milestone's gate record gets `warnings_acknowledged_at` written. On subsequent runs, the skill reads the timestamp and only re-prints the warning if a *new* warning has appeared since (e.g., the merge-gate was re-run and produced a new warning row). Pre-v0.4 the flag was per-invocation only; users upgrading from v0.3 will see warnings re-emerge once, on first run after upgrade.
 
-If C1-C3 are failing, `--accept-warnings` does nothing — it can't override structural failures.
+If C1-C3 are failing, `--accept-warnings` does nothing — it can't override structural failures. Same for C5 in its FAIL state (double-forced milestone): `--accept-warnings` does nothing, the user must un-force at least one of the two gates (re-run `/gmk-validate` or `/gmk-self-test` without `--force`) before dev-complete can resolve.
 
 ### Project with `killed_milestones` and zero `shipped_milestones`
 

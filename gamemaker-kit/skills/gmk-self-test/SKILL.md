@@ -27,9 +27,13 @@ Coding the user's *own* notes is not the same as coding external testers. You ar
 ## Preconditions
 
 1. **Milestone exists** in `.gamemaker-kit/milestones.json`.
-2. **Validation has run** (`validation` block present on the milestone).
-   - If `validation.verdict === "FAIL"`: warn but allow override with `--force`. *"Bot validation failed. Self-testing a prototype the bot says is broken is information about your tolerance for jank, not the mechanic. Fix or kill first?"*
-   - If `validation` is missing entirely: stop with *"Run /gmk-validate first. Without bot validation, there are no suspicious-seed runs to prioritize and the bot-row half of the verdict is empty."*
+2. **Validation has run** (`validation` block present on the milestone, in one of these accepted states):
+   - `validation.verdict === "PASS"`: proceed normally.
+   - `validation.verdict === "FAIL"`: warn but allow override with `--force`. *"Bot validation failed. Self-testing a prototype the bot says is broken is information about your tolerance for jank, not the mechanic. Fix or kill first?"*
+   - `validation.verdict === "INCONCLUSIVE"` AND milestone's `shape === "shader"`: **accept**. Shader-shape milestones return INCONCLUSIVE by design (see `gmk-prototype-rules` Rule 11); self-test is the gate, not bot. Proceed normally — no `--force` needed. `[Rule 14] /gmk-self-test ← /gmk-validate — verified shader INCONCLUSIVE is an accepted precondition state, not a dead-end.`
+   - `validation.verdict === "INCONCLUSIVE"` AND shape ≠ shader: warn but allow override with `--force`. *"Bot validation was inconclusive on a non-shader milestone. Usually this means too few runs or a stuck prototype. Re-run /gmk-validate with --sample-size 400, OR --force into self-test if you trust your eyes here."*
+   - `validation.skipped === true` (a deliberate `/gmk-validate --skip --reason "..."`): accept. The skip reason is visible in the play menu so the user knows the bot-row half of the verdict was intentionally empty. `[Rule 14] /gmk-self-test ← /gmk-validate --skip — verified explicit skip is an accepted precondition state.`
+   - If `validation` is missing entirely: stop with *"Run /gmk-validate first. Without bot validation, there are no suspicious-seed runs to prioritize and the bot-row half of the verdict is empty. [Rule 14] /gmk-self-test → /gmk-validate — verified target's preconditions can be satisfied from current state."*
 3. **Self-test rows exist** in the hypothesis. Filter `hypothesis.measured_by` to `kind === 'self-test'`. If zero such rows:
    - Tell the user *"This milestone's hypothesis has no self-test rows. Either it's bot-only by design (rare smell — pure-bot hypotheses can't tell you about feel), or you forgot to add one. Add a self-test row in milestones.json or run /gmk-prototype again, then come back."*
    - Stop.
@@ -314,9 +318,9 @@ Reasoning: v0.2 left self-test FAIL as "user-figures-out". v0.3 wires the closes
 
 | Flag | Default | Effect | Side-effect |
 |---|---|---|---|
-| `--record` | — | Switches the skill from "show the play menu" to "prompt for notes and code them". Without `--record`, the skill stops at Step 1 (planning). | Writes `self_test.sessions[]` (latest session appended) + rolled-up `latest_verdict`. |
+| `--record` | — | Switches the skill from "show the play menu" to "prompt for notes and code them". Without `--record`, the skill stops at Step 1 (planning). | Writes the session file `.gamemaker-kit/self-tests/<m>/session-{date}.md` (immutable, on disk) + updates `self_test.{latest_verdict, latest_session_path, latest_session_at, verdict_reason, coded_at}` on milestones.json. Does NOT write `self_test.sessions[]` body or `self_test.coded_themes` (both deprecated in v0.4). |
 | `--force` | — | Allows running self-test even if `validation.verdict === 'FAIL'`. Useful when the user wants to characterise *what* the bot saw as bad, not validate the prototype. | None — milestones.json unchanged structurally. |
-| `--thin-ok` | — | Accept a session with < ~80 words of notes. Default behavior is INCONCLUSIVE on note quality regardless of code hits; this flag overrides that gate. | `self_test.sessions[].thin_ok = true` for trace. |
+| `--thin-ok` | — | Accept a session with < ~80 words of notes. Default behavior is INCONCLUSIVE on note quality regardless of code hits; this flag overrides that gate. | Adds a `thin_ok: true` line at the top of that day's session.md file. Does NOT write to milestones.json (the rolled-up `latest_verdict` already encodes the outcome; the thin-acceptance lives next to the notes themselves). |
 | `--launch` | `off` | Opens the prototype in the user's default browser before prompting for notes. Off by default — the skill prefers not to enforce a player. | None. |
 
 ## Edge cases & policy
@@ -348,7 +352,7 @@ This is correct behavior: a user who flags FAIL despite "satisfying-ish" languag
 User does session 1 (INCONCLUSIVE), plays more for two days, runs `--record` again. The skill should:
 - Append the new session note (immutable; never edits old session files).
 - Re-code from scratch across *all* sessions (don't try to merge old codings — coding is cheap, drift is expensive).
-- Overwrite `coded.md` and `self_test.{coded_themes, latest_verdict, verdict_reason}`.
+- Overwrite `coded.md`. Update `self_test.{latest_verdict, latest_session_path, latest_session_at, verdict_reason, coded_at}` on milestones.json (do NOT write `coded_themes` — deprecated in v0.4; the per-theme coding lives in `coded.md` on disk).
 
 ### Suspicious seed list is stale
 

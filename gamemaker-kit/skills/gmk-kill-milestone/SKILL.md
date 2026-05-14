@@ -65,7 +65,7 @@ Milestone: m2-dragon-evo  [currently KILLED]
 
 About to: REVIVE
 
-The kill reason will be preserved in the milestone's kill_history for trace continuity.
+The kill reason will be preserved in this commit (and in milestones.json's git history) for trace continuity.
 ```
 
 ### Step 3 — Ask for the kill reason (kill operation only)
@@ -179,7 +179,7 @@ Next:
 Revived: m2-dragon-evo
   Previously killed: 2026-05-09 (reason: bot_fail — clear_rate 4%)
 
-The previous kill is preserved in kill_history[]. If you want to retry this mechanic with a different prototype, run:
+The previous kill is preserved in git history of milestones.json (not in a `kill_history[]` array — that field was deprecated in v0.4). If you want to retry this mechanic with a different prototype, run:
   /gmk-prototype m2-dragon-evo --regen
   (this will prompt before overwriting the existing HTML, which is from before the kill)
 
@@ -190,7 +190,7 @@ If the original prototype is still suitable, just re-run /gmk-validate.
 
 | Flag | Default | Effect | Side-effect |
 |---|---|---|---|
-| `--revive` | — | Switches the operation from kill to revive (un-kill). Refuses if the milestone is not currently killed. Previous kill data is preserved in `kill_history[]`. | Resets top-level `killed`, `killed_at`, `kill_reason`, `kill_followup`, `kill_category`; appends a `kill_history[]` entry with the prior values. |
+| `--revive` | — | Switches the operation from kill to revive (un-kill). Refuses if the milestone is not currently killed. Previous kill data is preserved in git history of milestones.json (not in any in-file array — `kill_history[]` was deprecated in v0.4). | Resets top-level `killed`, `killed_at`, `kill_reason`. Sets `revived_at`. Does NOT write `kill_history[]` / `kill_category` / `kill_followup` (all deprecated). |
 
 `--regen` (referenced in the Revive output text) is a `gmk-prototype` flag, not this skill's. See `gmk-prototype` Sub-flags.
 
@@ -235,7 +235,7 @@ If the user wants to mark in-progress tasks as `cancelled`, they edit `milestone
 
 ### Multiple kill cycles (kill → revive → kill)
 
-Allowed. Each kill appends to `kill_history[]` on revive. A milestone with 3 kill entries in history has a rich trace; future readers see it was attempted three times.
+Allowed. Each kill/revive cycle leaves a git commit on milestones.json; the full trace is `git log -- .gamemaker-kit/milestones.json`. A milestone that's been killed twice and revived twice produces 4+ commits — that *is* the trace. (v0.2's in-file `kill_history[]` array was deprecated in v0.4; git is the canonical source.)
 
 ### User says "actually let's not kill, let me think"
 

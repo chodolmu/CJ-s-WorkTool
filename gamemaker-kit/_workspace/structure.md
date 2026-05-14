@@ -418,7 +418,12 @@ PASS / FAIL
 
 ## Warnings
 - {free-text warnings, never blocking}
+
+## warnings_acknowledged_at (optional, set by `/gmk-dev-complete --accept-warnings`)
+- {ISO timestamp, only present if user acknowledged via dev-complete}
 ```
+
+The `warnings_acknowledged_at` line is **optional** and only written when the user runs `/gmk-dev-complete --accept-warnings`. Subsequent dev-complete runs read this timestamp and suppress the warning until a *new* warning row appears (i.e., the merge-gate is re-run and produces a different `## Warnings` block). The acknowledgment lives in the gate file that produced the warning, not in milestones.json.
 
 ### `.gamemaker-kit/port-checklists/<m>.md`
 
@@ -450,7 +455,12 @@ Output of `gmk-port` stage 5. **Template:**
 - User played for {min} minutes
 - Verdict: RE_PASS / RE_FAIL / NEEDS_TUNING
 - Reason: {user's own words}
+
+## warnings_acknowledged_at (optional, set by `/gmk-dev-complete --accept-warnings`)
+- {ISO timestamp, only present if user acknowledged via dev-complete}
 ```
+
+The `warnings_acknowledged_at` line is **optional** and only written when the user runs `/gmk-dev-complete --accept-warnings` AND this port checklist contributed a warning (e.g., a `forced: true` Stage 6 verdict). Re-running the port stage that produced the warning invalidates the acknowledgment — dev-complete re-shows the warning. The acknowledgment lives in the checklist file, not in milestones.json.
 
 ### `_workspace/milestones/<id>/design-system.md`
 

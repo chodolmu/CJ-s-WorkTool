@@ -31,11 +31,13 @@ The kit's bots, metric thresholds, and persona library are calibrated for:
 
 Outside this envelope, the kit still runs — but validation gates degrade (bots can spec but not judge), and the user is told so explicitly at `/gmk-init`. **3D, MMO, real-time PvP, and AAA-narrative are Phase 3** (or never).
 
-### Endpoint: "development complete"
+### Release-readiness checkpoint: "development complete"
 
-The kit's endpoint is the user's explicit declaration: *"this game is ready for release prep"*. Everything after that — Steam-page text, marketing, build pipelines, telemetry, live-ops, patch notes, community channels — is **outside the kit**. The kit does not bundle, integrate with, or recommend release tooling. It is opinionated about what it does, and it does development. (See §13 for the 4-axis frame.)
+The kit's exit signal is a **release-readiness checkpoint**, not a one-way terminus. The user crosses it when `/gmk-dev-complete` returns `DEV_COMPLETE`. Everything after that — Steam-page text, marketing, build pipelines, telemetry, live-ops, patch notes, community channels — is **outside the kit**. The kit does not bundle, integrate with, or recommend release tooling. It is opinionated about what it does, and it does development. (See §13 for the 4-axis frame.)
 
-Structurally, the endpoint is reached when **`/gmk-dev-complete`** returns `DEV_COMPLETE`. The SKILL is read-only on canonical state; it runs 6 structural checks (live milestones, all shipped, every pillar covered by ≥1 shipped milestone, no unresolved merge-gates, no unacknowledged forced overrides, pillars locked) and emits a release-readiness report at `_workspace/dev-complete-report.md`. Past `DEV_COMPLETE`, the kit deliberately does nothing further.
+Structurally, the checkpoint is reached when **`/gmk-dev-complete`** returns `DEV_COMPLETE`. The SKILL is read-only on canonical state; it runs 6 structural checks (live milestones, all shipped, every pillar covered by ≥1 shipped milestone, no unresolved merge-gates, no double-forced overrides, pillars locked) and emits a release-readiness report at `_workspace/dev-complete-report.md`. Past `DEV_COMPLETE`, the kit deliberately does nothing further.
+
+**Why "checkpoint" and not "endpoint"**: the project can be re-opened later by three deliberate user actions — `/gmk-roadmap` adding a new milestone (re-validation needed), `/gmk-kill-milestone --revive` resurrecting a killed milestone (pillar coverage may drop), or `/gmk-validate --accept-regression` downgrading a previously-PASS milestone (re-ships its slot). Each of these recomputes `/gmk-dev-complete` correctly on next run. The kit isn't *locked* at `DEV_COMPLETE`; it just stops *doing* work there. (v0.4 docs called this an "endpoint"; v0.5 corrects the framing — the call graph supports re-opening, and the verdict is recomputable.)
 
 ---
 

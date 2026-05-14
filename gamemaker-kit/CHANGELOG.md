@@ -6,6 +6,48 @@ Versioning follows [SemVer](https://semver.org/).
 
 ---
 
+## [0.5.0] — 2026-05-15
+
+v0.4 deprecated 9 trace fields and announced "skills no longer write them" — but the deprecation was applied **half-way**. Two external evaluator agents (one comparative-research, one internal-coherence) audited v0.4 immediately after release and found **7 regressions** the v0.4 audit had introduced and missed. v0.5 is the **post-release hotfix** that closes those gaps.
+
+This release was driven by **external-agent evaluation**, not by self-audit. v0.4 self-audit reported "28 defects → 0 ★★★ → all fixed". The external evaluator found 7 ★★ defects v0.4 had introduced and not seen. v0.5 fixes those.
+
+### Fixed (the 7 regressions v0.4 introduced)
+
+- **G-A — Rule 14 made falsifiable.** `gmk-prototype-rules` Rule 14 originally said the refuse-chain check lives "in the model's reasoning, not in the user-visible message" — un-grep-able and non-falsifiable. v0.5 introduces the `[Rule 14]` and `[Rule 14 — CYCLE]` mandatory tokens that every refuse-with-recommendation block must end with. `gmk-self-test` Preconditions §2 now explicitly accepts `validation.verdict === "INCONCLUSIVE"` when `shape === "shader"` (the v0.3 cycle Rule 14 was built for) and accepts `validation.skipped === true` (the v0.4 `/gmk-validate --skip` escape hatch).
+- **G-B — `gmk-kill-milestone` deprecation completed.** v0.4 deprecated `kill_history[]` in the Step 5 kill operation but left 4 contradictory lines elsewhere in the same SKILL (lines 68, 182, 193 sub-flag table, 238 edge case) that *also* told the model to write the deprecated array. v0.5 replaces all 4 with "preserved in git history of milestones.json — `kill_history[]` was deprecated in v0.4."
+- **G-C — `gmk-self-test` deprecation completed.** v0.4 deprecated `self_test.sessions[]` body + `coded_themes` in Step 7 but left 3 contradictory lines (Sub-flags `--record` side-effect, `--thin-ok` side-effect, Step 7 edge case at line 351) telling the model to write them. v0.5 fixes all 3.
+- **G-D — `gmk-validate` deprecation completed.** v0.4 deprecated `validation_history[]` but left line 478 saying "Re-running on the same milestone appends to `validation_history`". v0.5 corrects to "overwrites top-level `validation` directly — no append."
+- **G-E — `gmk-prototype-rules` Rule 10 rulebook fixed.** v0.4 left Rule 10 (the canonical rulebook that all other SKILLs cite) saying self-test data lands in `self_test.sessions[]` — structurally undoing the v0.4 deprecation. v0.5 corrects Rule 10's "Where it lands" table to name `self_test.latest_verdict / latest_session_path / latest_session_at / verdict_reason` (the canonical v0.4 fields) plus the on-disk session files, with a parenthetical note explaining the v0.4 deprecation.
+- **G-F — `warnings_acknowledged_at` schema declared.** v0.4 introduced `--accept-warnings` persistence but didn't declare *where* the timestamp gets written. v0.5 adds the optional `warnings_acknowledged_at` field to both `merge_gates/<m>.md` and `port-checklists/<m>.md` templates in `structure.md`, including the invalidation rule (re-running the gate that produced the warning invalidates the acknowledgment).
+- **G-G — Double-force → DEV_COMPLETE blocked.** v0.4's `gmk-dev-complete` C5 was a WARN regardless of which gates were forced. v0.5 splits C5: if *both* validation AND self-test are `forced: true` on the same milestone (the "zero evidence" case), C5 is **FAIL** and cannot be acknowledged via `--accept-warnings`; if only one gate is forced, C5 stays WARN. New derived fact `double_forced_gates` exposed in Step 1.
+
+### Changed
+
+- **"Endpoint" → "release-readiness checkpoint".** `CONCEPT.md §0 Endpoint`, `gmk-dev-complete` title, body, and a refuse-message all retired the misnomer. The project can be re-opened later by `/gmk-roadmap`, `/gmk-kill-milestone --revive`, or `/gmk-validate --accept-regression` — `DEV_COMPLETE` is a recomputable checkpoint, not a one-way terminus.
+
+### Honesty note
+
+The v0.4 release notes claimed "Wave γ migration policy: no data loss" and "9 fields, write-only, safe to drop". Both statements were structurally true on *read paths* (no SKILL reads the deprecated fields), but **not** on write paths — v0.4 SKILLs still told the model to write 3 of the 9 fields (G-B/C/D/E above). v0.5 completes the write-path removal. A v0.5 file is now actually free of the deprecated writes.
+
+External evaluator graded v0.4's self-audit as **OVERSTATED**. v0.5 accepts that grade and is the corrective.
+
+### Migration notes from v0.4
+
+- No data loss. v0.4 files with deprecated fields still read as-is. v0.5 stops writing them across the board.
+- No new SKILLs, no new agents.
+- `--accept-warnings` semantics tightened: double-forced milestones cannot be acknowledged. Users with double-forced shipped milestones from v0.4 should un-force at least one gate before re-running dev-complete.
+- Rule 14 tokens (`[Rule 14]` / `[Rule 14 — CYCLE]`) are new mandatory-format strings on refuse-with-recommendation outputs. Skill outputs from v0.4 sessions that lack these tokens are still readable — v0.5 just produces them going forward.
+
+### Non-goals (v0.5 deliberately did not do)
+
+- No new audit waves beyond fixing the 7 regressions. The v0.4 audit's structural framework holds; v0.5 only corrects the application.
+- No dogfood. Audit-only stance preserved.
+- No new SKILLs / agents / templates.
+- No `kit_version` read-enforcement (still deferred to v0.6 or later).
+
+---
+
 ## [0.4.0] — 2026-05-15
 
 v0.3 closed the structural skeleton (agent wiring + dev-complete endpoint). v0.4 is the **quality-of-life** release on top: orphan sub-flags get definitions, the 27 precondition-handling skills converge on one pattern, the agent routing block standardizes its output format, and the schema sheds 9 trace fields that were write-only since v0.2. **No new SKILLs, no new agents.** Backward-compatible reads (v0.3 files validate as-is); breaking writes (v0.4 skills no longer emit the 9 deprecated fields).

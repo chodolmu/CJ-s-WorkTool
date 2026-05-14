@@ -475,7 +475,7 @@ Bot validation contributes little (no decision space). Run preflight only, then 
 
 ### Re-running
 
-Re-running on the same milestone appends to `validation_history` and overwrites top-level `validation`. The previous `trial-{id}.json` stays on disk (immutable). `suspicious/` is overwritten by the new trial's outliers — old suspicions are gone (read them from the old `trial-{id}.json` if needed).
+Re-running on the same milestone **overwrites** top-level `validation` directly — no append to `validation_history[]` (that field was deprecated in v0.4; see CHANGELOG). The previous `trial-{id}.json` stays on disk (immutable), which is the canonical trace. `suspicious/` is overwritten by the new trial's outliers — old suspicions are gone (read them from the old `trial-{id}.json` if needed).
 
 ### Determinism check failing on Wave A migration
 
