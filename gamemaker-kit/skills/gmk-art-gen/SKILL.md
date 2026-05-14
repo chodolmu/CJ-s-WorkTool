@@ -19,6 +19,8 @@ The external `/art` skill (defined in `C:/GameMaking/CLAUDE.md`) does the actual
 3. **ComfyUI is reachable.** Best-effort: ping `http://127.0.0.1:8000`. If unreachable, warn: *"ComfyUI doesn't respond at port 8000. Start it before continuing, or generate art manually. The skill can still build the prompt list — set `--dry-run` to skip the actual invocation."*
 4. **Asset list in art-spec.md is non-empty.** Pure procedural milestones have no asset list — tell the user *"This milestone's art spec is procedural (no static asset list). /gmk-art-gen has nothing to generate; the procedural rendering happens inside the prototype HTML directly."*
 
+_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard) follow `gmk-prototype-rules` Rule 13-14._
+
 ## Flow
 
 ### Step 1 — Parse art-spec.md

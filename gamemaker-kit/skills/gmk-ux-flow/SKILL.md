@@ -19,6 +19,8 @@ Output: a markdown file with **flow diagram (textual)**, **input map**, **FTUE**
    - If validation is FAIL or absent: warn — *"Bot validation hasn't passed. UX flow on a not-yet-validated milestone is premature; the mechanic might not survive. Continue with --force or come back after /gmk-validate?"* Allow override; the user might be planning ahead.
 3. **Design system spec is helpful but not required.** If absent, the flow draws from the hypothesis + prototype.
 
+_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard) follow `gmk-prototype-rules` Rule 13-14._
+
 ## Flow
 
 ### Step 1 — Recall the mechanic's "first interactive frame"
@@ -209,6 +211,12 @@ Next:
   - /gmk-task-split m1-merge-feel — add UX implementation tasks (tutorial overlay, pause, input handler)
   - /gmk-port m1-merge-feel — port mechanic; UX is built engine-side around the validated core
 ```
+
+## Sub-flags
+
+| Flag | Default | Effect | Side-effect |
+|---|---|---|---|
+| `--force` | — | Runs the skill on a milestone whose validation hasn't passed (or is absent). One-shot override — the user may be planning the UX ahead of validation. Nothing stamped on the milestone record. | None. |
 
 ## Edge cases & policy
 

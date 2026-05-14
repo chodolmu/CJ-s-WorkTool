@@ -20,6 +20,8 @@ Output: a markdown plan describing the schema delta, the migration function pseu
    - If no previous schema and the project IS post-port for at least one milestone: warn. *"This is the first save-migration plan but the project has shipped at least one milestone. Existing save files are at risk; document the current schema before adding fields."*
    - If pre-port: write the first schema baseline as part of this plan.
 
+_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard) follow `gmk-prototype-rules` Rule 13-14._
+
 ## Flow
 
 ### Step 1 — Read the current schema (or baseline)

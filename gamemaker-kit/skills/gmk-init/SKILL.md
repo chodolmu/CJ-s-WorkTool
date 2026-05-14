@@ -160,6 +160,7 @@ Full layout spec — see `_workspace/structure.md` in the kit itself. `gmk-init`
 
 ```json
 {
+  "kit_version": "0.4.0",
   "project_name": "ZooMerge",
   "engine": "godot",
   "created_at": "2026-05-08T15:30:00Z",
@@ -189,12 +190,15 @@ Full layout spec — see `_workspace/structure.md` in the kit itself. `gmk-init`
 
 ```json
 {
+  "kit_version": "0.4.0",
   "project_name": "ZooMerge",
   "milestones": []
 }
 ```
 
 Milestones get appended by `/gmk-prototype` later. Don't create any here.
+
+`kit_version` is the schema version this file conforms to (v0.4 writes `"0.4.0"`). When `/gmk-init` is re-invoked on an older project (no `kit_version` or `< "0.4.0"`), upgrade the value silently — the file shape is backward-compatible.
 
 ### vision.md (initial)
 

@@ -28,6 +28,8 @@ The right shape is usually one of these. Sometimes a mechanic legitimately strad
 1. **A milestone exists.** Skill input: `<milestone-id>`. If no milestone given and `pillars.json` exists, ask the user which milestone to advise on.
 2. **The milestone has a hypothesis (`IF` and `THEN`).** Without it, the advisor has nothing to reason from. Stop: *"Milestone {id} has no hypothesis yet. Run /gmk-prototype first (it'll prompt you), or write the IF/THEN by hand in milestones.json."*
 
+_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard) follow `gmk-prototype-rules` Rule 13-14._
+
 ## Flow
 
 ### Step 1 — Read the hypothesis

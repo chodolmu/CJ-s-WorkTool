@@ -1,0 +1,49 @@
+{
+  "_comment": "pillars.json — v0.4 schema example. Pillars are the 3-5 commitments the game makes to its players. Every milestone in milestones.json must bind to ≥1 pillar via `pillars_targeted`. Anti-examples are pre-committed phrases that mark pillar violations — fired by gmk-self-test code matching during play sessions. supported_genres_check is read by gmk-shape-advisor and gmk-portability-check to determine bot-validation confidence.",
+  "kit_version": "0.4.0",
+  "project_name": "ZooMerge",
+  "created_at": "2026-05-08T11:00:00Z",
+  "pillars": [
+    {
+      "id": "tactile-satisfaction",
+      "name": "Every merge feels mechanical and chunky",
+      "description": "Hit-stop, screen shake, particle burst, audio thud — the merge resolves with weight. The player physically registers each combine.",
+      "kind": "sensory",
+      "anti_examples": [
+        "soft / dreamy / floating combines",
+        "any merge with no hit-stop",
+        "merges that happen off-screen without feedback"
+      ]
+    },
+    {
+      "id": "discovery-joy",
+      "name": "Each new species is a surprise worth waiting for",
+      "description": "Distinct silhouette, distinct color, distinct animation. The next dragon should not look like a recolor of the previous one.",
+      "kind": "decision-shape",
+      "anti_examples": [
+        "palette-swap species (same silhouette, different color)",
+        "incremental species (gradual size increase only)",
+        "species that aren't visually grouped into eras / families"
+      ]
+    },
+    {
+      "id": "frictionless-restart",
+      "name": "Death-to-next-attempt is under 2 seconds",
+      "description": "After death (or run end), the player is back to interactive mid-board within 2 seconds. No menus, no confirmations, no animations.",
+      "kind": "behavioral",
+      "anti_examples": [
+        "game-over screen that requires a click",
+        "restart animations longer than 0.5s",
+        "save-prompt before next run",
+        "any modal between attempts"
+      ]
+    }
+  ],
+  "supported_genres_check": {
+    "is_2d": true,
+    "deterministic_input": true,
+    "session_under_5min": true,
+    "_comment_check": "All three true → standard bot validation confidence. Any false → gmk-validate adds a caveat (bot signal is reduced for this milestone)."
+  },
+  "skipped": false
+}

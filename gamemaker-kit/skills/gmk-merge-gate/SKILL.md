@@ -22,6 +22,8 @@ This skill runs all three and outputs a single PASS/FAIL verdict with the failin
 
 `gitleaks` is *not* required. Section 3 has a fallback. The skill prefers `gitleaks` when available because pattern coverage is broader.
 
+_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard) follow `gmk-prototype-rules` Rule 13-14._
+
 ## Flow
 
 ### Step 1 — Show the gate plan
@@ -146,6 +148,15 @@ verdict = PASS if (check1 in {PASS, N/A}) and check2 == PASS and check3 == PASS
 There's no soft FAIL. The whole point of the gate is binary.
 
 Edge: if Check 1 is N/A (no prior PASS milestones) and Check 2 + 3 PASS, overall is PASS. Note the N/A explicitly so it doesn't read as a skipped check.
+
+### Step 5.5 — Save-schema check (warning-only)
+
+If the candidate milestone has a `_workspace/milestones/<id>/save-migration.md` file (produced by `gmk-save-migrate`), check whether it's been updated since the milestone's `ported_to.ported_at` timestamp.
+
+- **Missing migration file** AND milestone touches persistent fields (heuristic: `files_modified` includes `save.gd` / `save_data.cs` / save-schema.json) → emit a warning row: *"Milestone changes persistence layer but no save-migration plan exists. Either run `/gmk-save-migrate <id>` or confirm the change is non-breaking by adding a `_save_breaking: false` note to the milestone."*
+- **Migration file older than ported_at** → warning: *"save-migration plan was written before the latest port. Re-validate the migration is still applicable."*
+
+This is a **warning, not a gate failure** — save-migrate runs late (after port) and merge-gate shouldn't block on a doc the user can write next. The warning lands in the report's "Warnings" section and surfaces in dev-complete's C4 check until acknowledged.
 
 ### Step 6 — Write the report
 

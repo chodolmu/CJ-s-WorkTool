@@ -79,7 +79,7 @@ If you find yourself wanting to put state somewhere else, stop. Either it belong
 
 ### `pillars.json`
 
-Written once by `gmk-init`. User can hand-edit. Schema:
+Written once by `gmk-init`. User can hand-edit. Reference: `_workspace/examples/pillars-example.json`. Schema:
 
 ```json
 {
@@ -480,6 +480,10 @@ Output of `gmk-narrative`. Branch tree, dialogue volume per branch, tone constra
 
 Output of `gmk-refactor-check`. Per-function complexity table, unreferenced paths, comment drift, untouched regions. Pre-port tech-debt audit. Read by `gmk-port` (informs Stage 1 plan). Overwrites on re-run.
 
+### `_workspace/milestones/<id>/portability-check.md`
+
+Written by `gmk-portability-check`. Overwritten each run. Lists port-risk categories detected in the HTML prototype (RNG drift, timing-driven feel, browser-only APIs, async assumptions) with severity (LOW/MED/HIGH) and per-category mitigation notes. Advisory only — does not gate any other skill.
+
 ### `_workspace/milestones/<id>/save-migration.md`
 
 Output of `gmk-save-migrate`. Schema delta, migration function pseudocode, rollback strategy, test cases. **Post-port only** — HTML prototypes don't persist (`gmk-prototype-rules` §6 forbids localStorage). Read by `gmk-merge-gate` (warns if missing for milestones that touch persistent data). Overwrites on re-run.
@@ -536,6 +540,33 @@ Transient concurrency lock written by `gmk-loop`. Contains `{started_at, milesto
 - **Markdown headings** — `#` for file title, `##` for sections. No skipping levels.
 - **Status emojis in dashboard.md** — `✅ Done`, `🚧 In progress`, `🚫 Blocked`, `📋 Backlog`, `👁 Review`. Don't invent new ones.
 - **Backward compat** — every v0.2 schema addition is *optional*. A v0.1 milestone with only the seven original fields still validates.
+- **Path convention** — `prototype` paths in milestones.json are **relative to the project root** (the directory containing `.gamemaker-kit/`). Absolute paths are accepted but discouraged — they break when the project moves. Skills resolve relative-to-project-root before opening.
+- **`validation.policy` enum** — closed set: `persona-mix | random | mcts | mixed | runner | treasure | survivor | explorer`. Other values are rejected by `gmk-validate` Step 1.
+- **`merge_gate.touched_files`** — array of relative paths (no leading `./`, no absolute). Used by future merge gates to compute asset-conflict deltas. Example: `["prototypes/m1.html", "scripts/merge_board.gd"]`.
+- **`validation.metrics.custom`** — open object. Keys are case-sensitive. Read by `gmk-validate` Step 4 hypothesis-row aggregation when a `measured_by` row's `metric` matches a key. Values are numeric (scalars) or simple nested objects — no arrays as top-level values.
+- **`port-checklists/<m>.md` frontmatter** — optional YAML frontmatter: `milestone_id`, `engine`, `stages_complete` (list of stage numbers). Body is free-form markdown.
+
+### v0.4 schema versioning
+
+- **`kit_version`** (optional, top-level in both `pillars.json` and `milestones.json`) — semver string. v0.4 writes `"0.4.0"`. v0.3-and-earlier files have no `kit_version`; skills treat absence as `"0.3.0"` and proceed normally. v0.5 may begin to *require* this field; v0.4 only writes it.
+
+### v0.4 deprecated fields (read-only, not written)
+
+Nine trace fields v0.2 introduced but no skill ever read are deprecated in v0.4:
+
+| Field | Status |
+|---|---|
+| `hypothesis.trials[]` | Deprecated. v0.4 skills do not write. v0.3 entries remain readable but ignored. |
+| `validation_history[]` | Deprecated. Same. |
+| `re_validation_history[]` | Deprecated. Same. |
+| `kill_history[]` | Deprecated. Re-kill no longer accumulates a history array; the active `kill_reason` / `killed_at` is the canonical state. |
+| `kill_category` | Deprecated. |
+| `kill_followup` | Deprecated. |
+| `validation.guardrails` | Deprecated. `validation.verdict` already encodes the same information. |
+| `self_test.coded_themes` | Deprecated. `latest_verdict` + `latest_session_path` are sufficient. |
+| `self_test.sessions[]` body | Deprecated. Sessions stay on disk as `.gamemaker-kit/self-tests/<m>/session-{date}.md` files; the milestones.json roll-up keeps only `latest_*`. |
+
+**Migration policy**: v0.3 files containing these fields validate without modification. Skills *ignore* them. A future `gmk-init --migrate` flag may offer to strip them; until then, the fields sit dormant. **No data loss** — the fields are not deleted from existing files automatically.
 
 ---
 

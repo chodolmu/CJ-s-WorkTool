@@ -18,6 +18,8 @@ That's it. No production schedule, no asset list (that's `/gmk-art-spec` and `/g
 2. **Hypothesis touches volume** (session length, count of distinct things, progression). If the hypothesis is purely about feel of a single moment (e.g. "the merge moment is satisfying"), this skill isn't useful — tell the user *"This milestone's hypothesis is about a single moment, not progression. /gmk-content-plan is for milestones whose hypothesis depends on volume/curve. Skip this; go to /gmk-prototype."*
 3. **Pillars are bound.** The curve should serve the pillars.
 
+_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard) follow `gmk-prototype-rules` Rule 13-14._
+
 ## Flow
 
 ### Step 1 — Read what the hypothesis assumes about volume
@@ -146,6 +148,8 @@ A curve shape (`stairs`, `ramp`, `wave`, `bell`) is a *shape* — the numbers un
 | Hypothesis lacks a `kind: 'bot'` numeric `measured_by` row | Skip — `economy-balancer` will refuse anyway (no anchor metric). The user must add a row via `/gmk-prototype` first. |
 
 If routing: surface in the "Next" block. Don't auto-invoke; the user calls `@economy-balancer <id>`. The agent's preconditions (numeric measured_by row, system spec) must be satisfied — name them in the recommendation so the user knows what to set up first.
+
+_The routing output follows `gmk-prototype-rules` Rule 15 (agent routing block format)._
 
 ### Step 7 — Don't touch milestones.json
 

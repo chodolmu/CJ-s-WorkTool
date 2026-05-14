@@ -35,6 +35,8 @@ Coding the user's *own* notes is not the same as coding external testers. You ar
    - Stop.
 4. **Hypothesis header migration check.** Open `prototypes/<name>.html` header comment. If it contains `human:` rows in `MEASURED BY`, warn once and offer to migrate to `self-test:` (per `gmk-prototype-rules` Rule 10). Apply the migration only with user confirmation; don't rewrite silently.
 
+_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard) follow `gmk-prototype-rules` Rule 13-14._
+
 ## Flow
 
 ### Step 1 — Locate the play surface
@@ -178,31 +180,21 @@ Two writes:
    {
      "id": "m1-merge-feel",
      "self_test": {
-       "sessions": [
-         {
-           "date": "2026-05-09",
-           "duration_min": 22,
-           "notes_path": ".gamemaker-kit/self-tests/m1-merge-feel/session-2026-05-09.md",
-           "suspicious_seeds_reviewed": [17, 42, 88],
-           "verdict": "PASS"
-         },
-         { "date": "2026-05-12", "duration_min": 18, "notes_path": "...", "suspicious_seeds_reviewed": [3, 199], "verdict": "PASS" }
-       ],
-       "coded_themes": [
-         { "code": "says_satisfying", "n_sessions": 2, "session_dates": ["2026-05-09", "2026-05-12"] },
-         { "code": "bored-after-30s", "n_sessions": 0, "session_dates": [] }
-       ],
-       "pillar_violations": [],
        "latest_verdict": "PASS",
+       "latest_session_path": ".gamemaker-kit/self-tests/m1-merge-feel/session-2026-05-12.md",
+       "latest_session_at": "2026-05-12",
+       "pillar_violations": [],
        "verdict_reason": "Both self-test rows passed across 2 sessions. No anti-example matches. Bot+user agreement on seeds 17, 42.",
        "coded_at": "2026-05-12T22:15:00Z"
      }
    }
    ```
 
+   **v0.4 deprecation**: do NOT write `self_test.sessions[]` body or `self_test.coded_themes` (deprecated — see `structure.md` § v0.4 deprecated fields). The full session history lives on disk at `.gamemaker-kit/self-tests/<m>/session-{date}.md` (immutable) + `coded.md` (latest roll-up); the milestones.json block keeps only the *latest pointer*.
+
 Do NOT touch `validation`, `merge_gate`, `ported_to`, `tasks`, `killed`, or anything else. Self-test only owns the `self_test` block.
 
-If a previous `self_test` block exists, append the new session(s) to `sessions[]` and overwrite the rolled-up fields (`coded_themes`, `latest_verdict`, `verdict_reason`, `coded_at`). **Sessions are append-only**; previous sessions never disappear.
+If a previous `self_test` block exists, **overwrite** the rolled-up fields (`latest_verdict`, `latest_session_path`, `latest_session_at`, `verdict_reason`, `coded_at`). Prior session files on disk are preserved; their history is recoverable from filesystem timestamps.
 
 If a v0.1 `human_feedback` block exists on the milestone (from before the v0.2 rename), migrate it: rename the key to `self_test_legacy`, leave the data, write the new `self_test` block as usual. Print a one-time note that v0.1's `human_feedback` is preserved for archive purposes.
 
@@ -314,7 +306,18 @@ When the verdict is **FAIL**, the "Next:" block must include the closest domain-
 
 The route is a **recommendation**, never auto-invoke. The user reads, decides, runs `@feel-engineer <id>` or `@playtest-analyst <id>` themselves.
 
+_The routing output follows `gmk-prototype-rules` Rule 15 (agent routing block format)._
+
 Reasoning: v0.2 left self-test FAIL as "user-figures-out". v0.3 wires the closest expert. Sensory miss has a specific agent (`feel-engineer`); diffuse FAIL has the diagnostic agent (`playtest-analyst`).
+
+## Sub-flags
+
+| Flag | Default | Effect | Side-effect |
+|---|---|---|---|
+| `--record` | — | Switches the skill from "show the play menu" to "prompt for notes and code them". Without `--record`, the skill stops at Step 1 (planning). | Writes `self_test.sessions[]` (latest session appended) + rolled-up `latest_verdict`. |
+| `--force` | — | Allows running self-test even if `validation.verdict === 'FAIL'`. Useful when the user wants to characterise *what* the bot saw as bad, not validate the prototype. | None — milestones.json unchanged structurally. |
+| `--thin-ok` | — | Accept a session with < ~80 words of notes. Default behavior is INCONCLUSIVE on note quality regardless of code hits; this flag overrides that gate. | `self_test.sessions[].thin_ok = true` for trace. |
+| `--launch` | `off` | Opens the prototype in the user's default browser before prompting for notes. Off by default — the skill prefers not to enforce a player. | None. |
 
 ## Edge cases & policy
 

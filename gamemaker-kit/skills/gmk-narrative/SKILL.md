@@ -24,6 +24,8 @@ Output: a markdown spec with the branch tree (textual), dialogue volume table, t
    - If `shape !== 'dialogue'` and the user didn't ask: stop with *"This milestone's shape is `<shape>`, not 'dialogue'. /gmk-narrative is optional — most kit milestones don't need it. Continue with --force?"*
 3. **Hypothesis touches narrative metrics.** If the hypothesis is purely about mechanical tension (no language signal), point at `/gmk-design-system` instead.
 
+_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard) follow `gmk-prototype-rules` Rule 13-14._
+
 ## Flow
 
 ### Step 1 — Read pillars → narrative implications
@@ -180,6 +182,12 @@ Next:
   - /gmk-task-split m4-merchant — add writing tasks per branch
   - /gmk-prototype m4-merchant — implement in HTML (shape='dialogue')
 ```
+
+## Sub-flags
+
+| Flag | Default | Effect | Side-effect |
+|---|---|---|---|
+| `--force` | — | Runs the skill on milestones whose `shape !== 'dialogue'`. Without it, the skill refuses non-dialogue milestones (most kit milestones don't need narrative specs). One-shot override; nothing is stamped onto the milestone record. | None. |
 
 ## Edge cases & policy
 

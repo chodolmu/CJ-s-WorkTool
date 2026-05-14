@@ -20,6 +20,8 @@ Output: a markdown file with three sections — **Complexity hot spots**, **Like
 
 The skill works fine on prototypes that haven't passed `/gmk-validate` yet — but it's most useful after a few rounds of iteration.
 
+_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard) follow `gmk-prototype-rules` Rule 13-14._
+
 ## Flow
 
 ### Step 1 — Read the prototype

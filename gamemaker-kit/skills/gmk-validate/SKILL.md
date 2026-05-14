@@ -47,6 +47,8 @@ Before running anything, verify and stop with a clear message if any fails:
 
    The default `persona-mix` policy is still 4 × 50; falling-back personas don't get skipped (we still want their *random* baselines for comparison). The trial result records which personas were toothless so suspicious-run analysis doesn't blame them.
 
+_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard) follow `gmk-prototype-rules` Rule 13-14._
+
 ## Flow
 
 ### Step 1 — Resolve the run plan
@@ -315,21 +317,16 @@ Three writes, in order:
          { "metric": "session_length_avg_ms", "target": "> 240000", "actual_value": 287000, "ci": "[270, 304]k", "kind": "bot", "passed": true }
        ],
        "suspicious_seeds": [17, 42, 88, 3, 199, ...],
-       "verdict": "PASS",
-       "guardrails": { "crash_rate_ok": true, "dominant_strategy_ok": true, "stuck_rate_ok": true }
+       "verdict": "PASS"
      }
    }
    ```
 
-   Also push the hypothesis trial into `hypothesis.trials[]`:
+   **v0.4 deprecation**: do NOT write `validation.guardrails`, `hypothesis.trials[]`, or `validation_history[]`. These fields were v0.2 write-only trace data that no skill ever read; v0.4 removes the writes (see `structure.md` § v0.4 deprecated fields). The per-trial trace already lives at `.gamemaker-kit/validations/<m>/trial-{id}.json` (immutable on disk); the milestones.json roll-up keeps only the top-level `validation` block.
 
-   ```json
-   { "trial_id": "t-2026-05-12-01", "started_at": "...", "config": {...}, "result": { "metrics": {...}, "verdict": "PASS", "pruned": false, "pruned_reason": null, "finished_at": "..." } }
-   ```
+Don't touch `self_test`, `merge_gate`, `ported_to`, `tasks`, `killed`, or anything else — just merge under `validation`.
 
-Don't touch `self_test`, `merge_gate`, `ported_to`, `tasks`, `killed`, or anything else — just merge under `validation` and `hypothesis.trials[]`.
-
-If a previous validation entry exists, archive it under `validation_history: [...]`. Only the most recent run lives at the top level.
+If a previous validation entry exists, **overwrite** the top-level `validation` block. Do not push the old one into `validation_history[]` (deprecated). The previous `trial-{id}.json` on disk is sufficient history; the milestones.json roll-up is current-only.
 
 ### Step 7 — Print the verdict report
 
@@ -415,7 +412,35 @@ Next: don't /gmk-self-test this. Either:
 
 **Do not auto-invoke the agent.** The user reads the suggestion, then runs `@playtest-analyst <id>` (or `@economy-balancer <id>`) themselves. Playtest-analyst's preconditions (validation result exists, hypothesis structured) are already satisfied by the time this verdict prints.
 
+_The routing output follows `gmk-prototype-rules` Rule 15 (agent routing block format)._
+
 Reasoning: this routing turns a FAIL verdict into an actionable next step. v0.2 left FAIL verdicts as "user-figures-it-out"; v0.3 wires the closest domain expert in.
+
+## Sub-flags
+
+Complete flag catalog. Every flag this skill recognizes is listed here; any `--<flag>` referenced elsewhere in this file that is not in this table is a documentation bug.
+
+| Flag | Default | Effect | Side-effect on milestones.json |
+|---|---|---|---|
+| `--runs N` | `200` | Total bot trial count for this invocation. | Recorded in `validation.runs`. |
+| `--policy <name>` | `persona-mix` | One of `persona-mix` / `random` / `mcts` / `mixed` / `runner` / `treasure` / `survivor` / `explorer`. Single-persona names skip the persona-mix distribution. | Recorded in `validation.policy`. |
+| `--seed-offset N` | `0` | Seeds used are `N .. N + runs - 1`. Lets the user reproduce specific bands without re-using prior seed values. | None — derivable from `runs` + start seed. |
+| `--max-actions N` | `5000` | Per-run safety ceiling (per `gmk-prototype-rules` §9). | None. |
+| `--max-duration-sec N` | `600` | Per-run wall-time ceiling. | None. |
+| `--prune` / `--no-prune` | `on` for `persona-mix`, `off` for single-persona | Enable / disable early-fail pruning at ~30 runs (Step 1 §6). Single-persona is `off` by default because early_fail rules are calibrated for the mixed distribution. | None. |
+| `--confidence X` | `0.90` | One-sided binomial / normal CI confidence level (0.80 / 0.90 / 0.95). Used in hypothesis-row CI-aware decisions (Step 4). | None — affects `hypothesis_rows[].passed` aggregation. |
+| `--sample-size N` | `= --runs` | Override for the CI's sample size if hypothesis row authored against a tighter bound. | None. |
+| `--keep-traces` | `off` | If on, save Playwright trace zip per crashed run for offline inspection. | None — disk only. |
+| `--rebaseline` | — | Re-runs the trial AND replaces the existing baseline (`validation` top-level) without going through the regression path. Use when `gmk-regression` warns "persona definitions may have changed" and you accept that the *baseline* should be updated, not the prototype's verdict. Previous `validation` is *not* archived (it's a manual reset, not a regression trial). Refuses if no previous `validation` exists — there's nothing to rebaseline. | Overwrites `validation` top-level. Does *not* touch `validation_history[]` (deprecated in v0.4, see CHANGELOG). |
+| `--accept-regression` | — | After `gmk-regression` flagged a verdict change, commit the new trial as the authoritative `validation` (downgrades PASS → FAIL or upgrades FAIL → PASS deliberately). Refuses if no recent regression trial exists for this milestone. | Overwrites `validation` top-level with the most recent regression-trial result. `regression_of_trial` field records the prior baseline trial id for trace. |
+| `--skip --reason "<text>"` | — | Marks the milestone's `validation` as deliberately skipped without running bots. Required when the mechanic is bot-trivial (no death, no score, no decision pressure). The reason is stored verbatim so `gmk-self-test` and `gmk-loop` can verify the skip was intentional. Refuses if `--reason` is missing or empty (silent skips are not allowed). | Writes `validation: { skipped: true, skipped_reason: "<text>", skipped_at: "<iso>" }`. Other validation fields are not set. |
+
+`--rebaseline` vs `--accept-regression` vs `--skip`: three different escape hatches for three different situations.
+- `--rebaseline`: the *measurement infrastructure* changed and you want to re-set the line.
+- `--accept-regression`: the *prototype* drifted and you accept the new verdict.
+- `--skip`: the *mechanic* doesn't admit bot signal, never did, and shouldn't.
+
+None of these three flags auto-invoke each other; the user picks one explicitly.
 
 ## Edge cases & policy
 

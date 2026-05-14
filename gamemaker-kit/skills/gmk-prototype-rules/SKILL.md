@@ -299,6 +299,142 @@ This is consistent with `gmk-loop`'s Build gate, which says *"user writes"* — 
 
 ---
 
+## Rule 13 — Milestone-id resolution + empty/partial state (skill-wide pattern)
+
+Most skills take a `<milestone-id>` as input and read `pillars.json` + `milestones.json` before doing work. This rule fixes the **common precondition pattern** so every skill responds the same way to malformed input.
+
+### Resolution table
+
+When a skill is invoked, walk this table in order. First match wins.
+
+| State | Skill response |
+|---|---|
+| `.gamemaker-kit/` doesn't exist | Stop. *"Not a gamemaker-kit project. Run /gmk-init first, or you're in the wrong directory."* |
+| `pillars.json` missing | Stop. *"No pillars.json. Run /gmk-init first — this skill needs locked pillars to operate."* (Exception: `gmk-init` itself, and `gmk-status` which renders an empty dashboard.) |
+| `pillars.json` exists but `pillars: []` and `skipped: true` | Warn once. *"Pillars were skipped at init. This skill will run but without the binding it normally enforces. Run /gmk-init properly first? (y/n)"* — only continue on explicit yes. |
+| `milestones.json` missing | Stop. *"No milestones.json. Run /gmk-roadmap or /gmk-prototype first to create one."* (Exceptions: `gmk-init`, `gmk-roadmap`, `gmk-prototype`.) |
+| `milestones.json` has `milestones: []` (empty) | Stop. *"milestones.json exists but is empty. Run /gmk-prototype to add your first milestone."* (Same exceptions.) |
+| `<milestone-id>` argument missing AND skill requires one | Stop. List available IDs. *"This skill needs a milestone id. Available: [m1-..., m2-..., m3-...]."* Don't pick a default. |
+| `<milestone-id>` not found in milestones.json | Stop. List available IDs. *"`m2-tipo` not found. Available: [m1-..., m2-..., m3-...]. Closest match: m2-dragon-evo (Levenshtein 2)."* Don't proceed with a guess. |
+| Milestone exists but is `killed: true` AND skill is not `gmk-kill-milestone --revive` / `gmk-status` / `gmk-dev-complete` | Refuse. *"Milestone {id} is KILLED. Either revive it (/gmk-kill-milestone {id} --revive) or pick a different milestone."* |
+| Milestone exists and is alive | Proceed to skill-specific preconditions. |
+
+### Why this rule exists
+
+v0.3 audit (AD-3 + AD-9) found that only 2 of 29 skills explicitly handled milestone-id typos or empty state. The rest left the behavior to the model running the skill, which produced inconsistent responses (some refused, some picked the first entry, some asked clarifying questions). This rule **standardizes** the gates so a user who types `m2-tipo` gets the same "stop, list IDs, don't guess" response regardless of which skill they invoked.
+
+### Citation pattern
+
+Skill Preconditions sections should include a single line near the bottom:
+
+```
+See gmk-prototype-rules Rule 13 for milestone-id resolution and empty-state behavior.
+```
+
+The skill then layers its own preconditions (e.g., `validation` must be present, `shape` must equal X) on top of Rule 13's gates.
+
+### Refuse-message language
+
+All refuse messages are written in **English** regardless of the user's input language. The kit accepts Korean / English / mixed input for slash-command triggers (per each SKILL's `description:` field), but the structured refuse / verdict text is English-only. Rationale: refuse messages name JSON fields, file paths, and other identifiers that are themselves English; mixing languages mid-sentence reads worse than committing to one.
+
+### Hand-edit policy
+
+Many skills explicitly route the user to *hand-edit* `milestones.json` or `pillars.json` for operations the kit deliberately doesn't automate (task removal, never-touched milestone deletion, force-status changes). This is the **intended** escape hatch — gmk's contract is "the JSON files are user-readable; the kit doesn't lock you out of your own data". The user is expected to be comfortable opening these files in an editor. If a hand-edit recommendation appears more than 3 times in one session, that's a signal that the user needs a new SKILL, not better hand-edit instructions; surface as a v0.5 candidate.
+
+---
+
+## Rule 14 — Refuse-chain cycle guard
+
+When a skill refuses on a missing precondition and recommends "Run /gmk-other-skill first", check that the recommended skill doesn't itself refuse with a precondition that points back to this skill (or back to a third skill that points here). Cycles dead-end the user.
+
+### The pattern that breaks
+
+```
+User: /gmk-self-test m1
+gmk-self-test: "Run /gmk-validate first."
+
+User: /gmk-validate m1
+gmk-validate: (m1 has shape='shader') "INCONCLUSIVE — run /gmk-self-test."
+
+User: /gmk-self-test m1   ← back where they started
+```
+
+Here, the cycle is between `gmk-validate` (returns INCONCLUSIVE for shaders) and `gmk-self-test` (requires non-null `validation`). The fix: `gmk-self-test` accepts `validation.verdict === 'INCONCLUSIVE'` as a valid precondition when the milestone's `shape` is one where bot validation is by-design weak (`shader`).
+
+### The rule
+
+When writing a "Run /gmk-X first" refuse message:
+
+1. Open the target skill's Preconditions section.
+2. Check whether any of *its* preconditions could fail in the current state.
+3. If yes, either (a) widen this skill's acceptance (treat the partial state as valid), or (b) name the cycle in the refuse message and point at a third option.
+
+Example of (b): *"This milestone has shape='shader' and validate returned INCONCLUSIVE. Self-test is the right next step, but it normally requires bot validation. Run /gmk-self-test --force to acknowledge the shader-shape exception, or run /gmk-validate again with `--policy random` to get at least a smoke verdict."*
+
+### Why this rule exists
+
+v0.3 audit (AD-5) found that refuse-chain cycles are silent: each skill is locally correct but the *chain* dead-ends. The rule forces skills to check the chain before recommending.
+
+### Citation pattern
+
+Skills that refuse with "Run /gmk-X first" messages should include in their refuse path:
+
+```
+(Rule 14 check: /gmk-X's preconditions are satisfied given current state.)
+```
+
+The check itself is in the model's reasoning, not in the user-visible message.
+
+---
+
+## Rule 15 — Agent routing block (output format)
+
+The kit has four domain agents (`systems-designer`, `feel-engineer`, `economy-balancer`, `playtest-analyst`). Skills route to them as *recommendations* — never auto-invoke. This rule fixes the **output format** so the user reads the same pattern regardless of which skill produced it.
+
+### The agents and their preconditions
+
+| Agent | Reads | Refuses without |
+|---|---|---|
+| `systems-designer` | pillars.json, milestones.json, the target milestone's hypothesis | pillars.json + at least one target milestone |
+| `feel-engineer` | the prototype HTML + the milestone's `system-spec.md` (if present) | a prototype that already has a `systems-designer` spec — refuses to tune a system whose state machine isn't defined |
+| `economy-balancer` | milestones.json, the target milestone's hypothesis with at least one numeric `measured_by` row | a `measured_by` row with structured `target: {op, value}` — refuses purely sensory tuning, refuses pre-system tuning |
+| `playtest-analyst` | bot validation logs (`.gamemaker-kit/validations/<m>/`), self-test notes, the milestone's hypothesis | a `validation` block with a result — won't read suspicious runs that don't exist yet |
+
+### The output block (mandatory format)
+
+When a skill decides to route, it prints **exactly this block** at the end of its verdict / output:
+
+```
+Next agent (optional):
+  @<agent-name> <milestone-id>  — <one-line reason>
+```
+
+For multiple candidates:
+
+```
+Next agent (optional, pick one):
+  @<agent-1> <milestone-id>  — <one-line reason>
+  @<agent-2> <milestone-id>  — <one-line reason>
+```
+
+No "(Recommended)", no agent-specific extras, no auto-invocation. The block is informational; the user runs `@<agent-name> <milestone-id>` themselves.
+
+### When NOT to route
+
+- The agent's preconditions (from the table above) aren't satisfied. Don't print the line. (Surface the missing precondition instead.)
+- The skill already did the work the agent would do. (No double-routing.)
+- The verdict is PASS and no agent is needed. (Don't fill space.)
+
+### Citation pattern
+
+Skills that recommend agents (currently `gmk-design-system`, `gmk-validate`, `gmk-self-test`, `gmk-regression`, `gmk-port`, `gmk-loop`, `gmk-prototype`, `gmk-content-plan`) should use the Rule 15 block. Their internal routing logic can be skill-specific (e.g., `gmk-validate` routes to `playtest-analyst` on crash-rate and to `economy-balancer` on dominant-strategy); the *output format* is the same.
+
+### Why this rule exists
+
+v0.3 audit (CR-7 + AD-10) found that 6 skills referenced 4 agents but used 4 different output styles ("Recommend `@agent` next", "Spawn agent inline", "Next agent:", "Consider running `@agent`"). The user had to re-learn the pattern per-skill. Rule 15 unifies the surface.
+
+---
+
 ## What violates these rules → what the kit does
 
 | Violation | Detected by | Kit response |

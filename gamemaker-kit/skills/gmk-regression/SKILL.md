@@ -18,6 +18,8 @@ Output: a single roll-up markdown report + updated `.gamemaker-kit/validations/<
 2. **Playwright is installed** (same check `/gmk-validate` runs). If absent, stop with the same install message.
 3. **Prototypes still exist** at the paths each milestone declares. If a prototype file is missing, skip that milestone with a noted reason (`prototype-deleted`).
 
+_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard) follow `gmk-prototype-rules` Rule 13-14._
+
 ## Flow
 
 ### Step 1 — Build the regression target list
@@ -119,7 +121,7 @@ For each re-run milestone:
 
 - Write the new trial: `.gamemaker-kit/validations/<m>/trial-{new-trial-id}.json` (immutable, per `/gmk-validate`'s convention).
 - Update `.gamemaker-kit/validations/<m>/aggregated.json` (overwrite with latest roll-up).
-- For REGRESSIONs only: update `milestones.json` — push the previous `validation` into `validation_history[]` and write the new validation block with `verdict: FAIL` and a `regression_of_trial: <baseline_trial_id>` field. **Don't downgrade PASS → FAIL without explicit user consent on regressions.** Default behavior: write the new trial to disk but leave the milestone's `validation.verdict` at PASS, and surface the conflict in the report. The user runs `/gmk-validate <m> --accept-regression` to commit the downgrade.
+- For REGRESSIONs only: surface the conflict in the report. **Don't downgrade PASS → FAIL without explicit user consent on regressions.** Default behavior: the new trial is written to disk (`trial-{id}.json`), but milestones.json's top-level `validation` block is *not* modified. The user runs `/gmk-validate <m> --accept-regression` to commit the downgrade (which then overwrites the top-level `validation` with `regression_of_trial: <baseline_trial_id>` recorded inline). (v0.4 deprecation: `validation_history[]` is no longer written — see `structure.md` § v0.4 deprecated fields. The disk-level `trial-{id}.json` files are the authoritative trace.)
 
 (This split exists because regression runs can have false-positive FAILs — a Playwright timeout on a flaky network, a transient browser issue. We capture the data but don't auto-downgrade a milestone.)
 
@@ -201,6 +203,8 @@ Routing rules:
 | All milestones unchanged | (none) | No agent needed; the regression report is the deliverable. |
 
 The route is a recommendation; do not auto-invoke. The analyst's preconditions (`milestones.json` validation summary, structured hypothesis rows) are satisfied automatically since this skill just wrote them.
+
+_The routing output follows `gmk-prototype-rules` Rule 15 (agent routing block format)._
 
 ## Edge cases & policy
 

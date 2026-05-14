@@ -29,6 +29,8 @@ Output is a risk report, not a verdict. *"Port at your own informed risk"* is th
 2. **Milestone passed bot validation** — `validation?.verdict === 'PASS'`. If not, warn:
    - *"Milestone {id} hasn't passed bot validation yet. Port-risk analysis is most useful after a PASS verdict — before, the prototype might still be wrong. Continue anyway?"*
 
+_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard) follow `gmk-prototype-rules` Rule 13-14._
+
 ## Flow
 
 ### Step 1 — Load and scan the prototype
@@ -217,7 +219,7 @@ If the milestone has a `portability_check` field reserved (currently not in the 
 }
 ```
 
-**Wave A note**: the schema field is *not yet added* in v0.2 (it's reserved). For v0.2 this skill prints the report only — no JSON write. Later versions may persist; for now, the user copies into `_workspace/milestones/<id>/notes.md` if they want to keep it.
+**v0.4 persistence**: the skill writes its report to `_workspace/milestones/<id>/portability-check.md` (overwrites every run). milestones.json is **not** touched — port-risk is advisory, not a gate. If the user wants milestones.json-level persistence (e.g., to feed `gmk-merge-gate`), they can hand-copy a summary into `_workspace/milestones/<id>/notes.md`. (v0.2's "Wave A reserved" status is now resolved: markdown file is the canonical artifact.)
 
 ## Edge cases & policy
 

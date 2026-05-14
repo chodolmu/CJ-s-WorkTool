@@ -38,6 +38,8 @@ The 5-stage re-validation (Stages 2-6 below) is what makes this skill different 
 8. **Engine CLI on PATH for Stages 2-3.** For Godot: `godot --version` works. For Unity: `Unity -version` works. If missing, Stage 2 prints the install command and stops the re-validation at Stage 1.
 9. **Playwright available for Stage 4** (same dep as `/gmk-validate`). Missing Playwright skips Stage 4 with a warning.
 
+_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard) follow `gmk-prototype-rules` Rule 13-14._
+
 ## Flow
 
 The skill runs **Stage 1 (generate)** then a **6-step re-validation** (Stages 2-6) end-to-end by default. Each stage can be re-run in isolation via `--stage N`. Stage 6 (human RE-PASS) is interactive.
@@ -374,6 +376,8 @@ When Stage 4 produces **FLAG** or **FAIL**, surface a `playtest-analyst` route i
 
 The route is a recommendation; the user invokes `@playtest-analyst <id>` themselves. The analyst's preconditions (validation result, structured hypothesis) are already satisfied; it will read both the HTML baseline and the engine trial and produce one diagnosis doc.
 
+_The routing output follows `gmk-prototype-rules` Rule 15 (agent routing block format)._
+
 ---
 
 ### Stage 5 — Port checklist
@@ -605,7 +609,7 @@ User edits the HTML prototype, re-validates, re-self-tests (all PASS again), re-
 2. Diffs the previously generated files against current generation.
 3. Shows the user *which files would change* before overwriting.
 4. **Never silently overwrites user edits** to the ported files. If the user has touched a generated file (detect via git status or content hash), warn loudly: *"You've edited godot/scripts/merge/merge_grid.gd since the last port. Re-porting will OVERWRITE your edits. Options: (a) commit your edits and re-port, (b) skip re-porting that file and only update the others, (c) abort."*
-5. Re-runs Stages 2-6 from scratch. Prior `re_validation` is pushed into `re_validation_history[]`.
+5. Re-runs Stages 2-6 from scratch. Prior `re_validation` is **overwritten** with the new result. (v0.4 deprecation: `re_validation_history[]` is no longer written — see `structure.md` § v0.4 deprecated fields. The git commit history of milestones.json is the authoritative trace for re-port cycles.)
 
 ### Multiple milestones porting to the same engine project
 
@@ -635,17 +639,23 @@ The skill refuses to port FAIL/INCONCLUSIVE milestones unless `--force`. If forc
 "ported_to": { "forced": true, "force_reason": "User overrode FAIL — wants to keep the rough shape and rebuild" }
 ```
 
-### `--stage N` re-entry
+### Sub-flags
 
-Lets the user re-run a single stage. The skill reads existing artifacts from prior stages:
+Complete flag catalog. Any `--<flag>` referenced elsewhere in this file that is not in this table is a documentation bug.
 
-- `--stage 2` — re-runs compile only.
-- `--stage 3` — re-runs smoke (5 trials).
-- `--stage 4` — re-runs metric diff (200×2).
-- `--stage 5` — regenerates checklist from the most recent results.
-- `--stage 6 --verdict X` — records Stage 6 verdict.
+| Flag | Default | Effect | Side-effect |
+|---|---|---|---|
+| `--stage N` | (full run) | Re-runs a single stage. Reads existing artifacts from prior stages. `--stage 1` regenerates the engine code spec; `--stage 2` re-runs compile; `--stage 3` re-runs smoke (5 trials); `--stage 4` re-runs metric diff (200×2); `--stage 5` regenerates checklist; `--stage 6 --verdict X` records Stage 6 verdict. The skill validates that prior stages are recorded as PASS (or FLAG) before allowing later stages. | `ported_to.re_validation.<stage>` updated. |
+| `--force-rebuild` | — | **Alias for `--stage 1`.** Regenerates the engine code spec from the HTML prototype. Does *not* delete existing hand-edits in the engine project — the user merges manually. The alias exists because the failure-recovery path in Stage 6 verdict output suggests this name; both invocations do the same thing. | Same as `--stage 1`. |
+| `--verdict X` | — | Used only with `--stage 6`. `X` ∈ `RE_PASS` / `RE_FAIL` / `NEEDS_TUNING`. | Writes `re_validation.verdict`. |
+| `--reason "<text>"` | — | Required with `--stage 6 --verdict RE_FAIL` or `NEEDS_TUNING`. Free text. | Writes `re_validation.verdict_reason`. |
+| `--skip-stage-4` | `off` | Allows the user to bypass Stage 4 (metric diff). The Stage 5 checklist notes the skip; Stage 6's verdict still applies. Trusting eyes alone. | `re_validation.metric_diff = null`, `skipped_stages: ["4"]`. |
+| `--re-validate-only` | — | Skips Stage 1 (generate) and starts at Stage 2 (compile). Used when the user manually wrote the engine code (e.g., for engines other than Godot/Unity where auto-port is unsupported). | None — same writes as a normal run starting at Stage 2. |
+| `--force` | — | Override for the input gates (validation must be PASS, self-test must be PASS). Stamps `forced: true` on the port record + prints a 3-line warning before generating any code. Forced ports cannot regain `forced: false` later. | `ported_to.forced = true`, `ported_to.forced_reason` from prompt. |
+| `--to <engine>` | (auto-detect) | Engine target — `godot` / `unity` / `other`. Default reads the project's host engine config; this flag is for milestones being ported to a different engine than the project default. For `other`, only the checklist runs (no code generation). | `ported_to.engine`. |
+| `--no-systems-designer` | — | Skips the optional `@systems-designer` consultation at Stage 1a even when the heuristics (complex system, ≥4 systems, ≥5 named states) would otherwise recommend it. Use when the user has already written the system spec by hand or accepts the simpler routing. | None. |
 
-The skill validates that prior stages are recorded as PASS (or FLAG) before allowing later stages — `--stage 4` when Stage 3 hasn't run yet errors out and tells the user to start from Stage 1 or `--stage 3`.
+`--force-rebuild` is *not* a separate behavior — it is exactly `--stage 1` under a more memorable name. Engine hand-edits made after the previous Stage 1 are *not* deleted by either invocation; the user is responsible for resolving any drift between the regenerated spec and the engine project.
 
 ### Determinism mismatch between HTML and Engine bot hooks
 

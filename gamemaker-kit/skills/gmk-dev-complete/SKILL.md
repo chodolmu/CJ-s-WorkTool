@@ -28,6 +28,8 @@ Past `gmk-dev-complete` returning PASS, gamemaker-kit has nothing more to do. **
 
 Don't refuse on partially-shipped projects. The skill reports incomplete state honestly — that's its point.
 
+_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard) follow `gmk-prototype-rules` Rule 13-14._
+
 ## Flow
 
 ### Step 1 — Read canonical state
@@ -206,11 +208,17 @@ This skill is **read-only on canonical state**. It writes `_workspace/dev-comple
 
 If the user wants persistence (e.g., a git tag), suggest `git tag` — don't write to milestones.json.
 
+## Sub-flags
+
+| Flag | Default | Effect | Side-effect |
+|---|---|---|---|
+| `--accept-warnings` | — | Upgrades `COMPLETE_WITH_WARNINGS` verdict to `DEV_COMPLETE` and **persists** the acknowledgment. Each warned milestone gets `warnings_acknowledged_at: "<iso>"` written to its merge_gate or port checklist record (whichever produced the warning). Subsequent runs read the timestamp and skip the warning *if* no new warning has appeared since. If C1-C3 are failing, the flag is a no-op (cannot override structural failures). | `<warned-milestone>.<gate>.warnings_acknowledged_at` written. The dev-complete report is overwritten with the upgraded verdict. |
+
 ## Edge cases & policy
 
-### `--accept-warnings`
+### `--accept-warnings` details
 
-The flag upgrades `COMPLETE_WITH_WARNINGS` → `DEV_COMPLETE` and records the acknowledgment in the report (it doesn't write to milestones.json). Re-running without `--accept-warnings` shows COMPLETE_WITH_WARNINGS again — the acceptance is per-invocation.
+As of v0.4 the acceptance is **persisted**: each warned milestone's gate record gets `warnings_acknowledged_at` written. On subsequent runs, the skill reads the timestamp and only re-prints the warning if a *new* warning has appeared since (e.g., the merge-gate was re-run and produced a new warning row). Pre-v0.4 the flag was per-invocation only; users upgrading from v0.3 will see warnings re-emerge once, on first run after upgrade.
 
 If C1-C3 are failing, `--accept-warnings` does nothing — it can't override structural failures.
 

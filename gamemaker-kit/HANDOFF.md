@@ -1,10 +1,9 @@
-# Handoff: gamemaker-kit v0.3.0 — 스켈레톤 완성 릴리스 완료 + origin 동기화 완료
+# Handoff: gamemaker-kit v0.4.0 — Quality-of-Life 릴리스 완료
 
-**Generated**: 2026-05-14 (23:35 KST)
-**Branch**: main
-**Latest commit**: `321618c chore(gamemaker-kit): v0.3.0 release — CHANGELOG, version bump, HANDOFF`
-**Remote**: origin 동기화 완료 (`14ee45a..321618c main -> main` push 완료)
-**Status**: v0.3.0 모든 Wave (A/B/C/D/E) 완료 + origin 푸시 완료. dogfood 안 함 (v0.3 audit-driven). **종료 상태.**
+**Generated**: 2026-05-15 (01:10 KST)
+**Branch**: main (push 전)
+**Latest commit (pre-v0.4)**: `6597cc9 docs(gamemaker-kit): post-push HANDOFF reflection — v0.3.0 origin synced`
+**Status**: v0.4.0 모든 Wave (α/β/δ/γ/ε/ζ) 구현 완료. 미커밋 (다음 단계: 단일 commit + push + release).
 
 ---
 
@@ -12,105 +11,106 @@
 
 게임 개발 자동화 Claude Code 플러그인 `gamemaker-kit`. 4축 (시간·직군·검증·통합) × 개발 완료 끝점. 외부 사용자 0%, 외부 계정 0개.
 
-v0.3의 한 줄 약속: **"v0.2 뼈대를 *작동 가능*하게 만든다. v0.2가 약속한 4축·6직군·4 specialists·dev-complete endpoint가 *형태로만* 존재하는 부분을 *연결*한다."**
+v0.4의 한 줄 약속: **"v0.3 wiring 위의 *quality-of-life*. orphan flag · precondition 일관성 · trace data 정리 · schema versioning · agent routing 표준화."**
 
 ---
 
-## v0.3 릴리스 (완료)
+## v0.4 릴리스 (완료)
 
-| Wave | 커밋 | 내용 |
-|---|---|---|
-| A | `41aa658` | Agent wiring — 8 SKILL이 4 agents reference (v0.2는 2개만) |
-| B | `821d12d` | `gmk-dev-complete` NEW + endpoint 호출 경로 wiring |
-| C | `e650d68` | structure.md drift — 15+ file kinds 추가 + CONCEPT endpoint 동기화 |
-| D | `1629555` | 호출 그래프 보강 (ux-flow→self-test, kill→roadmap, shader path, HTML 정책) |
-| E | `321618c` | CHANGELOG v0.3 + plugin/marketplace 0.3.0 + HANDOFF |
+| Wave | 내용 |
+|---|---|
+| α | Orphan flag 정리 — 7 SKILL Sub-flags 섹션 + cross-skill orphan 0건 |
+| β | Precondition 일관성 — Rule 13/14 신설 + 27 SKILL citation |
+| δ | Agent routing 표준화 — Rule 15 신설 + 8 routing SKILL citation |
+| γ | Schema 정리 (breaking) — 9 deprecated 필드 + `kit_version` + pillars-example.json 신규 + example.json 갱신 |
+| ε | 운영/마이너 11결함 — lock 자동만료, dashboard archive, save-migrate 와이어링, accept-warnings persist, 등 |
+| ζ | CHANGELOG v0.4 + plugin/marketplace 0.4.0 + 이 HANDOFF |
 
-최종: **29 skills (28 + dev-complete) + 4 domain agents**. plugin.json + marketplace.json 모두 v0.3.0.
+최종: **29 skills + 4 domain agents** (변경 없음 — v0.4는 새 SKILL/agent 0).
+plugin.json + marketplace.json 모두 v0.4.0.
 
-**Backward-compat**: v0.2 자산 무손실. 스키마 변경 0개. v0.2 사용자는 SKILL 업데이트만 받으면 새 wiring 사용 가능.
+**Backward-compat**: v0.3 자산 무손실. 스키마 변경은 *추가*만 (`kit_version`) + *write 중단*만 (9 deprecated 필드). 데이터 손실 0.
 
 ---
 
-## v0.3가 *안* 한 것
+## v0.4가 *안* 한 것
 
 | 항목 | 이유 |
 |---|---|
-| Dogfood 2차 | audit-driven 접근 — 새 게임을 만들지 않고 fixture / 정적 검증으로 끝냄. dogfood findings는 *낮은 우선순위*로 v0.4 backlog |
-| 새 agent | 4 agents 자체는 충분, *wiring*이 v0.2의 진짜 defect |
-| 새 SKILL (dev-complete 제외) | finding은 *연결*로 풀림, *추가*가 아님 |
-| 스키마 변경 | 끝점 추가는 read-only 검사로 충분 |
-| 4축 모델 변경 | audit가 4축 자체엔 finding 없음 |
-| dino-run 재방문 | F10/W17 함정 차단 — readonly evidence |
+| 새 SKILL | 모든 결함을 *연결*/*정합성*으로 풀음 (v0.3 원칙 유지) |
+| 새 agent | 4 specialists 충분 |
+| dogfood | 사용자 방침 (2026-05-14 확정) — audit-only |
+| 4축 모델 변경 | finding 없음 |
+| `--autocode` HTML 자동 생성 | v0.3 scaffold-only 결정 유지 |
+| shader full WebGL2 template | minimal stub이 *의도된 디자인* |
+| dino-run 재방문 | readonly 유지 (F10/W17) |
+| `kit_version` read-enforcement | v0.4는 write만, v0.5 검토 |
+| trace data mining SKILL | 결정 1로 deprecate 채택 — git history가 trace |
 
 ---
 
-## v0.3 audit이 잡은 18 defects 처리 상태
+## v0.4 audit이 잡은 28 defects 처리 상태
+
+3-view audit 결과 (cold-read 10 + adversarial 10 + schema 8) → 8 통합 그룹 (G1-G8) → 6 Wave로 분해.
 
 | 코드 | 항목 | 상태 |
 |---|---|---|
-| K | SKILL이 agents 미호출 | ✅ Wave A로 해결 (8 SKILLs reference) |
-| S | 프로젝트 dev-complete endpoint 없음 | ✅ Wave B `gmk-dev-complete` SKILL 신규 |
-| L | agent 산출물 structure.md 누락 | ✅ Wave C 추가 |
-| M | 11+ file kinds structure.md 누락 | ✅ Wave C 추가 |
-| F | port → endpoint 미연결 | ✅ Wave B port stage 6 → dev-complete |
-| A | HTML 생성 정책 모호 | ✅ Wave D Rule 12 명시 |
-| Q | "끝점" 정의 문서 모호 | ✅ Wave C CONCEPT § 1.3 |
-| C | FTUE 검증 위치 빈칸 | ✅ Wave D self-test ↔ ux-flow |
-| I | kill → roadmap 미연결 | ✅ Wave D Step 6 추가 |
-| U | shader 검증 경로 불명 | ✅ Wave D Rule 11 추가 |
-| D/E | port stage 5 audio/art check | ✅ 이미 v0.2에 있음 (확인) |
-| G | art-gen → prototype 연결 | ✅ 이미 v0.2에 있음 (확인) |
-| H | sound 생성 SKILL | ✅ mock-inject 이미 SFX 다룸 (확인) |
-| N | engine save-schema.json 위치 | ✅ Wave C structure.md 추가 |
-| R | "외부 의존 0개" 카피 | ✅ CONCEPT § 6.3 line 324 정직 (확인) |
-| T | gmk-art-gen `/art` 의존 | ✅ CONCEPT § 6.3 line 323 명시 (확인) |
-| J | save-migrate → merge-gate | (Wave D 후 검토 — 영향 작음, v0.4) |
-| O/P | trials[]/validation_history write-only? | (Wave C에서 부분 명시; v0.4 추가 검토) |
+| **G1** | gmk-validate orphan flag (rebaseline/accept-regression/skip) | ✅ Wave α |
+| **G2** | gmk-port `--force-rebuild` alias | ✅ Wave α |
+| **G3** | milestone-id resolve + empty state | ✅ Wave β Rule 13 |
+| **G4** | Trace data (9 write-only 필드) | ✅ Wave γ deprecate |
+| **G5** | Schema 정합성 (example.json, structure.md, pillars-example.json) | ✅ Wave γ |
+| **G6** | Agent routing 표준화 | ✅ Wave δ Rule 15 |
+| **G7** | Lock 자동 만료 + race 보호 | ✅ Wave ε |
+| **G8** | Plugin meta / dashboard archive | ✅ Wave ε |
+| **AD-5** | Refuse-chain cycle guard | ✅ Wave β Rule 14 |
+| **CR-2** | Portability-check JSON persist | ✅ Wave ε |
+| **CR-3** | Shader template "Wave D" 카피 | ✅ Wave ε |
+| **CR-4** | "Future skill" dangling | ✅ Wave ε |
+| **CR-5** | Hand-edit 정책 명문화 | ✅ Wave β Rule 13 |
+| **CR-6** | `--bot-only` 의미 모호 | ✅ Wave α (gmk-prototype Sub-flags) |
+| **AD-4** | `--force` semantics SKILL별 | ✅ Wave α (각 Sub-flags 표) |
+| **AD-7** | Refuse 메시지 다국어 일관성 | ✅ Wave β Rule 13 (영어 통일) |
+| **AD-8** | `--accept-warnings` 비-persist (W20) | ✅ Wave ε persist 도입 |
+| **SC-9** | schema_version 부재 | ✅ Wave γ `kit_version` |
+| **J** (v0.3 carry-over) | save-migrate → merge-gate | ✅ Wave ε Step 5.5 warning |
 
-★★★ 2개 (K, S) + ★★ 5개 모두 처리됨. ★ 14개 중 대부분 처리, 2개 (J, O/P) v0.4로 deferred.
+★★ 12개 + ★ 16개 — **모두 처리**. v0.4 audit이 발견한 정상 결함 0 (SC-3는 audit 중 자체 정정).
 
 ---
 
-## v0.4 후보 backlog (보존)
+## v0.5 후보 (자연 발생, 비포커스)
 
-`_workspace/v0.4-backlog-candidates.md` (구 `dogfood-findings-v0.2.md`):
-- dino-run dogfood 11 findings (C1-C3 / M4-M7 / N8-N11)
-- v0.3 audit에서 *낮은 우선순위*로 분류됐던 것
+audit 작업 중 *명시적으로 v0.5+에 미룬* 항목:
+- `kit_version` read-enforcement (v0.4는 write만)
+- `gmk-init --migrate` 자동 마이그레이션 플래그
+- 단일 세션에서 hand-edit 추천이 ≥3회 발생하면 새 SKILL 후보 (Rule 13의 정책)
+- v0.4 자체가 발견하지 못한 결함 (실 사용 후 자연 발생)
 
-v0.3 audit 산출물:
-- `_workspace/v0.3-skeleton-audit.md` — 7-axis audit, 18 defects 분류
-- `_workspace/v0.3-backlog.md` — Wave 분해 + 결정 사항
-- `_workspace/extension-design-v0.3.DOGFOOD-DRIVEN.discarded.md` — 폐기된 dogfood-driven plan (history)
+이건 *backlog*가 아니라 *발견 후보*. v0.5 시작 시 새 audit으로 확정.
 
 ---
 
 ## Failed Approaches (Don't Repeat These)
 
-v0.2 누적 + 이번 세션 신규.
+v0.2/v0.3 누적 + 이번 세션 신규.
 
-### F1-F12 — 이전 세션들 (전부 유효)
-이전 HANDOFF / dogfood-findings 참조.
+### F1-F15 — 이전 세션들 (전부 유효)
+이전 HANDOFF.md git history 참조 (dogfood-findings 파일은 v0.3 종료 시 폐기됨).
 
-### F13 — 이번 세션 신규 (May 14)
+### F16 — 이번 세션 신규 (May 15)
 
-**"Dogfood findings"를 v0.3 backlog의 *전부*로 받지 말 것.**
+**dogfood-findings를 다른 이름으로 보존하지 말 것.**
 
-처음에 `extension-design-v0.3.md`를 dogfood findings 11개로 분해해서 Wave A/B/C로 짰음. 사용자 피드백: *"dogfood방식 자체에 굉장히 비판적이야 여기에 너무 매몰되어서 플러그인 전체가 dogfood를 위한 플러그인이 되어버려"* — 정확한 지적. dogfood findings는 *한 게임의 fit 문제*이지 *플러그인 뼈대 미완 항목*과 다른 것. 폐기하고 **structural audit**으로 갈아엎음. audit이 잡은 ★★★ K (agent wiring) + S (dev-complete endpoint)가 진짜 backlog였고, dogfood findings 11개 중 어느 것도 audit ★★★/★★ 항목에 매핑 안 됨.
+Path B 진행 중 처음에 v0.4-backlog-candidates.md에 dino-run findings + Wave 분해를 추가했음. 사용자 피드백: *"dogfood내용 다 삭제해줘 이게 도대체 왜들어가있는거야"* — 정당한 지적. 폐기 결정이 *파일 보존*까지 인정한 게 아니었음. 정책상 dogfood-driven backlog는 *완전 폐기*이며, 발견을 *어떤 형태로든* backlog에 끌고 가는 시도 자체가 정책 위반.
 
-교훈: dogfood는 *evidence 후보 1개*이지 backlog 그 자체가 아님. 뼈대 점검은 audit으로.
+교훈: dogfood가 정책상 차단됐다면 그 *findings*도 동일하게 차단. *경로*만 차단하고 *데이터*는 우회로 끌고 오지 말 것.
 
-### F14 — 이번 세션 신규
+### F17 — 이번 세션 신규
 
-**`gmk-design-system`은 user-facing 워킹 스펙이고 `systems-designer` agent는 strict 컨트랙트 스펙이라는 *역할 분리*는 명시 안 돼 있었음 — Wave A에서 보충.**
+**`v0.3 자동해결 여부 매트릭스`처럼 dogfood findings를 *비교 도구*로 살리려 하지 말 것.**
 
-audit 중 발견: 두 산출물 모두 milestone의 system을 다루는데, 어떤 게 *user 읽기용*이고 어떤 게 *downstream 코드 생성용*인지 v0.2 어디에도 없었음. v0.3 Wave A에서 `gmk-design-system` Step 9 (역할 분리 명시) + `gmk-port` Stage 1a.5 (system-spec 있으면 그것 사용, 없고 non-trivial이면 agent 호출 후 대기) 추가로 해결.
-
-### F15 — 이번 세션 신규
-
-**HANDOFF.md가 외부 도구에 의해 May 12 버전으로 두 번 reverted됨 (10:42 + 11:24).**
-
-이번 세션에서 HANDOFF.md 두 번 모두 수정 시도, 두 번 모두 old 버전으로 덮어써짐. 원인 불명 (외부 자동 도구 또는 syncing 충돌). 해결: 매 Wave 후 HANDOFF가 *commit된* 버전인지 git status로 확인. working tree가 stale하면 `git checkout HANDOFF.md`로 복구 후 새 내용 Write.
+F16과 같은 뿌리. 11 findings의 v0.3 자동해결 매트릭스를 만든 작업도 사용자가 폐기 결정으로 미루어 봤을 때 *결국 dogfood findings를 비교 데이터로 사용한 것*. 이것도 정책 위반.
 
 ---
 
@@ -118,29 +118,36 @@ audit 중 발견: 두 산출물 모두 milestone의 system을 다루는데, 어�
 
 | 결정 | 어디에 명시했나 |
 |---|---|
-| **v0.3 = audit-driven, not dogfood-driven** | `v0.3-skeleton-audit.md` §0 + `v0.3-backlog.md` §0 |
-| **신규 SKILL 0개 원칙 (B1 dev-complete 제외)** | `v0.3-backlog.md` §3 P4 |
-| **dino-run readonly evidence** | `v0.3-backlog.md` §2 P2 (F10 함정 차단) |
-| **`gmk-dev-complete` 이름 선택** | "ship-readiness" / "graduate" 후보 중 v0.2 카피와 일치하는 "dev-complete" 채택 |
-| **HTML 코드 생성 = scaffold-only** | `gmk-prototype-rules` Rule 12 명시 (v0.2 의도 보존, 결정 2 = a) |
-| **sound integration = mock-inject 경로** | structure.md 명시 + mock-inject가 이미 SFX 다룸 (결정 3 = c) |
-| **dogfood 2차 = 안 함** | audit + 정적 검증 + fixture로 충분 (결정 4 = c) |
-| **dogfood-findings-v0.2.md → v0.4-backlog-candidates.md** | 파일 이름 변경 (결정 5 = a) |
-| **Agent 호출은 *추천*이지 auto-invoke 아님** | gmk-loop "NOT do" 섹션에 명시. `max-iteration=1` 보존 |
+| **v0.4 = audit-driven (정책 확정 재확인)** | v0.4-skeleton-audit.md §0 |
+| **3-view audit (cold-read / adversarial / schema-first)** | v0.4-skeleton-audit.md §0 |
+| **dogfood-findings 폐기 + 파일 삭제** | HANDOFF.md (이전 섹션) + CHANGELOG v0.3 정정 |
+| **결정 1: trace data 9 필드 deprecate** | Wave γ |
+| **결정 2: precondition은 gmk-prototype-rules Rule 13/14 확장** | Wave β |
+| **결정 3: agent routing은 prototype-rules Rule 15 공통 block** | Wave δ |
+| **결정 4: `kit_version` v0.4 도입 + read는 v0.5** | Wave γ |
+| **결정 5: `--force-rebuild` = `--stage 1` alias** | Wave α (gmk-port Sub-flags) |
 
 ---
 
 ## Current State
 
-**Working** (v0.3.0 완전 출시):
-- 29 skills + 4 agents 전부 install 가능
-- CHANGELOG.md / CONCEPT.md v0.3 기준
-- plugin.json + marketplace.json v0.3.0
-- 모든 wave (A/B/C/D/E) origin 푸시 완료
+**Working** (v0.4.0 모든 구현 완료, 미커밋):
+- 29 skills + 4 agents — 변경 없음
+- 7 SKILL에 Sub-flags 정식 섹션
+- 27 SKILL에 Rule 13-14 citation
+- 8 routing SKILL에 Rule 15 citation
+- prototype-rules에 Rule 13/14/15 추가
+- structure.md 보강 (path/policy/touched_files/custom/deprecated)
+- example.json v0.4 형태
+- pillars-example.json NEW
+- scripts/check-plugin-meta.sh NEW
+- CHANGELOG v0.4 섹션
+- plugin.json + marketplace.json v0.4.0
+- 이 HANDOFF
 
-**Uncommitted Changes** (gamemaker-kit/): 이 HANDOFF 갱신 (push-completed reflection) 하나만 남음. 다음 세션에서 사소한 정정 commit으로 처리.
+**Uncommitted Changes** (gamemaker-kit/): 전부. 단일 commit + push 권장.
 
-**dino-run 상태**: **readonly** — 손 안 댐 (F10 함정 차단). m1-m4 그대로, m5 미진행.
+**dino-run 상태**: **readonly** — 손 안 댐 (F10/W17 함정 차단). 변화 없음.
 
 ---
 
@@ -148,49 +155,65 @@ audit 중 발견: 두 산출물 모두 milestone의 system을 다루는데, 어�
 
 | 파일 | 왜 중요한가 |
 |---|---|
-| `_workspace/v0.3-skeleton-audit.md` | **v0.3의 *왜*. 7-axis audit, 18 defects 분류.** |
-| `_workspace/v0.3-backlog.md` | Wave A-E plan + 결정 사항 + 비목표 |
-| `_workspace/v0.4-backlog-candidates.md` | dogfood 1차 findings — v0.4 후보 (자동 채택 안 함) |
-| `CHANGELOG.md` v0.3.0 섹션 | Wave별 변경 + migration notes |
-| `_workspace/structure.md` | **모든 file kind의 ground truth (v0.3에서 drift 해소)** |
-| `skills/gmk-dev-complete/SKILL.md` | 프로젝트 endpoint SKILL 본문 — read-only 검사 6개 |
-| `CONCEPT.md` §1.3 endpoint | "끝점" 정의와 `/gmk-dev-complete` 연결 |
+| `_workspace/v0.4-skeleton-audit.md` | **v0.4의 *왜*. 3-view audit, 28 defects, 8 그룹, 6 Wave.** |
+| `_workspace/v0.4-backlog.md` | Wave α-ζ plan + 5 결정 |
+| `_workspace/v0.4-audit-coldread.md` | Cold-read 시각의 10 결함 |
+| `_workspace/v0.4-audit-adversarial.md` | Adversarial 시각의 10 결함 |
+| `_workspace/v0.4-audit-schema.md` | Schema 시각의 9 결함 |
+| `_workspace/structure.md` | **v0.4 보강 — path/policy/custom/deprecated 명시** |
+| `_workspace/examples/pillars-example.json` | NEW — pillars schema reference |
+| `_workspace/examples/milestones-example.json` | v0.4 정정 (kit_version, kill_reason, deprecated 필드 제거) |
+| `skills/gmk-prototype-rules/SKILL.md` | **Rule 13/14/15 추가 — 27 SKILL의 공통 규약** |
+| `CHANGELOG.md` v0.4.0 섹션 | 전체 변경 + migration notes |
+| `scripts/check-plugin-meta.sh` | NEW — 릴리스 sanity script |
 
 ---
 
 ## Resume Instructions (다음 세션)
 
-### Path A — v0.3 검증 (Wave A·B 실제 작동 확인)
-1. `Read _workspace/v0.3-backlog.md` § 5 검증 체크리스트
-2. 합성 fixture로 verify (실제 게임 dogfood 없이):
-   - design-system 호출 시 systems-designer 라우팅 제안이 본문에 출력되는지
-   - validate FAIL 시 playtest-analyst 라우팅 제안 출력되는지
-   - 모든 milestone shipped 상태 simulated → `/gmk-dev-complete` DEV_COMPLETE 출력되는지
-3. (선택) Plugin reinstall로 `gmk-dev-complete` 자동완성 확인
+### Step 0 — Single commit + push
 
-### Path B — v0.4 backlog 정리
-1. `Read _workspace/v0.4-backlog-candidates.md` (dogfood findings)
-2. v0.3 작업 후 *어떤 finding이 자동 해결됐는지* 다시 검토 — 일부는 wiring이 완성된 결과 자연 해결
-3. 남은 finding을 v0.4 Wave 분해
+```bash
+git add -A
+git commit -m "feat(gamemaker-kit): v0.4.0 quality-of-life release — orphan flag resolution, precondition standardization, schema cleanup"
+git push origin main
+git tag v0.4.0
+git push origin v0.4.0
+```
 
-### Path C — 새 dogfood (조심해서)
-v0.3 작동 확인용으로 *작은* 새 게임 한 evening. dino-run은 readonly. F10/W17 함정 ("이 게임 통과시키려 플러그인 고침") 가드 유지.
+(또는 `/release` 스킬 사용.)
 
-### Path D — 다른 작업
-TaskForge Pro / ZooMerge / 다른 프로젝트로 이동.
+### Step A — v0.4 sanity verification (15 min)
 
-**현재 시점 권고**: **Path A** (합성 fixture로 v0.3 wiring 검증). 그 다음 Path B. Path C는 v0.4 작업 시작할 때.
+1. `bash scripts/check-plugin-meta.sh` 실행 → PASS 기대
+2. grep 검증:
+   - `Rule 13-14` in skills/ → 27 hit
+   - `Rule 15` in skills/ → 9 hit (8 SKILL + prototype-rules 3 self-ref)
+   - deprecated fields in SKILL write code → 0 (모두 "v0.4 deprecation:" 노트로 교체됨)
+3. example.json + pillars-example.json JSON 유효성
+
+### Step B — v0.5 audit 또는 정지
+
+v0.4 audit은 *3 시각*으로 매우 철저했음. v0.5는 *실 사용*에서 발견되는 결함 외엔 잡을 게 없을 가능성. dogfood 정책상 제외이므로 *시간이 흐른 후* 자연 발견을 대기하는 게 합리.
+
+대안: **Path D (다른 프로젝트)** — TaskForge Pro / ZooMerge / 다른 게임으로 이동. v0.4가 *진짜 quality-of-life 끝점*에 가깝다면 v0.5는 *자연 누적*이 필요.
+
+### Step C — `kit_version` v0.5 enforcement plan
+
+v0.4가 *write만* 했음. v0.5는 *read 시 검증*. 즉:
+- old file (`kit_version` 부재 or `< 0.5.0`)을 v0.5 SKILL이 만나면 어떻게 할지: 자동 마이그레이션? 거부? warn-and-continue?
+- 이건 v0.5 결정의 첫 번째 항목.
 
 ---
 
 ## Setup Required
 
-v0.2와 동일:
+v0.3과 동일:
 - Node + npm + Playwright (이미 설치됨)
-- gamemaker-kit plugin reinstall 권장 (v0.3.0 새 SKILL `gmk-dev-complete` 자동완성)
+- gamemaker-kit plugin reinstall 권장 (v0.4.0 Rule 13-15 + Sub-flags 본문 자동완성에 반영됨)
 
 **선택**:
-- Godot CLI (gmk-port 실험 시)
+- Godot CLI (gmk-port)
 - gitleaks (gmk-merge-gate)
 - ComfyUI on :8000 (gmk-art-gen)
 
@@ -200,49 +223,54 @@ v0.2와 동일:
 
 ## Warnings
 
-### W1-W18 — 이전 세션들에서 누적
-이전 HANDOFF.md 참조. 전부 유효.
+### W1-W22 — 이전 세션들에서 누적
+이전 HANDOFF.md / git history 참조. 전부 유효.
 
-### W19 — 이번 세션 신규
+### W23 — 이번 세션 신규
 
-**v0.3는 dogfood 없이 머지됐음 — 실 게임 회귀 검증이 부재.**
+**v0.4는 dogfood 없이 머지됐음 (정책 확정) — 실 게임 회귀 검증이 영구 부재.**
 
-audit-driven으로 작업했고 합성 fixture 검증만 함 (v0.3 backlog § 5). 만약 실 게임에서 새 wiring이 unexpected behavior 보이면, 그건 *audit이 놓친 영역*. Path A (검증) 수행하고, 새 finding 나오면 즉시 v0.4 backlog에 추가.
+v0.3 W19와 같은 종류이지만 v0.4에서 *정책 확정* — 회귀 검증이 *영영 없음*. v0.4 audit이 3 시각으로 매우 철저하지만, *audit이 놓친 영역*은 실 사용 누적으로만 발견 가능. v0.5 이후 결함은 자연 누적 시간이 필요.
 
-### W20 — 이번 세션 신규
+### W24 — 이번 세션 신규 (F16/F17의 정책화)
 
-**`gmk-dev-complete`는 read-only지만 `--accept-warnings` flag는 *세션-로컬*이지 milestones.json에 안 박힘.**
+**dogfood-findings를 *어떤 형태로든* backlog에 반영하지 말 것.**
 
-DEV_COMPLETE 도달 후 매번 같은 warnings 재출력. 사용자가 한 번 acknowledge 한 것이 *persisted*되길 원하면 v0.4 후보 (warnings_acknowledged_at 같은 필드를 milestones.json에 추가). 지금은 의도된 비-persist.
+폐기 결정은 *파일 보존*도 *비교 도구로 살리기*도 *findings를 다시 이름붙여 재활용하기*도 인정하지 않음. 다음 세션에서 *유사한 충동*이 들어도 차단. dogfood-driven 자체를 *영영* 차단.
 
-### W21 — 이번 세션 신규 (F13/F14의 명시화)
+### W25 — 이번 세션 신규
 
-**v0.3 backlog는 *audit*에서 도출됐지 dogfood에서 도출되지 않음.** 다음 backlog 결정 시 같은 가드 유지. dogfood findings는 *evidence 후보 1개*이지 backlog의 전부가 아님 — `feedback_dogfood_not_backlog` 류 메모리 룰로 보존 검토.
+**v0.4 deprecated 9 필드는 *읽기는* 정상 — 사용자 데이터를 자동 삭제하지 않음.**
 
-### W22 — 이번 세션 신규 (F15의 명시화)
+v0.4 SKILL이 *쓰기*는 안 하지만 v0.3 파일에 남아있는 데이터는 *그대로 남음*. 사용자가 *명시적으로* `gmk-init --migrate` (v0.5 후보) 또는 hand-edit으로 정리. 자동 삭제는 안 함 — 데이터 손실 위험.
 
-**HANDOFF.md는 working tree에서 외부 도구에 의해 reverted될 수 있음.** Wave 후 항상 `git status -- HANDOFF.md` 확인 + 필요 시 `git checkout HANDOFF.md`로 복구 후 새 내용 Write.
+### W26 — 이번 세션 신규
+
+**`kit_version`은 v0.4에서 *write만*. read 검증은 v0.5.**
+
+v0.4 SKILL이 *기록*하지만 *읽고 가드*하지 않음. 즉 사용자가 `kit_version: "0.1.0"`으로 손으로 적어도 v0.4 SKILL은 정상 진행. read enforcement는 v0.5에서 결정 (자동 마이그레이션 vs 거부 vs warn).
 
 ---
 
 ## Task List 상태 (이번 세션 종료 시점)
 
 이번 세션 완료:
-- #1-7: HANDOFF / audit 자료 정독 + 기존 plan 폐기
-- #8-17: 7-axis audit 7개 차원 점검 + v0.3-skeleton-audit.md / v0.3-backlog.md 작성 + 결정 5개
-- #18: dogfood-findings → v0.4-backlog-candidates 이름 변경
-- #19-25: Wave A (agent wiring 7 SKILLs) + 검증 + 커밋
-- #26: Wave B (gmk-dev-complete SKILL + endpoint wiring) + 커밋
-- #27: Wave C (structure.md drift + CONCEPT endpoint sync) + 커밋
-- #28: Wave D (call-graph reinforcement) + 커밋
-- #29: Wave E (CHANGELOG + version bump + 이 HANDOFF) — **진행 중 (이 커밋이 끝)**
+- #1-7: Path A 4 fixture 검증 PASS
+- #6-7: v0.4-backlog-candidates.md 갱신 → 폐기 결정 → 파일 삭제 + 참조 정리
+- #8-11: 3-view audit (cold/adv/schema) + v0.4-skeleton-audit.md 통합
+- 5 결정 확정 (trace data deprecate / precondition Rule 13 / agent routing Rule 15 / kit_version write-only / force-rebuild alias)
+- #12-15: Wave α (Sub-flags 7 SKILL + orphan 0건)
+- #16-17: Wave β (Rule 13/14 + 27 SKILL citation)
+- #18: Wave δ (Rule 15 + 8 SKILL citation)
+- #19: Wave γ (schema deprecate + kit_version + pillars-example + structure.md)
+- #20: Wave ε (lock 자동만료 + portability-check JSON + dashboard archive + shader 카피 + save-migrate 와이어링 + accept-warnings persist + future skill 정리 + plugin meta script + hand-edit/refuse 정책)
+- #21: Wave ζ (CHANGELOG + plugin/marketplace + 이 HANDOFF)
 
 다음 세션:
-- Path A (v0.3 검증) — TaskList 새로 생성
-- 또는 Path B (v0.4 backlog 정리)
-- 또는 Path C (작은 새 dogfood)
-- 또는 Path D (다른 프로젝트)
+- Step 0 commit + push + release
+- Step A sanity verification
+- 또는 Step B (Path D 다른 프로젝트로 이동)
 
 ---
 
-*마지막 커밋: `321618c` Wave E. origin/main 동기화 완료 (push `14ee45a..321618c`).*
+*이 HANDOFF는 v0.4.0 *구현 완료* 시점 기록. commit 후 reflection HANDOFF 추가 권장.*

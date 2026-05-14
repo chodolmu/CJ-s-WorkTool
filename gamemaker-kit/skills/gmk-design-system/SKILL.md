@@ -25,6 +25,8 @@ Then it stops. No code, no implementation plan, no priorities. That's `/gmk-task
 
 The skill does NOT require a prototype to exist. Often this skill runs *before* `/gmk-prototype` to surface complexity early.
 
+_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard) follow `gmk-prototype-rules` Rule 13-14._
+
 ## Flow
 
 ### Step 1 — Read the hypothesis aloud
@@ -178,6 +180,8 @@ After writing `design-system.md`, decide whether to route to `systems-designer`:
 | User explicitly asks for the strict spec | Route to `systems-designer` regardless of the heuristics above. |
 
 If routing: the recommendation goes in the "Next" block (Step 7 template). Don't auto-invoke — surface the route and let the user decide. The user runs `@systems-designer <milestone-id>` themselves.
+
+_The routing output follows `gmk-prototype-rules` Rule 15 (agent routing block format)._
 
 ## Output: tell the user what happens next
 

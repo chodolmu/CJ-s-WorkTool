@@ -32,6 +32,8 @@ If the user proposes a discipline outside the six, push back: *"There's no 'prod
 3. **Milestone is not killed.** If `killed: true`: refuse. *"Milestone {id} is KILLED. Either revive it (gmk-kill-milestone --revive) or pick a different milestone."*
 4. **Skill input** — exactly one milestone ID. Refuse bulk splits: *"Run task-split on one milestone at a time — bulk splitting produces same-shaped task lists for different milestones, which is rarely what you want."*
 
+_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard) follow `gmk-prototype-rules` Rule 13-14._
+
 ## Flow
 
 ### Step 1 — Read the milestone, summarize
@@ -138,7 +140,7 @@ Next:
 
 **Merge mode**, not overwrite. New tasks are appended; existing tasks (including completed ones) are preserved. If the user proposes a task with an ID that already exists, the kit refuses: *"`t-m2-design-tree` already exists. Pick a different slug, or skip this task."* Never silently update.
 
-If the user wants to **remove** a task that exists, they edit `milestones.json` by hand or use a dedicated future skill — `gmk-task-split` does not delete tasks. Removing in-progress tasks loses status history, which the kanban relies on.
+If the user wants to **remove** a task that exists, they edit `milestones.json` by hand — `gmk-task-split` does not delete tasks, and the kit has no dedicated task-removal skill. Removing in-progress tasks loses status history, which the kanban relies on. (The "dedicated future skill" promise from v0.2 is retired in v0.4; hand-edit is the answer.)
 
 ### Task that spans multiple disciplines
 

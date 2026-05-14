@@ -5,15 +5,15 @@
     "email": "chodolmu@github.com"
   },
   "metadata": {
-    "description": "Game development workflow plugin for Claude Code. Falsify un-fun in HTML before touching the engine: 29 skills + 4 domain agents covering 4 axes (time / discipline / validation / integration). v0.3 wires the 4 domain agents into SKILL routing and adds the project-level dev-complete endpoint. Endpoint is 'development complete' — release and live-ops are out of scope by design.",
-    "version": "0.3.0"
+    "description": "Game development workflow plugin for Claude Code. Falsify un-fun in HTML before touching the engine: 29 skills + 4 domain agents covering 4 axes (time / discipline / validation / integration). v0.3 wires the 4 domain agents into SKILL routing and adds the project-level dev-complete endpoint. v0.4 standardizes the preconditions / agent-routing / sub-flag patterns across all 29 skills and deprecates 9 unused schema fields. Endpoint is 'development complete' — release and live-ops are out of scope by design.",
+    "version": "0.4.0"
   },
   "plugins": [
     {
       "name": "gamemaker-kit",
       "source": "./",
-      "description": "HTML single-file prototyping + Playwright bot validation (4 procedural personas, suspicious-run extract, trial pruning, CI-aware row evaluation) + asymmetric self-test gate + 6-stage HTML→engine port re-validation + merge gate (asset conflict + gitleaks secret scan) + capture-but-don't-apply regression + project-level dev-complete endpoint (v0.3). 29 skills (init / roadmap / brainstorm / task-split / status / loop / prototype-rules / shape-advisor / portability-check / mechanic-merge / kill-milestone / mock-inject / design-system / content-plan / prototype / refactor-check / art-spec / art-gen / sound-plan / ux-flow / narrative / save-migrate / validate / self-test / regression / platform-check / merge-gate / port / dev-complete) + 4 domain agents (systems-designer / feel-engineer / economy-balancer / playtest-analyst). v0.3 wires the 4 agents into SKILL routing (was form-only in v0.2). MAST-aligned safety: one-way log verification via playtest-analyst, no agent-to-agent calls, max-iteration=1. Calibrated for 2D / deterministic input / sessions ≤5min. Zero external accounts, zero API keys.",
-      "version": "0.3.0",
+      "description": "HTML single-file prototyping + Playwright bot validation (4 procedural personas, suspicious-run extract, trial pruning, CI-aware row evaluation) + asymmetric self-test gate + 6-stage HTML→engine port re-validation + merge gate (asset conflict + gitleaks secret scan) + capture-but-don't-apply regression + project-level dev-complete endpoint (v0.3). 29 skills (init / roadmap / brainstorm / task-split / status / loop / prototype-rules / shape-advisor / portability-check / mechanic-merge / kill-milestone / mock-inject / design-system / content-plan / prototype / refactor-check / art-spec / art-gen / sound-plan / ux-flow / narrative / save-migrate / validate / self-test / regression / platform-check / merge-gate / port / dev-complete) + 4 domain agents (systems-designer / feel-engineer / economy-balancer / playtest-analyst). v0.3 wires the 4 agents into SKILL routing (was form-only in v0.2). v0.4 quality-of-life: Rule 13-15 across all 27 skills (milestone-id resolution + refuse-cycle guard + agent routing block format), formal sub-flag catalogs on 7 skills, 9 deprecated trace fields cleaned. MAST-aligned safety: one-way log verification via playtest-analyst, no agent-to-agent calls, max-iteration=1. Calibrated for 2D / deterministic input / sessions ≤5min. Zero external accounts, zero API keys.",
+      "version": "0.4.0",
       "author": {
         "name": "Cho Jun"
       },

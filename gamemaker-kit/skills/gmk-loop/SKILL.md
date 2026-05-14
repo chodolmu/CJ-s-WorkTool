@@ -56,7 +56,12 @@ If the user wants `/gmk-loop` to run twice, they invoke it twice. The kit does *
 1. **A clearly active milestone exists.** If multiple are active, the user must pick: *"Active milestones: m2, m3, m4. Which should this loop iteration target?"*
    - **Heuristic for picking the default** when only the user is ambiguous: highest position in `roadmap.md` order that isn't shipped/killed.
 2. **`pillars.json` exists.** (Plan stage requires it.)
-3. **No global lock file.** If `.gamemaker-kit/.loop.lock` exists, refuse: *"Another loop is in progress (started {timestamp}). If you're sure it's stuck, delete `.gamemaker-kit/.loop.lock` manually and retry."*
+3. **No global lock file.** If `.gamemaker-kit/.loop.lock` exists, check `started_at` and `pid` (lock file format: `{"started_at": "<iso>", "pid": <int>, "host": "<name>"}`).
+   - If `started_at` is **> 60 minutes ago**, treat the lock as stale and auto-clear it. Print *"Cleared stale loop lock (started_at {timestamp}, > 60 min ago)."* and proceed.
+   - If `started_at` is recent and `pid` is alive on the same host, refuse: *"Another loop is in progress (PID {pid}, started {timestamp}). Wait for it, or if you're sure it's stuck, delete `.gamemaker-kit/.loop.lock` manually."*
+   - If `started_at` is recent but `pid` is dead or unreachable, auto-clear with a note.
+
+_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard) follow `gmk-prototype-rules` Rule 13-14._
 
 ## Flow
 
@@ -123,6 +128,8 @@ Run exactly one downstream skill based on the gate:
 | Shipped (this milestone) | Print: *"m2-dragon-evo is dev-complete. Next: pick another milestone (`/gmk-status`) or, if this was the last one, run `/gmk-dev-complete` for the project-level endpoint."* | The project-level endpoint (`gmk-dev-complete`) is a separate SKILL — see Wave B |
 
 **Dispatch is not auto-execution.** Surface the skill name and let the user invoke it. If the user wants the loop to *actually run* the next skill, the next iteration of `/gmk-loop` will do it (after the user confirms again).
+
+_When surfacing an agent route, the output follows `gmk-prototype-rules` Rule 15 (agent routing block format)._
 
 ### Step 5 — On the dispatched skill's completion
 

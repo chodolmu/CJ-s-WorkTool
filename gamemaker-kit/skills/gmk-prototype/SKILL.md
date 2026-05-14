@@ -23,6 +23,8 @@ Before writing anything, verify:
 3. **`milestones.json` exists**. Create as `{ "project_name": "...", "milestones": [] }` if missing. Schema reference: `_workspace/examples/milestones-example.json`.
 4. **`templates/_bot_hook_lib.js` reachable**. The prototype either inlines the library (Rule 7 Option B) or references it via `<script src>` (Option A). Either way, the kit's `templates/_bot_hook_lib.js` is the canonical source.
 
+_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard) follow `gmk-prototype-rules` Rule 13-14._
+
 ## Flow
 
 ### Step 1 — Get the milestone name
@@ -87,11 +89,11 @@ A prototype must declare one of: `grid | continuous | dialogue | shader`. Ask th
 
 `shape` drives the template selected in Step 5 AND the bot policy default in `/gmk-validate`.
 
-**`shape: 'shader'`** is a partial-stub in v0.2. The full WebGL2 template lands in Wave D (`templates/prototype-shader.html`). For v0.2:
+**`shape: 'shader'`** is **intentionally minimal** — the template provides a single fullscreen fragment shader, a uniform clock, and 1-axis interaction. The bot hook is wired but bot validation returns INCONCLUSIVE by design (bots can't judge visual fun). Self-test is the gate for shader milestones; see `gmk-prototype-rules` Rule 11.
 
 - Accept the `shape: 'shader'` declaration in the hypothesis header.
-- Generate a minimal WebGL2 shader scaffold (vertex pass-through + a fragment shader the user fills in) with the standard bot hook attached but `legalActions()` returning `[{ type: 'time-tick', dt: 16 }]` only.
-- Print a banner: *"Shader shape is partial in v0.2. Bot validation produces INCONCLUSIVE for shader milestones; `/gmk-self-test` is the gate. Wave D will ship the full template."*
+- Generate the WebGL2 shader scaffold (vertex pass-through + a fragment shader the user fills in) with the standard bot hook attached but `legalActions()` returning `[{ type: 'time-tick', dt: 16 }]` only.
+- Print a banner: *"Shader shape: bot validation produces INCONCLUSIVE by design. `/gmk-self-test` is the gate for this milestone. See `gmk-prototype-rules` Rule 11."*
 - Don't refuse — shader prototypes still benefit from the schema and self-test loop.
 
 Flag `--type=shader` is equivalent to setting `shape: 'shader'` in the hypothesis interactively.
@@ -109,6 +111,8 @@ After the shape is chosen and the hypothesis is schema-strict, decide whether do
 | `shape: 'dialogue'` | (route to `gmk-narrative` SKILL, not an agent) | Dialogue spec is a SKILL, not an agent. |
 
 If a trigger fires, **do not auto-invoke**. Add the recommendation to the "Next" message in Step 7 (the user invokes `@feel-engineer <id>` or `@economy-balancer <id>` themselves). The agent's preconditions (system spec exists, hypothesis is schema-strict) are already satisfied by the time this skill finishes its own steps.
+
+_The routing output follows `gmk-prototype-rules` Rule 15 (agent routing block format)._
 
 If both `feel-engineer` and `economy-balancer` triggers fire (rare — a prototype that combines a sensory feedback loop with an economy curve), recommend **`feel-engineer` first** then `economy-balancer`. Feel and economy can interact (reward-feel coupling), and tuning feel first gives economy clean ground.
 
@@ -196,6 +200,16 @@ If the user reopens a v0.1 prototype to extend it (re-running `/gmk-prototype <e
 - Update `milestones.json` `measured_by[].kind` from `'human'` to `'self-test'`.
 - Don't migrate silently and don't ask permission per-row; one warn + bulk migration.
 
+## Sub-flags
+
+| Flag | Default | Effect | Side-effect |
+|---|---|---|---|
+| `--type <shape>` | (asked) | Equivalent to setting `shape: <value>` non-interactively. Valid values: `grid` / `continuous` / `dialogue` / `shader`. Skips the shape-advisor prompt. | `milestones[].shape` set. |
+| `--bot-only` | — | Skips the prompt for a self-test row at hypothesis-authoring time. The hypothesis still lists a placeholder self-test row with `verdict: "PASS"` *deferred* to the user — the placeholder exists only to satisfy the schema gate, and the user is expected to overwrite it (with a real PASS/FAIL) when they actually self-test. Downstream skills (`gmk-validate`, `gmk-self-test`) treat the placeholder as "self-test not yet performed", not as a passing gate. | `hypothesis.measured_by` gets one placeholder `kind: 'self-test'` row with `_placeholder: true`. |
+| `--regen` | — | Regenerates the HTML scaffold from the current milestones.json entry. Used after a kill+revive cycle, or after editing the hypothesis and wanting a fresh scaffold. Preserves the existing prototype file with `.bak` suffix; the user merges hand-edits manually. | None — only the prototype file changes. |
+
+`--bot-only` is *not* an attestation that self-test is unnecessary; it's an attestation that the user wants to author the self-test row later. The schema gate (placeholder PASS) keeps `gmk-validate` from refusing on row-count grounds, but `gmk-self-test` will still flag the placeholder as "not yet performed" when it runs.
+
 ## What this skill does NOT do
 
 - **Doesn't restate the rulebook.** Caps, hook API surface, header format, RNG rules, library options live in `gmk-prototype-rules`. Cite the section number when you enforce.
@@ -204,7 +218,7 @@ If the user reopens a v0.1 prototype to extend it (re-running `/gmk-prototype <e
 - **Doesn't validate.** That's `/gmk-validate`. Generation ends with the file written + milestone registered.
 - **Doesn't share / deploy.** External release is out of scope (`gmk-share` is removed in v0.2).
 - **Doesn't accept hypothesis without a self-test row by default.** Pure-bot hypotheses are a smell; force the user to acknowledge with `--bot-only`.
-- **Doesn't ship the full shader template in v0.2.** Stub + bot-INCONCLUSIVE messaging only; full template lands in Wave D.
+- **Doesn't ship a "full" shader template.** The shader scaffold is intentionally minimal — INCONCLUSIVE-by-design bot verdict, self-test as the gate (Rule 11). Active code generation for shader logic is a user task.
 
 ## Output: tell the user what happens next
 

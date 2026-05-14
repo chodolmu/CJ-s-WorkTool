@@ -21,6 +21,10 @@ The model was haiku in v0.1 (read-only tree). It's now **sonnet** because bottle
 
 Canonical state lives in `pillars.json` + `milestones.json`. Dashboard is a **rendered view**, not a separate source. Anyone who hand-edits `dashboard.md` will get overwritten — there's a warning at the top.
 
+### Sub-flag: `--archive`
+
+When called as `/gmk-status --archive`, the skill copies the current dashboard to `_workspace/dashboard-archive/dashboard-{YYYY-MM-DD-HHMM}.md` before regenerating. Use this when you want a snapshot at a specific moment (e.g., before a milestone close, for a meeting). Archives accumulate; the user prunes them.
+
 ## Preconditions
 
 1. **Inside a gamemaker-kit project** — `.gamemaker-kit/` exists.
@@ -30,6 +34,8 @@ Canonical state lives in `pillars.json` + `milestones.json`. Dashboard is a **re
 4. **`_workspace/` exists.** Create if missing (we're about to write `dashboard.md` there).
 
 Do not refuse on malformed JSON. Print the parse error and the file path, then stop. Repair is a separate concern — gmk-status is not a fixer.
+
+_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard) follow `gmk-prototype-rules` Rule 13-14._
 
 ## Flow
 

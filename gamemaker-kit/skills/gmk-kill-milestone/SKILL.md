@@ -24,6 +24,8 @@ Three reasons:
 2. **For kill**: `killed !== true` (otherwise it's already dead).
 3. **For revive (`--revive`)**: `killed === true`.
 
+_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard) follow `gmk-prototype-rules` Rule 13-14._
+
 ## Flow
 
 ### Step 1 — Pick the operation
@@ -106,21 +108,12 @@ Update the milestone:
   "id": "m2-dragon-evo",
   "killed": true,
   "killed_at": "2026-05-12T17:00:00Z",
-  "kill_reason": "Bot says clear_rate 4% — random play can't find the unlock; mechanic is too narrow",
-  "kill_followup": "Mechanic wrong, not prototype — the unlock cadence (every 5 merges) is the wrong granularity",
-  "kill_category": "bot_fail",
+  "kill_reason": "Bot says clear_rate 4% — random play can't find the unlock; mechanic is too narrow. Mechanic wrong, not prototype.",
   ...rest of milestone preserved as-is
 }
 ```
 
-`kill_category` is one of (closed set):
-- `bot_fail` — bot validation failed
-- `self_test_fail` — bot passed but self-test failed
-- `pillar_conflict` — milestone weakens a target pillar
-- `scope_wrong` — milestone is actually 2+ milestones
-- `pivot` — user changed direction on the game
-- `prototype_wrong` — mechanic might be fine; the prototype's encoding was wrong (suggests re-prototype after revive)
-- `other` — user reason doesn't fit categories above (preserved verbatim)
+**v0.4 deprecation**: `kill_category` and `kill_followup` are deprecated (see `structure.md` § v0.4 deprecated fields). The reason text is free-form and incorporates both the *what* (former `kill_reason`) and the *why* (former `kill_followup`) in one paragraph. Don't write the deprecated keys.
 
 Don't delete any existing fields (validation, self_test, ported_to, tasks). The killed milestone is a *trace*; all its history is value.
 
@@ -131,21 +124,13 @@ Don't delete any existing fields (validation, self_test, ported_to, tasks). The 
   "id": "m2-dragon-evo",
   "killed": false,
   "revived_at": "2026-05-15T10:00:00Z",
-  "kill_history": [
-    {
-      "killed_at": "2026-05-12T17:00:00Z",
-      "kill_reason": "...",
-      "kill_followup": "...",
-      "kill_category": "bot_fail"
-    }
-  ],
   ...
 }
 ```
 
-Move the previous `killed_at` / `kill_reason` / `kill_followup` / `kill_category` into a `kill_history[]` entry. Reset top-level fields. If the milestone is killed again later, append another entry to `kill_history`.
+Reset top-level kill fields (`killed`, `killed_at`, `kill_reason`). Set `revived_at`. Do NOT push prior kill data into `kill_history[]` (deprecated). The git commit history of milestones.json is the authoritative trace for kill/revive cycles.
 
-This preserves the full trace. A milestone that's been killed twice and revived once shows the full lineage.
+If the milestone is killed again later, just overwrite the top-level kill fields with new values. The previous kill's text is recoverable from git log.
 
 ### Step 6 — Refresh `_workspace/roadmap.md` (kill or revive)
 
@@ -200,6 +185,14 @@ The previous kill is preserved in kill_history[]. If you want to retry this mech
 
 If the original prototype is still suitable, just re-run /gmk-validate.
 ```
+
+## Sub-flags
+
+| Flag | Default | Effect | Side-effect |
+|---|---|---|---|
+| `--revive` | — | Switches the operation from kill to revive (un-kill). Refuses if the milestone is not currently killed. Previous kill data is preserved in `kill_history[]`. | Resets top-level `killed`, `killed_at`, `kill_reason`, `kill_followup`, `kill_category`; appends a `kill_history[]` entry with the prior values. |
+
+`--regen` (referenced in the Revive output text) is a `gmk-prototype` flag, not this skill's. See `gmk-prototype` Sub-flags.
 
 ## Edge cases & policy
 
@@ -263,5 +256,5 @@ Accept and exit cleanly. *"OK — no changes made. The milestone is unchanged."*
 - **Cleveland follow-up is a thinking pause, not a process step.** Don't auto-route to other skills based on the answer; just record. The user picks what to run next.
 - **Watch for kill-as-avoidance.** If a milestone has FAILed once and the user is killing immediately without revising the hypothesis, surface gently: *"This is the first FAIL — sometimes a single hypothesis tweak (or a different bot policy) is enough. Want to talk through the failure before killing?"* If they decline, kill.
 - **Kill category matters for trace mining.** Future-you searching for "all the milestones I killed because of pillar conflict" wants `kill_category === 'pillar_conflict'`. Categorize honestly, not generously.
-- **The trace is shipping-quality data.** Future skills (e.g., a v0.4 "graveyard mining" skill) will read `kill_history`. Treat the data as durable, not throwaway.
+- **The trace is git, not milestones.json.** v0.2 anticipated a "graveyard mining" skill that would read `kill_history[]`. v0.4 deprecated that array — the trace of kill/revive cycles lives in the git commit history of milestones.json. If a future skill wants to mine kill data, it reads `git log` on the file.
 - **Revive isn't free**. A revive resets the active state to "alive," but the prototype file might be from before the kill — surface this in the revive output so the user remembers to either re-prototype or re-validate.

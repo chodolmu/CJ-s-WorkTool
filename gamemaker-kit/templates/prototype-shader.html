@@ -16,15 +16,14 @@ Hypothesis:
 Created: {{CREATED_AT}}
 Shape: shader
 
-WAVE D STUB NOTE
-================
-This shader template is a v0.2 STUB. The full WebGL2 prototype shape is intentionally
-minimal: a single fullscreen fragment shader, a uniform clock, and 1-axis interaction
-(pointer or wheel). The bot hook is present and binds the standard 5-callback spec,
-but the bot verdict for shape='shader' is INCONCLUSIVE by design — bots cannot judge
-visual fun. /gmk-validate will record bot metrics (action_entropy, duration) but
-defer the verdict to /gmk-self-test. See CONCEPT.md §15 (academic honesty) and
-gmk-validate edge cases.
+SHADER TEMPLATE — intentionally minimal
+========================================
+This shader template is **intentionally minimal**: a single fullscreen fragment shader,
+a uniform clock, and 1-axis interaction (pointer or wheel). The bot hook is present
+and binds the standard 5-callback spec, but the bot verdict for shape='shader' is
+INCONCLUSIVE by design — bots cannot judge visual fun. /gmk-validate will record bot
+metrics (action_entropy, duration) but defer the verdict to /gmk-self-test. See
+gmk-prototype-rules Rule 11 (shader path) and CONCEPT.md §15 (academic honesty).
 
 If the prototype must measure something objective beyond "the shader ran without
 crashing for 60s", add a bot-tractable scalar to summary.score (e.g., total

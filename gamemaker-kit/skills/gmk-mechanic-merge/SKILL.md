@@ -34,6 +34,8 @@ Importantly: **mechanic-merge is not the same as feature-stacking**. Stacking tw
 3. **The two milestones share at least one structural commonality** — same shape, same input model, or same pillar. If they share nothing (grid + continuous + dialogue), refuse:
    - *"m1 is grid; m3 is continuous. These don't compose in one HTML prototype. Either pick a single shape for the merge, or this isn't a 'merge' — it's 'ship both and hope.'"*
 
+_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard) follow `gmk-prototype-rules` Rule 13-14._
+
 ## Flow
 
 ### Step 1 — Show the source pair

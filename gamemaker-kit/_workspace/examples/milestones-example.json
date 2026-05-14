@@ -1,5 +1,6 @@
 {
-  "_comment": "milestones.json — v0.2 schema example. All v0.2 fields (tasks[], hypothesis.trials[], self_test, merge_gate, ported_to.re_validation) are OPTIONAL. A v0.1 milestone with only {id, name, pillars_targeted, hypothesis.{if,then,measured_by}, prototype, shape, created_at, validation, ported_to} still validates.",
+  "_comment": "milestones.json — v0.4 schema example. v0.4 deprecates 9 trace fields from v0.2 (hypothesis.trials[], validation_history[], re_validation_history[], kill_history[], kill_category, kill_followup, validation.guardrails, coded_themes, self_test.sessions[] body). v0.4 skills do not write them; v0.3 files containing them still validate (read-only — fields are ignored).",
+  "kit_version": "0.4.0",
   "project_name": "ZooMerge",
   "milestones": [
     {
@@ -25,20 +26,6 @@
             "target": { "op": "==", "value": "PASS" },
             "confidence": 0.80,
             "sample_size": 1
-          }
-        ],
-        "trials": [
-          {
-            "trial_id": "t-2026-05-12-01",
-            "started_at": "2026-05-12T11:00:00Z",
-            "config": { "policy": "persona-mix", "runs": 200 },
-            "result": {
-              "metrics": { "session_length_avg_ms": 287000, "crash_rate": 0.0, "dominant_strategy_ratio": 0.31 },
-              "verdict": "PASS",
-              "pruned": false,
-              "pruned_reason": null,
-              "finished_at": "2026-05-12T11:08:00Z"
-            }
           }
         ]
       },
@@ -95,7 +82,10 @@
           "actions_taken_avg": 142,
           "state_coverage": 0.58,
           "action_entropy": 1.72,
-          "custom": {}
+          "custom": {
+            "_comment_custom": "Free-form numeric metrics the hypothesis adds beyond the always-on set. Keys are case-sensitive and read by gmk-validate Step 4 hypothesis-row aggregation.",
+            "long_chains_per_session_avg": 3.4
+          }
         },
         "by_persona": {
           "Runner":   { "clear_rate": 0.71, "dominant_strategy_ratio": 0.28 },
@@ -113,31 +103,19 @@
           { "seed":  4, "reason": "duration-short", "path": ".gamemaker-kit/validations/m1-merge-feel/suspicious/4.json" },
           { "seed": 199, "reason": "duration-long", "path": ".gamemaker-kit/validations/m1-merge-feel/suspicious/199.json" }
         ],
-        "verdict": "PASS",
-        "guardrails": { "crash_rate_ok": true, "dominant_strategy_ok": true, "state_coverage_ok": true }
+        "verdict": "PASS"
       },
-      "validation_history": [],
       "self_test": {
-        "sessions": [
-          {
-            "date": "2026-05-12",
-            "duration_min": 18,
-            "notes_path": ".gamemaker-kit/self-tests/m1-merge-feel/session-2026-05-12.md",
-            "suspicious_seeds_reviewed": [17, 42, 88],
-            "verdict": "PASS"
-          }
-        ],
-        "coded_themes": [
-          { "theme": "chunky-feedback", "mentions": 4, "examples": ["thud feels right", "satisfying clack"] },
-          { "theme": "wants-more-variety", "mentions": 2, "examples": ["all merges sound the same after 5 min"] }
-        ],
-        "latest_verdict": "PASS"
+        "latest_verdict": "PASS",
+        "latest_session_path": ".gamemaker-kit/self-tests/m1-merge-feel/session-2026-05-12.md",
+        "latest_session_at": "2026-05-12"
       },
       "merge_gate": {
         "ran_at": "2026-05-12T15:00:00Z",
         "regression_ok": true,
         "asset_conflicts": [],
         "secrets_detected": [],
+        "touched_files": ["prototypes/m1-merge-feel.html", "scenes/MergeBoard.tscn", "scripts/merge_board.gd"],
         "verdict": "PASS",
         "warnings": []
       },
@@ -164,7 +142,7 @@
       "killed": false
     },
     {
-      "_comment": "Second milestone: minimal v0.1-compatible entry (no v0.2 optional fields). Demonstrates backward compat — gmk skills MUST accept this shape.",
+      "_comment": "Second milestone: minimal v0.1-compatible entry (no optional fields). Demonstrates backward compat — gmk skills MUST accept this shape.",
       "id": "m2-dragon-evo",
       "name": "Dragon evolution curve",
       "pillars_targeted": ["discovery-joy"],
@@ -188,7 +166,7 @@
       "ported_to": null
     },
     {
-      "_comment": "Third milestone: killed example (Cleveland rule). Kept in milestones.json for learning trace; gmk-status excludes from active count.",
+      "_comment": "Third milestone: killed example (Cleveland rule). Kept in milestones.json for learning trace; gmk-status excludes from active count. kill_reason is the v0.4 canonical field name (v0.2 example had a typo: _kill_reason with underscore prefix — corrected here).",
       "id": "m0-roguelike-deckbuild",
       "name": "Roguelike deckbuilder graft (KILLED)",
       "pillars_targeted": ["discovery-joy"],
@@ -213,11 +191,11 @@
         "runs": 200,
         "policy": "random",
         "metrics": { "session_length_avg_ms": 95000, "crash_rate": 0.0, "dominant_strategy_ratio": 0.82 },
-        "verdict": "FAIL",
-        "guardrails": { "crash_rate_ok": true, "dominant_strategy_ok": false }
+        "verdict": "FAIL"
       },
       "killed": true,
-      "_kill_reason": "Mechanic graft violates pillar 'tactile-satisfaction' — cards interrupt the merge flow. Cleveland rule: kill, log lesson, move on."
+      "killed_at": "2026-05-09T02:00:00Z",
+      "kill_reason": "Mechanic graft violates pillar 'tactile-satisfaction' — cards interrupt the merge flow. Cleveland rule: kill, log lesson, move on."
     }
   ]
 }
