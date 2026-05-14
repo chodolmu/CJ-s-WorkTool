@@ -59,7 +59,8 @@ Run this priority ladder. **Stop at the first match.**
 5. **Active milestone with no prototype yet** — earliest one in roadmap order; suggest `/gmk-prototype <id>`.
 6. **Active milestone with FAIL** — suggest `/gmk-kill-milestone` decision or hypothesis revision.
 7. **In-progress task with no recent update** — name the task (status `in-progress`, `updated_at` > 5 days ago).
-8. **Default** — *"Multiple milestones in flight — pick whichever feels most alive to you today. Status is healthy."*
+8. **All milestones shipped (no in-flight, no killed pending)** — *"All milestones shipped. Run /gmk-dev-complete to check the project-level endpoint (pillar coverage + warnings)."*
+9. **Default** — *"Multiple milestones in flight — pick whichever feels most alive to you today. Status is healthy."*
 
 **Only ever surface one.** If the user wants more, they can read the tree.
 
@@ -101,6 +102,14 @@ art 시안을 받아서 audio 막힘을 풀기. 이 한 가지가 풀리면 audi
 - 강화하는 Pillar: discovery-joy ✓
 - 약화하는 Pillar: 없음
 
+## Project dev-complete progress
+
+- Shipped milestones:  {S} / {S + M} active
+- Pillars with shipped coverage: {covered_count} / {pillar_count}
+- Forced gates outstanding: {forced_count}
+
+> When this section shows {S/S+M} = 1.0 AND {covered_count/pillar_count} = 1.0, run /gmk-dev-complete for the project-level endpoint check.
+
 ---
 
 ## 전체 마일스톤 트리
@@ -108,12 +117,15 @@ art 시안을 받아서 audio 막힘을 풀기. 이 한 가지가 풀리면 audi
 (same tree as printed to chat — see Step 4)
 ```
 
-If there's no active milestone (all shipped, or all killed, or none exist), replace the "Active milestone" section with a one-liner:
+If there's no active milestone (all shipped, or all killed, or none exist), replace the "Active milestone" section with a state-specific one-liner:
 
 ```markdown
 ## No active milestone
 
-All milestones are shipped or killed. Time to define the next one with /gmk-roadmap.
+{One of:}
+  - "All milestones shipped — check the project-level endpoint with /gmk-dev-complete."
+  - "All milestones killed — the project is in re-design. /gmk-roadmap to plan fresh."
+  - "No milestones defined yet. /gmk-roadmap or /gmk-prototype to start."
 ```
 
 ### Step 4 — Print the chat tree

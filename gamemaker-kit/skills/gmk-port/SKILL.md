@@ -484,6 +484,9 @@ milestones.json updated:
   ported_to.re_validation.tuned_at = (unset — RE_PASS implies no further tuning needed)
 
 If RE_PASS: the port is considered double-validated. Move on.
+            If this was the last in-flight milestone, run /gmk-dev-complete
+            to check whether the project has reached gmk's project-level
+            endpoint (all milestones shipped + every pillar covered).
 If RE_FAIL: this port is broken. Either /gmk-port --force-rebuild (re-runs Stage 1)
             or hand-edit the generated files and re-run --stage 4 to re-measure.
 If NEEDS_TUNING: the port is conceptually right but needs feel work. The checklist
