@@ -22,7 +22,7 @@ This skill runs all three and outputs a single PASS/FAIL verdict with the failin
 
 `gitleaks` is *not* required. Section 3 has a fallback. The skill prefers `gitleaks` when available because pattern coverage is broader.
 
-_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard) follow `gmk-prototype-rules` Rule 13-14._
+_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard, kit_version read contract) follow `gmk-prototype-rules` Rule 13-14, 16._
 
 ## Flow
 

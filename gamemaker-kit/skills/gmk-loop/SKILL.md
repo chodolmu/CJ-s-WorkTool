@@ -61,7 +61,7 @@ If the user wants `/gmk-loop` to run twice, they invoke it twice. The kit does *
    - If `started_at` is recent and `pid` is alive on the same host, refuse: *"Another loop is in progress (PID {pid}, started {timestamp}). Wait for it, or if you're sure it's stuck, delete `.gamemaker-kit/.loop.lock` manually."*
    - If `started_at` is recent but `pid` is dead or unreachable, auto-clear with a note.
 
-_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard) follow `gmk-prototype-rules` Rule 13-14._
+_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard, kit_version read contract) follow `gmk-prototype-rules` Rule 13-14, 16._
 
 ## Flow
 

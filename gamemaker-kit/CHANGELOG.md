@@ -6,6 +6,77 @@ Versioning follows [SemVer](https://semver.org/).
 
 ---
 
+## [0.7.0] — 2026-05-17
+
+v0.6 was the first ACCURATE-verdict release after three consecutive OVERSTATED rounds. v0.7 keeps the 3-checkpoint evaluator process (Protocol 1/3/4) and closes another tranche of declared-but-half-applied standards: `kit_version` finally has a read contract, two structural-guard checks (A and C) graduate to FAIL-level, three new checks land at WARN-level, the allowlist gets line-level precision, and the rulebook's Rule 14 CYCLE form gets correctly framed as a future safety valve. Protocol 1 caught the HANDOFF's 4-candidate backlog being **UNDERSTATED** — the real implementation surface was 7 items — same anchoring pattern that hit v0.4 → v0.5 → v0.6. Protocol 3 graded the work **ACCURATE** with one minor stylistic tightening applied pre-tag.
+
+### Added
+
+**`gmk-prototype-rules` — Rule 16 (`kit_version` read contract):**
+- 4-case table for handling the field: absent → treat as `"0.3.0"`, ≤ current → proceed, > current → warn-once-then-proceed (shape (d), warn-only), unparseable → warn and proceed as current.
+- Warn-only by design — refusing on newer-version files would lock users out of their own data after any plugin upgrade/downgrade. Preserves v0.4's "no data loss" promise.
+- Placeholder convention clarified: warn text uses full `MAJOR.MINOR.PATCH`, comparison logic uses `MAJOR.MINOR` only.
+- Every SKILL with a `## Preconditions` section now follows the rule (verified by the amended Rule 13-14 footer; see Changed).
+
+**`scripts/check-plugin-meta.sh` — three new checks (WARN-level in v0.7):**
+- **Check D** — `kit_version` consistency. Schema example files (`_workspace/examples/pillars-example.json`, `milestones-example.json`) must declare `kit_version` matching plugin.json's MAJOR.MINOR.
+- **Check E** — template line caps per Rule 2. `templates/prototype-*.html` ≤ 300 lines (soft, WARN) / ≤ 600 lines (hard, FAIL inside the WARN umbrella). v0.7 baseline: `prototype-shader.html` at 401 lines (over soft, under hard) — known carry-over from v0.4 template work, scheduled for refactor in v0.8.
+- **Check F** — template `__gmk_botHook__` API version anchor. Files using the hook must either declare `_gmkApiVersion: 1` inline OR reference `_bot_hook_lib.js` (which declares it canonically). Guards against silent API drift.
+
+**`scripts/hooks/pre-push` (NEW) — opt-in pre-push hook template:**
+- Runs `scripts/check-plugin-meta.sh` and refuses the push on exit code ≠ 0.
+- Opt-in via `git config core.hooksPath scripts/hooks` (not auto-installed — invasive on user clones).
+- Emergency bypass: `git push --no-verify` (documented in the hook, not recommended).
+- Closes the v0.6 process gap where an implementer could tag a release without running the pre-flight script.
+
+### Changed
+
+**Check A + Check C — WARN → FAIL.**
+- Check A (Rule 14 token presence) and Check C (Rule 13-14 footer presence) are now release-blocking. Drift on either FAILs the script with exit code 1, refusing the pre-flight.
+- Check B (endpoint terminology drift) stays at WARN: its case-insensitive `grep -rni 'endpoint'` regex risks false positives on legitimate prose (e.g., "API endpoint"). Whole-word `\bendpoint\b` regex + per-line allowlist is queued for v0.8.
+
+**`scripts/.rule14-allowlist.txt` — file-level → line-level granularity.**
+- v0.6 allowlist entries were per-SKILL (`gmk-mock-inject/SKILL.md`); a future patch adding a real refuse-with-rec to an allowlisted SKILL would slip past Check A undetected.
+- v0.7 entries are per-line (`gmk-mock-inject/SKILL.md:26`). Each justification now cites the specific line. 9 entries cover 7 SKILLs (gmk-loop and gmk-merge-gate each have two non-refuse `/gmk-` mentions).
+- Check A logic rewritten to iterate refuse-pattern hit lines and apply the allowlist per-line.
+
+**Rule 13-14 citation footer — amended to "Rule 13-14, 16" across 27 SKILLs.**
+- Every SKILL with a `## Preconditions` section now cites Rule 16 in its standard-preconditions footer. The amendment was uniform (one sed across all 27 SKILLs); audit grep `grep -l "Rule 13-14, 16" skills/*/SKILL.md` returns 28 hits (27 SKILLs + the rulebook).
+
+**Rule 14 CYCLE form — reframed as "fallback / currently unused safety valve".**
+- v0.6 docs presented CYCLE as a routine alternative to the standard form, which made Protocol 1 question whether it was dead code. v0.7 clarifies: the two known cycles (shader INCONCLUSIVE, `--skip` validation) are closed by **accept-state widening** in the target skill (see `gmk-self-test:33/35`), not by emitting the CYCLE token. CYCLE is preserved as the mandated form for *future* cycles that cannot be closed by widening either side. Currently unused — and that's the intended state.
+
+**`kit_version` writer (`gmk-init`) — now writes `"0.7.0"`.**
+- Pillars-template (L163) and milestones-template (L193) both updated. Prose anchor at L201 cross-references Rule 16 and clarifies the silent-upgrade path (additive-only schema, backward-compatible reads).
+
+**Schema example files — `kit_version: "0.7.0"` + `_comment` updated.**
+- `_workspace/examples/pillars-example.json` and `milestones-example.json` now declare v0.7. `_comment` blocks mention v0.7 schema and Rule 16. Schema itself unchanged from v0.4 (additive-only across all sub-releases).
+
+### Honesty note
+
+The HANDOFF v0.6 reflection listed 4 v0.7 backlog candidates. **Protocol 1 (work-start) evaluator found the real implementation surface was 7 items** — 4 candidates corrected plus 3 the HANDOFF missed (line-level allowlist granularity, pre-push hook template, three new structural checks D/E/F). One candidate (`gmk-mock-inject` cold-read audit) resolved to **NO IMPLEMENTATION WORK** — the audit completed during Protocol 1 and confirmed the allowlist decision holds; v0.7 simply records the verification.
+
+This is the **same anchoring pattern** F21 named in the post-v0.6 HANDOFF: the previous evaluator's backlog reads convincingly because it cites real grep hits, but it shows only what *they* saw. Protocol 1's job is to look fresh — and once again it expanded scope by ~75% (4 → 7 items).
+
+Protocol 3 (pre-release) graded v0.7 **ACCURATE** with one minor stylistic clarification applied pre-tag (placeholder MAJOR.MINOR.PATCH convention in Rule 16's 4-case table).
+
+### Migration notes from v0.6
+
+- **No schema changes.** Files written by v0.6 (or earlier) read identically in v0.7. The new read-side behavior (Rule 16) only adds warnings for files written by *newer* kit versions, never refuses.
+- **No data loss.** v0.7 doesn't rewrite or auto-upgrade existing files. The `kit_version` field upgrades silently only when `/gmk-init` is re-invoked on a project (existing behavior since v0.4).
+- **No new SKILLs, no new agents.**
+- **Pre-flight is now FAIL-strict on Checks A and C.** Anyone tagging a release must `bash scripts/check-plugin-meta.sh` returning exit 0. Optional opt-in: `git config core.hooksPath scripts/hooks` to enforce via pre-push hook.
+
+### Non-goals (v0.7 deliberately did not do)
+
+- Did not promote Check B to FAIL (regex tightening + line-level allowlist queued for v0.8).
+- Did not refactor `templates/prototype-shader.html` to fit the 300-line soft cap (queued for v0.8).
+- Did not add a `pillars.kind` field reader (also write-only since v0.4 — same defect class as `kit_version`; queued for v0.8).
+- No dogfood. Audit-only stance preserved (W24).
+- No new SKILLs, no new agents, no new templates.
+
+---
+
 ## [0.6.0] — 2026-05-17
 
 v0.5 declared `[Rule 14]` tokens mandatory and renamed "endpoint" → "checkpoint" — but applied each only halfway. The external evaluator graded v0.5's self-audit **OVERSTATED** for the third release in a row. v0.6 finishes both sweeps across all affected SKILLs and adds a **structural guard** so the next half-applied standard auto-fails release pre-flight.

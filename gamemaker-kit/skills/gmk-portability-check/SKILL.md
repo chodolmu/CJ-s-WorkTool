@@ -29,7 +29,7 @@ Output is a risk report, not a verdict. *"Port at your own informed risk"* is th
 2. **Milestone passed bot validation** — `validation?.verdict === 'PASS'`. If not, warn:
    - *"Milestone {id} hasn't passed bot validation yet. Port-risk analysis is most useful after a PASS verdict — before, the prototype might still be wrong. Continue anyway?"*
 
-_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard) follow `gmk-prototype-rules` Rule 13-14._
+_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard, kit_version read contract) follow `gmk-prototype-rules` Rule 13-14, 16._
 
 ## Flow
 

@@ -19,7 +19,7 @@ Output: a short markdown checklist with pass/fail per category. No deep analysis
 
 That's it. No Playwright, no validation gate, no other skill required. This is meant to run any time.
 
-_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard) follow `gmk-prototype-rules` Rule 13-14._
+_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard, kit_version read contract) follow `gmk-prototype-rules` Rule 13-14, 16._
 
 ## Flow
 

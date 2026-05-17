@@ -47,7 +47,7 @@ Before running anything, verify and stop with a clear message if any fails:
 
    The default `persona-mix` policy is still 4 × 50; falling-back personas don't get skipped (we still want their *random* baselines for comparison). The trial result records which personas were toothless so suspicious-run analysis doesn't blame them.
 
-_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard) follow `gmk-prototype-rules` Rule 13-14._
+_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard, kit_version read contract) follow `gmk-prototype-rules` Rule 13-14, 16._
 
 ## Flow
 

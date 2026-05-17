@@ -23,7 +23,7 @@ Before writing anything, verify:
 3. **`milestones.json` exists**. Create as `{ "project_name": "...", "milestones": [] }` if missing. Schema reference: `_workspace/examples/milestones-example.json`.
 4. **`templates/_bot_hook_lib.js` reachable**. The prototype either inlines the library (Rule 7 Option B) or references it via `<script src>` (Option A). Either way, the kit's `templates/_bot_hook_lib.js` is the canonical source.
 
-_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard) follow `gmk-prototype-rules` Rule 13-14._
+_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard, kit_version read contract) follow `gmk-prototype-rules` Rule 13-14, 16._
 
 ## Flow
 

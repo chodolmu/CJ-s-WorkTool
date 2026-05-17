@@ -385,15 +385,17 @@ Skills that refuse with "Run /gmk-X first" messages **must end the refuse block*
 [Rule 14] /gmk-<this-skill> → /gmk-<target-skill> — verified target's preconditions can be satisfied from current state.
 ```
 
-If the chain *cannot* close (target skill also refuses in the same state), the refuse message must instead use Example (b) above — name the cycle and point at a third option:
+**Fallback form (currently unused as of v0.7 — keep as safety valve).** If a cycle *cannot* be closed by widening either side's accept-state (the form `gmk-self-test:33/35` uses), the refuse message must use a `CYCLE` token naming the cycle and pointing at a third option:
 
 ```
 [Rule 14 — CYCLE] /gmk-<this-skill> ↔ /gmk-<target-skill> on <named state>. Exits: (1) <option a>, (2) <option b>.
 ```
 
-Examples of named states gmk-cycle-tracks:
-- `shape: 'shader'` + bot INCONCLUSIVE — `/gmk-validate` returns INCONCLUSIVE, `/gmk-self-test` accepts INCONCLUSIVE for shader shape only (see gmk-self-test Preconditions §2).
-- `validation: null` AND mechanic is bot-trivial — `/gmk-validate --skip --reason "..."` writes a skipped record that `/gmk-self-test` accepts.
+Examples of named states the kit currently handles via accept-state widening (NOT the CYCLE form):
+- `shape: 'shader'` + bot INCONCLUSIVE — `/gmk-validate` returns INCONCLUSIVE, `/gmk-self-test` accepts INCONCLUSIVE for shader shape only (see gmk-self-test Preconditions §2). Closed via accept-state; no CYCLE token issued.
+- `validation: null` AND mechanic is bot-trivial — `/gmk-validate --skip --reason "..."` writes a skipped record that `/gmk-self-test` accepts. Closed via accept-state; no CYCLE token issued.
+
+The CYCLE form is preserved as a *future safety valve*: if a new cycle is discovered that cannot be closed by widening either skill's accept-state, the discoverer must emit the CYCLE token rather than silently dropping the Rule 14 check. As of v0.7, no SKILL emits it — and that's the intended state.
 
 The `[Rule 14]` / `[Rule 14 — CYCLE]` tags are **mandatory tokens** so an audit can grep `\[Rule 14` in any SKILL body and verify every refuse-with-recommendation has the check attached. Skills missing the token fail the v0.5+ refuse-chain audit.
 
@@ -444,6 +446,39 @@ Skills that recommend agents (currently `gmk-design-system`, `gmk-validate`, `gm
 ### Why this rule exists
 
 v0.3 audit (CR-7 + AD-10) found that 6 skills referenced 4 agents but used 4 different output styles ("Recommend `@agent` next", "Spawn agent inline", "Next agent:", "Consider running `@agent`"). The user had to re-learn the pattern per-skill. Rule 15 unifies the surface.
+
+---
+
+## Rule 16 — `kit_version` read contract (skill-wide pattern)
+
+Every SKILL that opens `pillars.json` or `milestones.json` must check the file's `kit_version` field and respond per this contract. v0.4 introduced the write side (`gmk-init` stamps the current kit version on creation); v0.7 introduces the read side (skills act on it).
+
+### The contract (4 cases)
+
+| File state | Skill behavior |
+|---|---|
+| `kit_version` absent | Treat as `"0.3.0"` (the last kit version that didn't write the field). Proceed normally. |
+| `kit_version` ≤ current kit's MAJOR.MINOR | Proceed normally. Schema is additive-only across sub-releases, so older files validate as a subset. |
+| `kit_version` > current kit's MAJOR.MINOR | **Warn once, then proceed.** Print exactly: *"This file was written by gamemaker-kit {file_version}; you're running {kit_version}. Unknown fields may be ignored. If the kit was downgraded, consider re-checking against the version that wrote this file."* Continue with the operation. |
+| `kit_version` is present but unparseable (not `MAJOR.MINOR.PATCH`) | Warn — *"kit_version `{value}` is not parseable as MAJOR.MINOR.PATCH; treating as the current kit version"* — and proceed. |
+
+Placeholders use the **full `MAJOR.MINOR.PATCH`** form (e.g., `"0.8.0"`, `"0.7.0"`) in the user-visible warn text. Comparison logic operates on `MAJOR.MINOR` only (PATCH differences are always backward-compatible by SemVer).
+
+### Why warn-only, not refuse
+
+The kit ships as a Claude Code plugin. Users may upgrade and downgrade the plugin freely; refusing on newer-version files would lock users out of their own data after any version flip. Warn-only preserves the v0.4 *"no data loss"* promise while still surfacing the version mismatch to the user.
+
+If a future MAJOR-version bump (1.0.0+) breaks schema compatibility, this rule will be revised — but additive-only sub-releases (0.X.Y) are guaranteed not to break old files.
+
+### Where this rule applies
+
+Every SKILL with a `## Preconditions` section that reads `pillars.json` or `milestones.json`. The Rule 13-14 footer (`_Standard preconditions ... follow gmk-prototype-rules Rule 13-14._`) is amended in v0.7 to *Rule 13-14, 16* so an audit can grep for the citation and catch missing read-side checks.
+
+The structural guard (`scripts/check-plugin-meta.sh` Check D) verifies the *write* side: the schema example files declare `kit_version` matching the current plugin.json MAJOR.MINOR. The read side relies on Rule 16 + the citation footer being present in every reader SKILL.
+
+### Why this rule exists
+
+v0.4 wrote `kit_version` but no SKILL read it. v0.5 / v0.6 inherited the write-only state. v0.6 Protocol 1 evaluator flagged this as the same defect class as the Rule 14 token half-application — declared standard, partial application. v0.7 closes the loop with the minimum behavior the v0.4 CHANGELOG promised (*"v0.5 may begin to require this field"*) translated into a non-blocking, no-data-loss warn-only contract.
 
 ---
 

@@ -35,7 +35,7 @@ When called as `/gmk-status --archive`, the skill copies the current dashboard t
 
 Do not refuse on malformed JSON. Print the parse error and the file path, then stop. Repair is a separate concern — gmk-status is not a fixer.
 
-_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard) follow `gmk-prototype-rules` Rule 13-14._
+_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard, kit_version read contract) follow `gmk-prototype-rules` Rule 13-14, 16._
 
 ## Flow
 

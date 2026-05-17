@@ -18,7 +18,7 @@ Output: a markdown spec listing SFX, BGM, and (optionally) adaptive layers, with
 2. **Design system spec exists** (`_workspace/milestones/<id>/design-system.md`) OR the user explicitly skips it (some milestones are simple enough). The systems list tells you which events probably need cues.
 3. **Pillars are bound.** Audio choices serve pillars; mismatches are flagged.
 
-_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard) follow `gmk-prototype-rules` Rule 13-14._
+_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard, kit_version read contract) follow `gmk-prototype-rules` Rule 13-14, 16._
 
 ## Flow
 

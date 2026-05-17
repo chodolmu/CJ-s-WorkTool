@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# scripts/hooks/pre-push — opt-in pre-push hook for gamemaker-kit.
+#
+# Prevents a `git push` (especially a tag push) from going out without the
+# structural pre-flight (`scripts/check-plugin-meta.sh`) returning exit 0.
+# v0.6 / v0.7 added Checks A-F covering Rule 14 tokens, endpoint terminology,
+# Rule 13-14 footer, kit_version consistency, template line caps, and the
+# __gmk_botHook__ API version anchor. Checks A and C are FAIL-level in v0.7;
+# the hook refuses the push when they trip.
+#
+# Why opt-in (not auto-installed)
+#   Installing a hook in a user's clone without consent is invasive — many
+#   developers run their own custom hook chains. This file is the *template*;
+#   the user opts in by pointing `git config core.hooksPath` at this dir:
+#
+#     git config core.hooksPath scripts/hooks
+#
+#   Once configured, every push runs this script. To bypass on a specific
+#   emergency push (NOT recommended), use `git push --no-verify`.
+#
+# Exit codes
+#   0 — preflight clean; push proceeds.
+#   1 — preflight detected drift; push refused.
+
+set -euo pipefail
+
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+cd "$REPO_ROOT"
+
+if [ ! -x scripts/check-plugin-meta.sh ] && [ ! -f scripts/check-plugin-meta.sh ]; then
+  echo "pre-push: scripts/check-plugin-meta.sh missing — skipping preflight." >&2
+  exit 0
+fi
+
+echo "pre-push: running scripts/check-plugin-meta.sh..." >&2
+if bash scripts/check-plugin-meta.sh; then
+  echo "pre-push: preflight OK; push proceeding." >&2
+  exit 0
+else
+  echo "" >&2
+  echo "pre-push: preflight FAILED. Push refused." >&2
+  echo "         Run 'bash scripts/check-plugin-meta.sh' locally, fix the drift," >&2
+  echo "         then retry the push. To bypass (NOT recommended), use --no-verify." >&2
+  exit 1
+fi

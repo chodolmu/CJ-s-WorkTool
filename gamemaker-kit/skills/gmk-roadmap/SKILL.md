@@ -23,7 +23,7 @@ If the user wants project-management ceremony (deadlines, burndown, capacity), p
 2. **`.gamemaker-kit/milestones.json` exists.** If missing, create as `{ "project_name": "...", "milestones": [] }`.
 3. **`_workspace/` directory exists.** Create if missing.
 
-_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard) follow `gmk-prototype-rules` Rule 13-14._
+_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard, kit_version read contract) follow `gmk-prototype-rules` Rule 13-14, 16._
 
 ## Flow
 

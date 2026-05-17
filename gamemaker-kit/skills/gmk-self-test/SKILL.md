@@ -39,7 +39,7 @@ Coding the user's *own* notes is not the same as coding external testers. You ar
    - Stop.
 4. **Hypothesis header migration check.** Open `prototypes/<name>.html` header comment. If it contains `human:` rows in `MEASURED BY`, warn once and offer to migrate to `self-test:` (per `gmk-prototype-rules` Rule 10). Apply the migration only with user confirmation; don't rewrite silently.
 
-_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard) follow `gmk-prototype-rules` Rule 13-14._
+_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard, kit_version read contract) follow `gmk-prototype-rules` Rule 13-14, 16._
 
 ## Flow
 

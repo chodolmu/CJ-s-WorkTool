@@ -45,7 +45,7 @@ The mock is **temporary infrastructure**. When the real assets arrive, the user 
 
    If none found, the skill says: *"No asset references found in `prototypes/m2-dragon-evo.html`. The prototype seems to already render with what's available; mocking may not be needed."*
 
-_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard) follow `gmk-prototype-rules` Rule 13-14._
+_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard, kit_version read contract) follow `gmk-prototype-rules` Rule 13-14, 16._
 
 ## Flow
 

@@ -32,7 +32,7 @@ If the user proposes a discipline outside the six, push back: *"There's no 'prod
 3. **Milestone is not killed.** If `killed: true`: refuse. *"Milestone {id} is KILLED. Either revive it (gmk-kill-milestone --revive) or pick a different milestone."*
 4. **Skill input** — exactly one milestone ID. Refuse bulk splits: *"Run task-split on one milestone at a time — bulk splitting produces same-shaped task lists for different milestones, which is rarely what you want."*
 
-_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard) follow `gmk-prototype-rules` Rule 13-14._
+_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard, kit_version read contract) follow `gmk-prototype-rules` Rule 13-14, 16._
 
 ## Flow
 

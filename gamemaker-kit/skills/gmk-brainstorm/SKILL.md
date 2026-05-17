@@ -34,7 +34,7 @@ If the user invokes this skill when they don't actually need it, say so: *"You n
    - A free-text problem — *"I want a mechanic that makes the player decide between speed and score"*
 3. **`_workspace/brainstorms/` directory exists.** Create if missing.
 
-_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard) follow `gmk-prototype-rules` Rule 13-14._
+_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard, kit_version read contract) follow `gmk-prototype-rules` Rule 13-14, 16._
 
 ## Flow
 

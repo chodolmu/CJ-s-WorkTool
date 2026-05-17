@@ -25,7 +25,7 @@ Then it stops. No code, no implementation plan, no priorities. That's `/gmk-task
 
 The skill does NOT require a prototype to exist. Often this skill runs *before* `/gmk-prototype` to surface complexity early.
 
-_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard) follow `gmk-prototype-rules` Rule 13-14._
+_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard, kit_version read contract) follow `gmk-prototype-rules` Rule 13-14, 16._
 
 ## Flow
 

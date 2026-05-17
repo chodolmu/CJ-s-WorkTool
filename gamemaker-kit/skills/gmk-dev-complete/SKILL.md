@@ -28,7 +28,7 @@ Past `gmk-dev-complete` returning PASS, gamemaker-kit has nothing more to do. **
 
 Don't refuse on partially-shipped projects. The skill reports incomplete state honestly — that's its point.
 
-_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard) follow `gmk-prototype-rules` Rule 13-14._
+_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard, kit_version read contract) follow `gmk-prototype-rules` Rule 13-14, 16._
 
 ## Flow
 

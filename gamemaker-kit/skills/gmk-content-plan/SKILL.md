@@ -18,7 +18,7 @@ That's it. No production schedule, no asset list (that's `/gmk-art-spec` and `/g
 2. **Hypothesis touches volume** (session length, count of distinct things, progression). If the hypothesis is purely about feel of a single moment (e.g. "the merge moment is satisfying"), this skill isn't useful — tell the user *"This milestone's hypothesis is about a single moment, not progression. /gmk-content-plan is for milestones whose hypothesis depends on volume/curve. Skip this; go to /gmk-prototype."*
 3. **Pillars are bound.** The curve should serve the pillars.
 
-_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard) follow `gmk-prototype-rules` Rule 13-14._
+_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard, kit_version read contract) follow `gmk-prototype-rules` Rule 13-14, 16._
 
 ## Flow
 

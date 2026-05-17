@@ -38,7 +38,7 @@ The 5-stage re-validation (Stages 2-6 below) is what makes this skill different 
 8. **Engine CLI on PATH for Stages 2-3.** For Godot: `godot --version` works. For Unity: `Unity -version` works. If missing, Stage 2 prints the install command and stops the re-validation at Stage 1.
 9. **Playwright available for Stage 4** (same dep as `/gmk-validate`). Missing Playwright skips Stage 4 with a warning.
 
-_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard) follow `gmk-prototype-rules` Rule 13-14._
+_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard, kit_version read contract) follow `gmk-prototype-rules` Rule 13-14, 16._
 
 ## Flow
 

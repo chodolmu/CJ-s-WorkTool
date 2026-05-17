@@ -18,7 +18,7 @@ Output: a markdown spec with sections for **asset list**, **palette**, **style a
 2. **Pillars are bound** — the visual style should serve the pillars.
 3. **Content plan exists OR milestone needs no curve.** Read `_workspace/milestones/<id>/content-plan.md` if present (it tells you how many of each asset). If absent and the milestone is volume-driven, suggest running `/gmk-content-plan` first.
 
-_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard) follow `gmk-prototype-rules` Rule 13-14._
+_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard, kit_version read contract) follow `gmk-prototype-rules` Rule 13-14, 16._
 
 ## Flow
 

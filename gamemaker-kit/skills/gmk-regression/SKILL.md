@@ -18,7 +18,7 @@ Output: a single roll-up markdown report + updated `.gamemaker-kit/validations/<
 2. **Playwright is installed** (same check `/gmk-validate` runs). If absent, stop with the same install message.
 3. **Prototypes still exist** at the paths each milestone declares. If a prototype file is missing, skip that milestone with a noted reason (`prototype-deleted`).
 
-_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard) follow `gmk-prototype-rules` Rule 13-14._
+_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard, kit_version read contract) follow `gmk-prototype-rules` Rule 13-14, 16._
 
 ## Flow
 

@@ -24,7 +24,7 @@ Output: a markdown spec with the branch tree (textual), dialogue volume table, t
    - If `shape !== 'dialogue'` and the user didn't ask: stop with *"This milestone's shape is `<shape>`, not 'dialogue'. /gmk-narrative is optional — most kit milestones don't need it. Continue with --force?"*
 3. **Hypothesis touches narrative metrics.** If the hypothesis is purely about mechanical tension (no language signal), point at `/gmk-design-system` instead.
 
-_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard) follow `gmk-prototype-rules` Rule 13-14._
+_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard, kit_version read contract) follow `gmk-prototype-rules` Rule 13-14, 16._
 
 ## Flow
 
