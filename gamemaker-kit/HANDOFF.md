@@ -1,10 +1,74 @@
-# Handoff: gamemaker-kit — v0.5.0 origin 동기화 완료, v0.6 backlog 대기
+# Handoff: gamemaker-kit — v0.6.0 release 완료, **ACCURATE 판정 첫 사이클**
 
-**Generated**: 2026-05-15 (01:40 KST)
+**Updated**: 2026-05-17 (22:40 KST)
 **Branch**: main
-**Latest commit**: `87595bc fix(gamemaker-kit): v0.5.0 hotfix — 7 regressions from v0.4 half-applied deprecations`
-**Tag**: `v0.5.0` (origin 동기화 완료)
-**Status**: v0.5.0 release 완료. **외부 evaluator 재검증 결과: v0.5도 OVERSTATED** (mildly) — 같은 half-applied 패턴이 *새 형태*로 2번 재발. v0.6 backlog 대기.
+**Latest commit**: `bc4c7bc feat(gamemaker-kit): v0.6.0 — complete v0.5 half-applied sweeps + structural guard`
+**Tag**: `v0.6.0` (origin 동기화 완료, GitHub release 발행)
+**Release URL**: https://github.com/chodolmu/CJ-s-WorkTool/releases/tag/v0.6.0
+**Status**: v0.6.0 release 완료. **3 evaluator checkpoint 모두 ACCURATE**: Protocol 1 (work-start), Protocol 3 (pre-release), Protocol 4 (post-release git verification). v0.4 → v0.5 → v0.6 사이클에서 **첫 non-OVERSTATED release**.
+
+---
+
+## v0.6 핵심 성과
+
+| 항목 | 결과 |
+|---|---|
+| MAJOR-1 Rule 14 sweep | 11 SKILLs / 13 토큰 사이트 (HANDOFF 원본 15 → Protocol 1 보정 11) |
+| MAJOR-2 endpoint → checkpoint | 17 위치 (HANDOFF 원본 13 → Protocol 1 +4 보정) |
+| MINOR-3 dev-complete read-only 정정 | 2 줄 (HANDOFF 1 → Protocol 1 +1) |
+| MINOR-4 CHANGELOG cross-ref | 2 줄 |
+| STRUCTURAL GUARD | scripts/check-plugin-meta.sh + 2 allowlist 파일 |
+| Protocol 1 (work-start) verdict | UNDERSTATED — HANDOFF backlog 자체가 anchoring |
+| Protocol 3 (pre-release) verdict | **ACCURATE** |
+| Protocol 4 (post-release git-based) verdict | **ACCURATE** |
+
+## v0.6에서 학습된 패턴 (다음 release에 적용)
+
+### F21 — HANDOFF 작성자도 anchoring한다
+
+v0.5 evaluator가 v0.6 backlog를 작성. 본인이 직접 확인한 위치만 나열했고, *놓친 사이트*는 HANDOFF에도 그대로 누락. Protocol 1이 그것을 잡아냄 (15→11, 13→17).
+
+**교훈**: HANDOFF backlog는 *작업 지시*가 아니라 *작업 후보 가설*. 실제 작업 시작 *전*에 fresh evaluator가 한 번 더 보는 게 정책.
+
+### 3-checkpoint process가 비용 대비 효과 큼
+
+evaluator 3번 호출 비용 < OVERSTATED 사이클 1번 비용 (다음 release에서 또 hotfix). v0.7+에서도 같은 process 유지.
+
+### 결함 class별로 structural guard 추가하면 사람 audit 부담 감소
+
+`check-plugin-meta.sh`가 Rule 14 토큰 / endpoint terminology / Rule 13-14 footer 자동 검출. 다음 sweep도 같은 형태로 추가하면 됨.
+
+---
+
+## v0.7 backlog candidate (확정 아님 — Protocol 1로 보정 필요)
+
+다음 release에서 검토 후보:
+
+1. **`kit_version` read-enforcement** (v0.4 decision 4 / v0.6 honesty note에서 이월). v0.4 이후 모든 파일이 `kit_version` 쓰지만 *읽고 행동하는 SKILL은 0개*. 이도 declared-but-half-applied 패턴. structural guard에 4번째 check 후보.
+2. **Structural guard WARN → FAIL 승격**. v0.6은 baseline 정착용으로 WARN. v0.7에서 release-blocking으로 승격 검토.
+3. **gmk-mock-inject 검증 통합 audit**. v0.5/v0.6 모두 gmk-mock-inject를 refuse-with-rec allowlist에 두었음. 실제로 refuse 패턴 없는지 한 번 cold-read 권장.
+4. **Rule 14 토큰의 cycle form 사용 확인**. 현재 모든 토큰이 single-target form. `[Rule 14 — CYCLE]` 사용 사례가 0개인데, 룰북에 정의된 cycle 상황 (shader INCONCLUSIVE, validate --skip) 모두 *self-test가 accept*하는 형태로 처리. CYCLE form이 dead code인지 검토.
+
+이 4개를 v0.7 작업 시작 전 Protocol 1로 보강 후 확정.
+
+---
+
+## Process 정착 (v0.7+ 영구 적용 결정)
+
+매 release마다 다음 4 checkpoint:
+
+| Protocol | When | Cost | Purpose |
+|---|---|---|---|
+| 1 — Work-start | 작업 시작 전 | ~1 evaluator call | backlog scope 보정 (anti-anchoring) |
+| 2 — Mid-work (optional) | 작업 중간 (해당 시) | ~1 call | 진행 방식 sanity check |
+| 3 — Pre-release | release 직전 | ~1 call | 작업 완료 여부 + 새 결함 검증 |
+| 4 — Post-release | tag/push 직후 | ~1 call | git-based 최종 검증 |
+
+총 3-4 calls per release. 비용 < OVERSTATED hotfix cycle.
+
+---
+
+## v0.5 → v0.6 변경 누적 (이전 섹션 참고 유지)
 
 ---
 
