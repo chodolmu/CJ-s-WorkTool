@@ -32,7 +32,7 @@ Iterate `milestones[]`. Include a milestone iff:
 
 Skip silently for verdict ≠ PASS (regression checking on already-failed milestones produces no signal). Skip killed milestones (they're not part of the live surface).
 
-If the resulting list is empty: *"No PASS milestones to regress. Run /gmk-validate first to establish at least one baseline."* Stop.
+If the resulting list is empty: *"No PASS milestones to regress. Run /gmk-validate first to establish at least one baseline. [Rule 14] /gmk-regression → /gmk-validate — verified target's preconditions can be satisfied from current state."* Stop.
 
 ### Step 2 — Show the run plan
 

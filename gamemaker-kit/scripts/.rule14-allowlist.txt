@@ -1,0 +1,44 @@
+# Rule 14 token allowlist for scripts/check-plugin-meta.sh Check A.
+#
+# Format: one SKILL basename (with .md) per line. Lines starting with # ignored.
+#
+# SKILLs listed here match "Run /gmk-" / `run \`/gmk-` via grep but on
+# deep inspection do NOT contain a refuse-with-recommendation pattern that
+# Rule 14 governs. The matches are advisory prose, dispatch-table cells,
+# usage triggers, recovery instructions, or post-action follow-up notes.
+#
+# Each entry must have a one-sentence justification. Maintained: 2026-05-17.
+# Verified by Protocol 1 evaluator (HANDOFF v0.6 amendment).
+
+# gmk-art-gen — L140 is a recovery instruction inside an ongoing flow,
+# not a refuse-with-recommendation. The skill already runs; it tells the
+# user how to recover from a partial pipeline failure.
+gmk-art-gen/SKILL.md
+
+# gmk-brainstorm — L24 is a "when not to run brainstorm" condition (opt-in
+# skill), not a precondition refuse pointing at another skill.
+gmk-brainstorm/SKILL.md
+
+# gmk-kill-milestone — L145 is a post-action follow-up note ("run /gmk-roadmap
+# after this to regenerate the dep graph"). The kill already succeeded; this
+# is courtesy guidance, not a refuse. Adding a Rule 14 token would mislead
+# the audit about which sites actually gate on a missing precondition.
+gmk-kill-milestone/SKILL.md
+
+# gmk-loop — L128 is a dispatch-table advisory describing what /gmk-loop
+# delegates to; L243 is a user confirm prompt. Neither is a refuse.
+gmk-loop/SKILL.md
+
+# gmk-merge-gate — L156 is the warning-row text in Step 5.5's save-schema
+# check, explicitly documented (L159) as "a warning, not a gate failure".
+# Rule 14 governs refuses; warnings have their own discipline.
+gmk-merge-gate/SKILL.md
+
+# gmk-mock-inject — L26 is a usage-trigger sentence in the description
+# block (the conditions under which the user *wants* to run the skill),
+# not a refuse-with-rec.
+gmk-mock-inject/SKILL.md
+
+# gmk-save-migrate — L196 is advisory prose in the "Multi-milestone batch
+# port" edge-case section, suggesting how to chain migrations. Not a refuse.
+gmk-save-migrate/SKILL.md

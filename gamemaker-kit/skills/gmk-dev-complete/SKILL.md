@@ -1,6 +1,6 @@
 ---
 name: gmk-dev-complete
-description: Check whether the project has reached gamemaker-kit's dev-complete endpoint — all non-killed milestones double-validated and ported (RE_PASS), every Pillar covered by ≥1 shipped milestone, no merge-gate blockers — and emit a release-readiness report. Writes _workspace/dev-complete-report.md. Use when the user says "/gmk-dev-complete", "graduate", "끝났나", "ship-ready", "release readiness", or when gmk-loop signals the last milestone is shipped. This is the project-level endpoint of gamemaker-kit — past this point, ship / live-ops / external feedback live outside the kit.
+description: Check whether the project has reached gamemaker-kit's dev-complete checkpoint — all non-killed milestones double-validated and ported (RE_PASS), every Pillar covered by ≥1 shipped milestone, no merge-gate blockers — and emit a release-readiness report. Writes _workspace/dev-complete-report.md. Use when the user says "/gmk-dev-complete", "graduate", "끝났나", "ship-ready", "release readiness", or when gmk-loop signals the last milestone is shipped. This is the project-level release-readiness checkpoint of gamemaker-kit — past this point, ship / live-ops / external feedback live outside the kit.
 model: sonnet
 ---
 
@@ -22,7 +22,7 @@ Past `gmk-dev-complete` returning PASS, gamemaker-kit has nothing more to do. **
    - Missing: *"No pillars.json. The release-readiness check needs a vision to verify against. Run `/gmk-init` first if you're starting a new project, or you're in the wrong directory."*
 
 2. **`milestones.json` exists** with at least one non-killed milestone.
-   - Missing or all-killed: *"No live milestones. Either the project hasn't started (run `/gmk-roadmap` + `/gmk-prototype`), or every milestone was killed (the project is in a re-design moment, not at the checkpoint)."*
+   - Missing or all-killed: *"No live milestones. Either the project hasn't started (run `/gmk-roadmap` + `/gmk-prototype`), or every milestone was killed (the project is in a re-design moment, not at the checkpoint). [Rule 14] /gmk-dev-complete → /gmk-roadmap → /gmk-prototype — verified targets' preconditions can be satisfied from current state."*
 
 3. **`.gamemaker-kit/` exists.** (Sanity — same as `gmk-status`.)
 
@@ -56,7 +56,7 @@ Derive these facts:
 
 ### Step 2 — Run the dev-complete checks
 
-The endpoint is reached when **all** of the following pass. The checks are deliberately strict because the user is about to declare a transition (gmk → ship/live-ops); false positives here are expensive.
+The checkpoint resolves to PASS when **all** of the following pass. The checks are deliberately strict because the user is about to declare a transition (gmk → ship/live-ops); false positives here are expensive. (The checkpoint is recomputable — a later change can flip the verdict back to NOT_COMPLETE; that's the point of the "checkpoint, not endpoint" framing.)
 
 | Check | Pass condition | If fails |
 |---|---|---|
@@ -205,7 +205,7 @@ the bypassed gate or document why the override is acceptable.
 
 ### Step 5 — Don't touch milestones.json or pillars.json
 
-This skill is **read-only on canonical state**. It writes `_workspace/dev-complete-report.md` and nothing else. The verdict isn't persisted into JSON — it's recomputed every run from primary sources. (If the project state changes after a DEV_COMPLETE verdict, the next run re-computes correctly.)
+This skill is **read-only on `milestones.json` / `pillars.json`** (canonical state). It writes `_workspace/dev-complete-report.md` always, and `warnings_acknowledged_at` into merge_gate / port-checklist files when invoked with `--accept-warnings`. The verdict isn't persisted into the canonical JSON files — it's recomputed every run from primary sources. (If the project state changes after a DEV_COMPLETE verdict, the next run re-computes correctly.)
 
 If the user wants persistence (e.g., a git tag), suggest `git tag` — don't write to milestones.json.
 
@@ -225,7 +225,7 @@ If C1-C3 are failing, `--accept-warnings` does nothing — it can't override str
 
 ### Project with `killed_milestones` and zero `shipped_milestones`
 
-If the user killed every milestone they tried, the project is in a re-design moment. Return NOT_COMPLETE with a specific message: *"Every milestone is killed. The project is in re-design, not at the endpoint. Either revive a killed milestone (`/gmk-kill-milestone --revive`) or start fresh with new pillars (`/gmk-roadmap`)."*
+If the user killed every milestone they tried, the project is in a re-design moment. Return NOT_COMPLETE with a specific message: *"Every milestone is killed. The project is in re-design, not at the checkpoint. Either revive a killed milestone (`/gmk-kill-milestone --revive`) or start fresh with new pillars (`/gmk-roadmap`)."*
 
 ### Pillar with only killed milestones
 
@@ -245,8 +245,8 @@ Create it. The skill always writes `_workspace/dev-complete-report.md`.
 
 ## What this skill does NOT do
 
-- **Doesn't ship the game.** External release is outside scope. The skill stops at the endpoint.
-- **Doesn't write to milestones.json or pillars.json.** Read-only on canonical state.
+- **Doesn't ship the game.** External release is outside scope. The skill stops at the checkpoint.
+- **Doesn't write to milestones.json or pillars.json.** Read-only on canonical state; writes only the dev-complete report and `warnings_acknowledged_at` into merge_gate / port-checklist files when `--accept-warnings` is used.
 - **Doesn't auto-tag git.** Suggests `git tag` if the user wants a marker; doesn't run it.
 - **Doesn't override C1-C3 failures.** `--accept-warnings` only handles C4-C6.
 - **Doesn't call any agent.** This is a state-aggregation skill; no domain agents are needed.

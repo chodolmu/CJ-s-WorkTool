@@ -22,9 +22,9 @@ The 5-stage re-validation (Stages 2-6 below) is what makes this skill different 
 
 1. **Milestone exists** in `.gamemaker-kit/milestones.json`.
 2. **Bot validation passed** — `validation.verdict === "PASS"`.
-   - If FAIL or INCONCLUSIVE: stop. *"This milestone hasn't passed bot validation. The kit refuses to port — that's the whole reason it exists. Fix and re-validate, or kill the milestone."*
+   - If FAIL or INCONCLUSIVE: stop. *"This milestone hasn't passed bot validation. The kit refuses to port — that's the whole reason it exists. Fix and re-validate, or kill the milestone. [Rule 14] /gmk-port → /gmk-validate OR /gmk-kill-milestone — verified target's preconditions can be satisfied from current state."*
 3. **Self-test passed** — `self_test.latest_verdict === "PASS"`.
-   - If FAIL or INCONCLUSIVE: stop. *"Bot PASS but your own self-test {verdict}. The bot can't catch feel; if you didn't agree it's worth porting, don't port. Replay suspicious runs or re-tune the prototype first."*
+   - If FAIL or INCONCLUSIVE: stop. *"Bot PASS but your own self-test {verdict}. The bot can't catch feel; if you didn't agree it's worth porting, don't port. Replay suspicious runs or re-tune the prototype first. [Rule 14] /gmk-port → /gmk-self-test (replay suspicious seeds) OR /gmk-prototype (re-tune) — verified target's preconditions can be satisfied from current state."*
    - `--force` override is allowed for either gate but stamps `forced: true` in the port record AND prints a 3-line warning before generating any code.
 4. **Merge gate ran recently (recommended).** Look for `.gamemaker-kit/merge-gates/<milestone-id>.md` with `verdict: PASS` modified ≤24h ago. If missing or FAIL or stale, warn but allow:
    - *"No recent merge-gate PASS for this milestone. Stages 2-5 still run, but you're porting code that may have shared-file conflicts or pre-existing regressions. /gmk-merge-gate first is recommended."*
@@ -85,7 +85,7 @@ The `systems-designer` agent's second entry point (per its SKILL.md) is `/gmk-po
 | Condition | Action |
 |---|---|
 | `_workspace/milestones/<id>/system-spec.md` exists | Read it; use it as the input to step 1b's plan. Don't re-invoke the agent. |
-| Spec missing AND mechanic is non-trivial (≥ 3 systems in `design-system.md`, OR any state machine with ≥ 4 states, OR ≥ 3 coupling lines) | Invoke `@systems-designer <id>` and **wait for its output** before proceeding to 1b. Print: *"Invoking systems-designer for engine-side plan — non-trivial system needs strict spec before code. Once it writes `system-spec.md`, re-run `/gmk-port <id>` to continue."* Stop. |
+| Spec missing AND mechanic is non-trivial (≥ 3 systems in `design-system.md`, OR any state machine with ≥ 4 states, OR ≥ 3 coupling lines) | Invoke `@systems-designer <id>` and **wait for its output** before proceeding to 1b. Print: *"Invoking systems-designer for engine-side plan — non-trivial system needs strict spec before code. Once it writes `system-spec.md`, re-run `/gmk-port <id>` to continue. [Rule 14] /gmk-port → /gmk-port (re-entry after @systems-designer writes system-spec.md) — verified target's preconditions can be satisfied from current state."* Stop. |
 | Spec missing AND mechanic is trivial (single state machine, ≤ 2 couplings) | Skip — proceed to step 1b. The HTML prototype + `design-system.md` (if present) is enough context. |
 | User explicitly passes `--no-systems-designer` | Skip — proceed straight to 1b. The user owns the choice. |
 
@@ -490,7 +490,7 @@ milestones.json updated:
 If RE_PASS: the port is considered double-validated. Move on.
             If this was the last in-flight milestone, run /gmk-dev-complete
             to check whether the project has reached gmk's project-level
-            endpoint (all milestones shipped + every pillar covered).
+            release-readiness checkpoint (all milestones shipped + every pillar covered).
 If RE_FAIL: this port is broken. Either /gmk-port --force-rebuild (re-runs Stage 1)
             or hand-edit the generated files and re-run --stage 4 to re-measure.
 If NEEDS_TUNING: the port is conceptually right but needs feel work. The checklist

@@ -28,7 +28,7 @@ When called as `/gmk-status --archive`, the skill copies the current dashboard t
 ## Preconditions
 
 1. **Inside a gamemaker-kit project** — `.gamemaker-kit/` exists.
-   - Missing: *"No `.gamemaker-kit/` here. Either you're in the wrong directory, or you haven't run `/gmk-init` yet."*
+   - Missing: *"No `.gamemaker-kit/` here. Either you're in the wrong directory, or you haven't run `/gmk-init` yet. [Rule 14] /gmk-status → /gmk-init — verified target's preconditions can be satisfied from current state."*
 2. **`pillars.json` exists.** Even if `skipped: true` — that's still a valid state.
 3. **`milestones.json` exists.** If missing, treat as `{ milestones: [] }`.
 4. **`_workspace/` exists.** Create if missing (we're about to write `dashboard.md` there).
@@ -65,7 +65,7 @@ Run this priority ladder. **Stop at the first match.**
 5. **Active milestone with no prototype yet** — earliest one in roadmap order; suggest `/gmk-prototype <id>`.
 6. **Active milestone with FAIL** — suggest `/gmk-kill-milestone` decision or hypothesis revision.
 7. **In-progress task with no recent update** — name the task (status `in-progress`, `updated_at` > 5 days ago).
-8. **All milestones shipped (no in-flight, no killed pending)** — *"All milestones shipped. Run /gmk-dev-complete to check the project-level endpoint (pillar coverage + warnings)."*
+8. **All milestones shipped (no in-flight, no killed pending)** — *"All milestones shipped. Run /gmk-dev-complete to check the project-level release-readiness checkpoint (pillar coverage + warnings)."*
 9. **Default** — *"Multiple milestones in flight — pick whichever feels most alive to you today. Status is healthy."*
 
 **Only ever surface one.** If the user wants more, they can read the tree.
@@ -114,7 +114,7 @@ art 시안을 받아서 audio 막힘을 풀기. 이 한 가지가 풀리면 audi
 - Pillars with shipped coverage: {covered_count} / {pillar_count}
 - Forced gates outstanding: {forced_count}
 
-> When this section shows {S/S+M} = 1.0 AND {covered_count/pillar_count} = 1.0, run /gmk-dev-complete for the project-level endpoint check.
+> When this section shows {S/S+M} = 1.0 AND {covered_count/pillar_count} = 1.0, run /gmk-dev-complete for the project-level release-readiness checkpoint check.
 
 ---
 
@@ -129,7 +129,7 @@ If there's no active milestone (all shipped, or all killed, or none exist), repl
 ## No active milestone
 
 {One of:}
-  - "All milestones shipped — check the project-level endpoint with /gmk-dev-complete."
+  - "All milestones shipped — check the project-level release-readiness checkpoint with /gmk-dev-complete."
   - "All milestones killed — the project is in re-design. /gmk-roadmap to plan fresh."
   - "No milestones defined yet. /gmk-roadmap or /gmk-prototype to start."
 ```

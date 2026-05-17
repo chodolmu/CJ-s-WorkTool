@@ -8,7 +8,7 @@
 
 ## 0. One-paragraph summary
 
-Game development isn't code development. The validation criterion is "fun", not "works". When a milestone isn't fun, the cheapest answer is to throw it away — but engines (Godot's 850 classes, Unity's package thicket) make throwing things away expensive. **gamemaker-kit forces fun-falsification at the cheapest layer**: each milestone gets a single-file HTML prototype, a Playwright bot self-plays 200 rounds across four procedural personas, the user themselves does a self-test pass with the suspicious-run subset already curated, and only milestones that survive **both** gates get ported to Godot or Unity — with a 6-stage re-validation gate after porting. The kit's endpoint is **"development complete"**; release, live-ops, marketing, and external-tester channels are out of scope by design.
+Game development isn't code development. The validation criterion is "fun", not "works". When a milestone isn't fun, the cheapest answer is to throw it away — but engines (Godot's 850 classes, Unity's package thicket) make throwing things away expensive. **gamemaker-kit forces fun-falsification at the cheapest layer**: each milestone gets a single-file HTML prototype, a Playwright bot self-plays 200 rounds across four procedural personas, the user themselves does a self-test pass with the suspicious-run subset already curated, and only milestones that survive **both** gates get ported to Godot or Unity — with a 6-stage re-validation gate after porting. The kit's release-readiness checkpoint is **"development complete"** (recomputable, not a one-way endpoint); release, live-ops, marketing, and external-tester channels are out of scope by design.
 
 ---
 
@@ -64,7 +64,7 @@ gmk-init  →  gmk-roadmap  →  (per milestone) ──┐
    │                     stages, HTML→engine re-validation)   │
    └─────────────────────────────────────────────────────────┘
        ↓
-🏁 development complete (gmk endpoint — user-declared)
+🏁 development complete (gmk release-readiness checkpoint — user-declared, recomputable)
 
 ┄┄┄┄┄┄┄┄┄ outside gmk ┄┄┄┄┄┄┄┄┄
 Steam page · marketing · release · live-ops · patch notes · community
@@ -405,7 +405,7 @@ The cycle through axes 1 → 2 → 3 → 4 → 1 is what the kit calls the **mil
 | Merge gate (asset conflict + secret scan) | ✓ | ✗ |
 | Capture-but-don't-apply regression | ✓ | ✗ |
 | Killable milestones (Cleveland rule) | ✓ | ✗ |
-| Development-completion endpoint (release out of scope) | ✓ | ✗ (release-inclusive) |
+| Development-completion checkpoint (release out of scope) | ✓ | ✗ (release-inclusive) |
 | Skills | ~28 | 72 |
 | Stars | 0 | 18.2k |
 

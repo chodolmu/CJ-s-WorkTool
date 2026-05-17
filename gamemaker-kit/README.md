@@ -1,7 +1,7 @@
 # gamemaker-kit
 
 > Prototype game milestones in HTML, falsify "un-fun" with bots + your own play, port only what survives to Godot/Unity.
-> **Endpoint: "development complete". Release and live-ops are out of scope by design.**
+> **Release-readiness checkpoint: "development complete". Release and live-ops are out of scope by design.**
 
 Claude Code plugin. Zero external accounts. ~28 skills + 4 domain agents covering 4 axes (time / discipline / validation / integration).
 

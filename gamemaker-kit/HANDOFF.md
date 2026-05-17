@@ -85,6 +85,79 @@
 
 스크립트 실행이 v0.6+의 *release pre-flight*가 되도록 README 또는 CHANGELOG에 명시.
 
+---
+
+## Protocol 1 amendment (2026-05-17, work-start evaluator) — SCOPE CORRECTED
+
+작업 시작 전 evaluator 호출(F20/W29 정책) 결과: HANDOFF 원본 backlog **UNDERSTATED**. 같은 anchoring 패턴이 HANDOFF 작성에도 재발. 아래가 실제 시행 scope.
+
+### MAJOR-1 corrections — 15 SKILL → 실제 10-12 SKILL (composition도 다름)
+
+**ADD (HANDOFF가 누락)**:
+- `gmk-prototype` L20+L21 — refuse-with-rec 두 줄 (Missing pillars / skipped pillars → /gmk-init)
+- `gmk-ux-flow` L19 — "come back after /gmk-validate?" 사전조건 워닝
+- `gmk-kill-milestone` L145 — post-action 후속 안내. 엄밀히는 refuse 아니지만 사용자 시야 구분 안 됨 → 방어적 ADD
+
+**REMOVE (HANDOFF가 잘못 포함)**:
+- `gmk-validate` — L401은 routing-table advisory, refuse 아님
+- `gmk-loop` — L128은 dispatch-table advisory, L243은 confirm prompt
+- `gmk-mock-inject` — L26은 usage trigger 문장
+- `gmk-brainstorm` — L24는 "when not to run" 조건
+- `gmk-art-gen` — L140은 recovery instruction
+
+**VERIFY**:
+- `gmk-save-migrate` L196 — multi-milestone advisory 문장으로 보임. 확인 후 REMOVE 가능성 높음
+- `gmk-roadmap` — L21 + L203 **2 tokens 필요** (HANDOFF는 1개로 셈)
+- `gmk-merge-gate` L156 — warning-row borderline. 토큰 부착 권고
+
+### MAJOR-2 corrections — 13 위치 → 실제 17 위치
+
+**ADD**:
+- `CONCEPT.md:11` — §0 본문 한 단락 요약의 핵심 문장 ("kit's endpoint is 'development complete'")
+- `CONCEPT.md:408` — 비교 테이블 row ("Development-completion endpoint (release out of scope)")
+- `skills/gmk-prototype-rules/SKILL.md:279` — shader-shape 테이블 cell ("dev-complete endpoint accepts a shader milestone…")
+- `.claude-plugin/marketplace.json:15` — 마켓플레이스 description ("project-level dev-complete endpoint (v0.3)")
+
+**DO NOT TOUCH (명시적 제외)**:
+- `skills/gmk-self-test/SKILL.md:107` — "before a clear endpoint" = 게임 세션 종료 의미, dev-complete state 아님
+- `CONCEPT.md:40` — 이름 변경 자체를 설명하는 메타-discussion, "endpoint" 의도적 등장
+- `.claude-plugin/plugin.json:4` — "checkpoint, not an endpoint" — v0.5에서 의도적 대조
+- CHANGELOG history, HANDOFF.md 자신, `_workspace/v0.X-*.md` 역사 audit — 동결
+
+### MINOR-3 corrections — 1 줄 → 실제 2 줄
+
+추가 발견: **`skills/gmk-dev-complete/SKILL.md:208`** 도 동일 결함.
+
+> L208: "This skill is **read-only on canonical state**. It writes `_workspace/dev-complete-report.md` and nothing else."
+
+"nothing else"가 `--accept-warnings`의 `warnings_acknowledged_at` write를 부정. L249와 같은 패스에서 함께 정정.
+
+### MINOR-4 corrections — 정확한 위치 확정
+
+- CHANGELOG.md **L53** (헤드라인: "v0.4 skills no longer emit the 9 deprecated fields")
+- CHANGELOG.md **L94** ("No data loss…")
+- L92는 섹션 헤더 → 건드리지 말 것
+
+각주 텍스트 권고: ` (see v0.5 Honesty note above — half-way applied until v0.5)` — "above"가 Keep-a-Changelog의 역연대 순서에서 cross-ref 방향 강화.
+
+### STRUCTURAL GUARD — 2 check → 3 check (defect-class 확장)
+
+세 번째 check 추가 권고: **Rule 13-14 citation footer 검증**.
+
+- v0.4 CHANGELOG L133이 "27 skills got a 1-line Rule 13-14 citation" 청구. *같은 결함 형태* — 일괄 적용 청구 후 selective 가능성.
+- 패턴: `## Preconditions` 섹션 있는 SKILL 각각이 `_Standard preconditions.*Rule 13-14._` footer 가져야.
+- WARN level, FAIL 아님. v0.7+에서 baseline 정착 후 FAIL 승격.
+
+기타 결정:
+- 모든 3 check는 v0.6에서 **WARN level만** — false positive 가능성, baseline 미정착.
+- endpoint check는 `.endpoint-allowlist.txt` 파일 별도 유지 (위 3 제외 위치 명시).
+
+### Final verdict (evaluator)
+
+HANDOFF v0.6 원본 그대로 시행 시 Protocol 4가 **OVERSTATED (mildly)** 3연속 판정 예상. 위 amendment 적용이 *필수*.
+
+---
+
 ### v0.6에서 *안* 할 것
 
 | 항목 | 이유 |

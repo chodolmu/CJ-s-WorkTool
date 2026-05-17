@@ -20,7 +20,7 @@ Then it stops. No code, no implementation plan, no priorities. That's `/gmk-task
 ## Preconditions
 
 1. **Milestone exists** in `.gamemaker-kit/milestones.json`. Read it.
-2. **Hypothesis is set** on the milestone (`hypothesis.if`, `hypothesis.then` non-empty). If not: stop with *"This milestone has no hypothesis yet. Run /gmk-prototype to draft one first — the design spec needs a target."*
+2. **Hypothesis is set** on the milestone (`hypothesis.if`, `hypothesis.then` non-empty). If not: stop with *"This milestone has no hypothesis yet. Run /gmk-prototype to draft one first — the design spec needs a target. [Rule 14] /gmk-design-system → /gmk-prototype — verified target's preconditions can be satisfied from current state."*
 3. **Pillars are bound** (`pillars_targeted` non-empty). The systems should serve at least one pillar.
 
 The skill does NOT require a prototype to exist. Often this skill runs *before* `/gmk-prototype` to surface complexity early.

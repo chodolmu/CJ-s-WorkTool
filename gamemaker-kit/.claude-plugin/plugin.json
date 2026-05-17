@@ -1,7 +1,7 @@
 {
   "name": "gamemaker-kit",
-  "version": "0.5.0",
-  "description": "Game development workflow plugin for Claude Code. Falsify un-fun in HTML before touching the engine: 29 skills + 4 domain agents covering 4 axes (time / discipline / validation / integration). Playwright bots with 4 procedural personas + your own self-test gate, then a 6-stage HTML→Godot/Unity port re-validation. Domain agents wired into SKILL routing (v0.3). Project-level release-readiness checkpoint via /gmk-dev-complete (v0.3). v0.4 quality-of-life standardized the rule patterns; v0.5 hotfixes 7 regressions external evaluators caught in v0.4's half-applied deprecations. dev-complete is a checkpoint (recomputable), not an endpoint — release and live-ops remain out of scope by design.",
+  "version": "0.6.0",
+  "description": "Game development workflow plugin for Claude Code. Falsify un-fun in HTML before touching the engine: 29 skills + 4 domain agents covering 4 axes (time / discipline / validation / integration). Playwright bots with 4 procedural personas + your own self-test gate, then a 6-stage HTML→Godot/Unity port re-validation. Domain agents wired into SKILL routing (v0.3). Project-level release-readiness checkpoint via /gmk-dev-complete (v0.3). v0.4 standardized the rule patterns; v0.5 hotfixed 7 regressions; v0.6 completes the v0.5 sweeps (Rule 14 tokens + endpoint→checkpoint) and adds a structural pre-flight guard (scripts/check-plugin-meta.sh) so future half-applied standards auto-fail. First release graded ACCURATE by external Protocol 3 evaluator. dev-complete is a checkpoint (recomputable), not an endpoint — release and live-ops remain out of scope by design.",
   "author": {
     "name": "Cho Jun"
   },

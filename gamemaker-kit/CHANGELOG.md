@@ -6,6 +6,69 @@ Versioning follows [SemVer](https://semver.org/).
 
 ---
 
+## [0.6.0] — 2026-05-17
+
+v0.5 declared `[Rule 14]` tokens mandatory and renamed "endpoint" → "checkpoint" — but applied each only halfway. The external evaluator graded v0.5's self-audit **OVERSTATED** for the third release in a row. v0.6 finishes both sweeps across all affected SKILLs and adds a **structural guard** so the next half-applied standard auto-fails release pre-flight.
+
+This release was driven by **two evaluator checkpoints, not self-audit**: Protocol 1 (work-start) corrected the backlog *before* implementation (HANDOFF v0.6 lists 15 SKILLs for the Rule 14 sweep; Protocol 1 found the real scope was 11 SKILLs with different composition — 3 ADDs, 5 REMOVEs that HANDOFF wrongly included, +2 endpoint locations HANDOFF missed). Protocol 3 (pre-release) verified the work before tag. v0.6 is the **first ACCURATE-verdict release**.
+
+### Added
+
+**`scripts/check-plugin-meta.sh` — three new pre-flight checks (WARN-level):**
+- **Check A — Rule 14 token presence.** For each SKILL containing a refuse-with-recommendation pattern (`Run /gmk-X` or `` run `/gmk-X` ``), require at least one `[Rule 14` token. False-positive SKILLs (advisory prose, dispatch tables, usage triggers) are listed in `scripts/.rule14-allowlist.txt` with per-entry justifications.
+- **Check B — `endpoint` terminology drift.** Scan live user-facing docs (`skills/`, `CONCEPT.md`, `README.md`, `_workspace/structure.md`, `.claude-plugin/marketplace.json`) for "endpoint". Intentional contrasts and frozen history are allowlisted in `scripts/.endpoint-allowlist.txt`.
+- **Check C — Rule 13-14 citation footer.** SKILLs with a `## Preconditions` section must carry the `_Standard preconditions ... Rule 13-14._` footer. Same defect-class shape as MAJOR-1: declared sweep that could drift over time.
+- All three are **WARN-level in v0.6** (release proceeds with warnings allowed). v0.7+ may promote to FAIL once baseline is stable.
+- Existing `skills/` count check fixed: now counts `SKILL.md` files via `find` instead of raw `ls`, eliminating the latent "29 vs 30" drift v0.5 had when `skills/scripts/` was added.
+
+**`scripts/.rule14-allowlist.txt` (NEW):**
+- 7 SKILLs exempt from Check A with one-sentence justifications: `gmk-art-gen` (recovery instruction), `gmk-brainstorm` (opt-in condition), `gmk-kill-milestone` (post-action note), `gmk-loop` (dispatch advisory), `gmk-merge-gate` (warning-only row), `gmk-mock-inject` (usage trigger), `gmk-save-migrate` (advisory prose).
+
+**`scripts/.endpoint-allowlist.txt` (NEW):**
+- 5 intentional "endpoint" sites: `CONCEPT.md:11` and `:40` (rename meta-discussion), `gmk-self-test:107` (player session end, different semantic), `gmk-dev-complete:59` (contrast clause), `plugin.json:4` (intentional contrast added in v0.5).
+
+### Changed
+
+**Rule 14 token sweep — 11 SKILLs, 13 token sites added.**
+- **`gmk-port`** — 3 sites: refuse on missing bot PASS (L25), refuse on self-test ≠ PASS (L27), re-entry sentinel after `@systems-designer` (L88).
+- **`gmk-roadmap`** — 2 sites: refuse on missing pillars (L21), refuse on milestone ID collision recommending `--revive` (L203). Defensive token also on the "Pillars skipped" warning (L22).
+- **`gmk-prototype`** — 2 sites: refuse on missing pillars (L20), warn on skipped pillars (L21). Both point to `/gmk-init`.
+- **`gmk-regression`, `gmk-dev-complete`, `gmk-status`, `gmk-design-system`, `gmk-shape-advisor`, `gmk-ux-flow`** — one token site each, all in the Preconditions block.
+- All tokens use canonical form `[Rule 14] /gmk-<this> → /gmk-<target> — verified target's preconditions can be satisfied from current state.` per `gmk-prototype-rules` Rule 14 (lines 380-398).
+
+**`endpoint` → `checkpoint` (or `release-readiness checkpoint`) — 17 locations.**
+- v0.5 changelog claimed 3 locations; the real count was 17 (Protocol 1 evaluator found +4 over HANDOFF's revised 13).
+- Live docs touched: `README.md:4`, `CONCEPT.md:11/67/408`, `gmk-dev-complete/SKILL.md:3/59/228/248`, `gmk-loop/SKILL.md:128`, `gmk-status/SKILL.md:68/117/132`, `gmk-port/SKILL.md:493`, `gmk-prototype-rules/SKILL.md:279`, `_workspace/structure.md:48/532`, `.claude-plugin/marketplace.json:15`.
+- Frozen history (CHANGELOG v0.3-v0.4 entries, `_workspace/v0.X-*.md` audit docs) and intentional contrasts (allowlist) left alone per Keep-a-Changelog convention.
+
+**`gmk-dev-complete` — two "read-only" inaccuracy fixes:**
+- L208 ("read-only on canonical state … nothing else") and L249 ("Doesn't write to milestones.json or pillars.json") both contradicted the `--accept-warnings` flag that writes `warnings_acknowledged_at` to merge_gate / port-checklist files. Both rewritten to surface the legitimate write paths.
+
+**CHANGELOG cross-reference footnotes:**
+- L53 and L94 of the v0.4 entry now carry `(see v0.5 Honesty note above — half-way applied until v0.5)` so a reader landing on the v0.4 claims doesn't miss the v0.5 correction. Keep-a-Changelog allows small inline cross-refs even on past entries.
+
+### Honesty note
+
+This release's scope was wider than the HANDOFF backlog. The HANDOFF (written immediately after v0.5's external audit) listed 15 SKILLs for the Rule 14 sweep; Protocol 1 (the work-start evaluator) found the real scope after reading each cited refuse site was 11 SKILLs — with 3 ADDs HANDOFF missed and 5 REMOVEs HANDOFF wrongly included. The endpoint sweep similarly grew from 13 cited locations to 17 actual. **The defect-class shape didn't disappear; the implementer's anchoring just shifted from "self-audit" to "HANDOFF authorship".** The lesson Protocol 1 captures: an evaluator with no stake in the previous list reads each cited site fresh, while the implementer (or HANDOFF author) reads to confirm. v0.6's process change is to require Protocol 1 + Protocol 3 evaluator checkpoints per release — costs ~3 evaluator calls, replaces ~3 OVERSTATED audits.
+
+External evaluator graded v0.6's Protocol 3 pre-release audit as **ACCURATE**. First in the v0.4 → v0.5 → v0.6 lineage.
+
+### Migration notes from v0.5
+
+- No data loss. No schema changes. No deprecated fields.
+- No new SKILLs, no new agents. (`scripts/` got a sanity script extension + 2 allowlist files.)
+- Existing v0.5 SKILL outputs without Rule 14 tokens still work — v0.6 just adds the tokens to refuse paths going forward and adds the structural guard so future sweeps can't go halfway again.
+- Pre-flight: `bash scripts/check-plugin-meta.sh` should be run before any v0.6+ tag.
+
+### Non-goals (v0.6 deliberately did not do)
+
+- No new audit waves beyond the 5 v0.5 evaluator backlog items + 1 structural guard. The v0.5 audit's framework holds; v0.6 just completes the work it specified (corrected by Protocol 1).
+- No dogfood. Audit-only stance preserved (W24).
+- No new SKILLs / agents / templates.
+- No `kit_version` read-enforcement (still deferred to v0.7+ — v0.4 decision 4 holds).
+
+---
+
 ## [0.5.0] — 2026-05-15
 
 v0.4 deprecated 9 trace fields and announced "skills no longer write them" — but the deprecation was applied **half-way**. Two external evaluator agents (one comparative-research, one internal-coherence) audited v0.4 immediately after release and found **7 regressions** the v0.4 audit had introduced and missed. v0.5 is the **post-release hotfix** that closes those gaps.
@@ -50,7 +113,7 @@ External evaluator graded v0.4's self-audit as **OVERSTATED**. v0.5 accepts that
 
 ## [0.4.0] — 2026-05-15
 
-v0.3 closed the structural skeleton (agent wiring + dev-complete endpoint). v0.4 is the **quality-of-life** release on top: orphan sub-flags get definitions, the 27 precondition-handling skills converge on one pattern, the agent routing block standardizes its output format, and the schema sheds 9 trace fields that were write-only since v0.2. **No new SKILLs, no new agents.** Backward-compatible reads (v0.3 files validate as-is); breaking writes (v0.4 skills no longer emit the 9 deprecated fields).
+v0.3 closed the structural skeleton (agent wiring + dev-complete endpoint). v0.4 is the **quality-of-life** release on top: orphan sub-flags get definitions, the 27 precondition-handling skills converge on one pattern, the agent routing block standardizes its output format, and the schema sheds 9 trace fields that were write-only since v0.2. **No new SKILLs, no new agents.** Backward-compatible reads (v0.3 files validate as-is); breaking writes (v0.4 skills no longer emit the 9 deprecated fields) *(see v0.5 Honesty note above — half-way applied until v0.5)*.
 
 This release was driven by a **3-view audit** (cold-read / adversarial / schema-first). No dogfood — v0.4 confirms gmk's audit-only stance for backlog derivation.
 
@@ -91,7 +154,7 @@ This release was driven by a **3-view audit** (cold-read / adversarial / schema-
 
 **Deprecated fields (9 — write-only since v0.2, read by nobody):**
 - `hypothesis.trials[]`, `validation_history[]`, `re_validation_history[]`, `kill_history[]`, `kill_category`, `kill_followup`, `validation.guardrails`, `self_test.coded_themes`, `self_test.sessions[]` body.
-- v0.4 skills no longer write these. v0.3 files containing them validate; skills ignore them. **No data loss** — fields are not auto-stripped. The git commit history of `milestones.json` is the canonical trace for kill/revive/regression/re-port cycles.
+- v0.4 skills no longer write these. v0.3 files containing them validate; skills ignore them. **No data loss** — fields are not auto-stripped. The git commit history of `milestones.json` is the canonical trace for kill/revive/regression/re-port cycles. *(see v0.5 Honesty note above — half-way applied until v0.5)*
 - `self_test` now stores only `latest_verdict`, `latest_session_path`, `latest_session_at`, `pillar_violations`, `verdict_reason`, `coded_at`. Full session history lives on disk at `.gamemaker-kit/self-tests/<m>/session-{date}.md` (immutable) + `coded.md` (latest roll-up).
 
 **`structure.md` (canonical schema reference):**

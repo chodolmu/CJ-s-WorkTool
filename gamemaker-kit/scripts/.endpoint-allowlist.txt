@@ -1,0 +1,38 @@
+# Endpoint-terminology allowlist for scripts/check-plugin-meta.sh Check B.
+#
+# Format: one "<path>:<line>" per line. Exact match against the script's
+# `grep -rnI` output, after path normalization. Lines starting with # ignored.
+#
+# Each entry MUST be justifiable — "endpoint" appears intentionally for a
+# different semantic, or as part of a meta-discussion of the rename itself.
+# If you cannot write a one-sentence justification, the line is not allowlisted.
+#
+# Maintained: 2026-05-17 (v0.6 introduction)
+
+# CONCEPT.md:40 — the meta-discussion of the v0.5 rename ("Why 'checkpoint' and not 'endpoint'").
+# Removing the word here would destroy the explanation.
+CONCEPT.md:40
+
+# skills/gmk-self-test/SKILL.md:107 — "they bounced before a clear endpoint" refers to
+# a player's gameplay session ending, not gamemaker-kit's dev-complete state.
+# Different semantic; the word fits and should stay.
+skills/gmk-self-test/SKILL.md:107
+
+# .claude-plugin/plugin.json:4 — the plugin description says "dev-complete is a
+# checkpoint (recomputable), not an endpoint" — intentional contrast added in v0.5.
+.claude-plugin/plugin.json:4
+
+# skills/gmk-dev-complete/SKILL.md:59 — references the "checkpoint, not endpoint"
+# framing as a contrast clause. The word appears only to name what the checkpoint
+# is *not*, mirroring CONCEPT.md:40's meta-discussion.
+skills/gmk-dev-complete/SKILL.md:59
+
+# CONCEPT.md:11 — the §0 summary contrasts "checkpoint" against "a one-way endpoint"
+# to anchor the v0.5 framing. Removing the word would weaken the contrast.
+CONCEPT.md:11
+
+# .claude-plugin/marketplace.json:8 + :15 — the v0.6 changelog blurbs name the
+# "endpoint→checkpoint at 17 locations" sweep as a release highlight. The word
+# appears only to describe the rename work itself, mirroring plugin.json:4.
+.claude-plugin/marketplace.json:8
+.claude-plugin/marketplace.json:15

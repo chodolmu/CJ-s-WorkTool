@@ -17,8 +17,8 @@ If you hit a rule violation, the message names which rule and points at the rule
 Before writing anything, verify:
 
 1. **`pillars.json` exists** at `{project}/.gamemaker-kit/pillars.json`.
-   - Missing: stop. *"No Pillars yet. Run /gmk-init first — Pillars are the lens this prototype gets judged against."*
-   - `pillars: []` and `skipped: true`: warn the user *"Pillars were skipped at init. This prototype won't have a north star to bind its hypothesis to. Run /gmk-init properly first?"* Only continue if they explicitly say yes.
+   - Missing: stop. *"No Pillars yet. Run /gmk-init first — Pillars are the lens this prototype gets judged against. [Rule 14] /gmk-prototype → /gmk-init — verified target's preconditions can be satisfied from current state."*
+   - `pillars: []` and `skipped: true`: warn the user *"Pillars were skipped at init. This prototype won't have a north star to bind its hypothesis to. Run /gmk-init properly first? [Rule 14] /gmk-prototype → /gmk-init — verified target's preconditions can be satisfied from current state."* Only continue if they explicitly say yes.
 2. **`prototypes/` directory exists**. Create if not.
 3. **`milestones.json` exists**. Create as `{ "project_name": "...", "milestones": [] }` if missing. Schema reference: `_workspace/examples/milestones-example.json`.
 4. **`templates/_bot_hook_lib.js` reachable**. The prototype either inlines the library (Rule 7 Option B) or references it via `<script src>` (Option A). Either way, the kit's `templates/_bot_hook_lib.js` is the canonical source.

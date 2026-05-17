@@ -45,7 +45,7 @@ If you find yourself wanting to put state somewhere else, stop. Either it belong
     ├─ vision.md                           # north star (Pillars in human-readable form)
     ├─ roadmap.md                          # milestone list + priority + deps
     ├─ dashboard.md                        # overwritten every gmk-status run
-    ├─ dev-complete-report.md              # overwritten every gmk-dev-complete run (project endpoint)
+    ├─ dev-complete-report.md              # overwritten every gmk-dev-complete run (project release-readiness checkpoint)
     ├─ regression-report-{YYYY-MM-DD-HHMM}.md   # gmk-regression roll-up (one per run, accumulates)
     ├─ brainstorms/                        # optional, gmk-brainstorm output
     │   └─ M{n}-{slug}.md
@@ -529,7 +529,7 @@ Output of `gmk-regression`. Roll-up across all PASS milestones re-validated. Tim
 
 ### `_workspace/dev-complete-report.md`
 
-Output of `gmk-dev-complete`. Project-level endpoint report — pillar coverage, milestone status table, C1-C6 check results. Overwrites every run (git keeps history).
+Output of `gmk-dev-complete`. Project-level release-readiness checkpoint report — pillar coverage, milestone status table, C1-C6 check results. Overwrites every run (git keeps history).
 
 ### `.gamemaker-kit/.loop.lock`
 

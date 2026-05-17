@@ -125,7 +125,7 @@ Run exactly one downstream skill based on the gate:
 | Integrate: merge-gate not run / FAIL | `/gmk-merge-gate <milestone>` | |
 | Integrate: port missing / RE_FAIL | `/gmk-port <milestone>` | |
 | Integrate: port NEEDS_TUNING | Surface port Stage 6 route — `@feel-engineer` or `@economy-balancer` based on the user's `--reason` text | |
-| Shipped (this milestone) | Print: *"m2-dragon-evo is dev-complete. Next: pick another milestone (`/gmk-status`) or, if this was the last one, run `/gmk-dev-complete` for the project-level endpoint."* | The project-level endpoint (`gmk-dev-complete`) is a separate SKILL — see Wave B |
+| Shipped (this milestone) | Print: *"m2-dragon-evo is dev-complete. Next: pick another milestone (`/gmk-status`) or, if this was the last one, run `/gmk-dev-complete` for the project-level release-readiness checkpoint."* | The project-level release-readiness checkpoint (`gmk-dev-complete`) is a separate SKILL — see Wave B |
 
 **Dispatch is not auto-execution.** Surface the skill name and let the user invoke it. If the user wants the loop to *actually run* the next skill, the next iteration of `/gmk-loop` will do it (after the user confirms again).
 

@@ -18,8 +18,8 @@ If the user wants project-management ceremony (deadlines, burndown, capacity), p
 ## Preconditions
 
 1. **`pillars.json` exists** at `.gamemaker-kit/pillars.json`.
-   - Missing: stop. *"No Pillars yet. Run /gmk-init first — the roadmap decomposes pillars, so it needs them locked."*
-   - `pillars: []` with `skipped: true`: warn — *"Pillars were skipped at init. Without them, this roadmap is just an unordered milestone list — the kit can't tell you 'which one strengthens which pillar.' Want to run /gmk-init properly first?"* Only continue if the user says yes.
+   - Missing: stop. *"No Pillars yet. Run /gmk-init first — the roadmap decomposes pillars, so it needs them locked. [Rule 14] /gmk-roadmap → /gmk-init — verified target's preconditions can be satisfied from current state."*
+   - `pillars: []` with `skipped: true`: warn — *"Pillars were skipped at init. Without them, this roadmap is just an unordered milestone list — the kit can't tell you 'which one strengthens which pillar.' Want to run /gmk-init properly first? [Rule 14] /gmk-roadmap → /gmk-init — verified target's preconditions can be satisfied from current state."* Only continue if the user says yes.
 2. **`.gamemaker-kit/milestones.json` exists.** If missing, create as `{ "project_name": "...", "milestones": [] }`.
 3. **`_workspace/` directory exists.** Create if missing.
 
@@ -200,7 +200,7 @@ Continue? (you can add new milestones for the new pillar, or revisit existing on
 
 ### Milestone naming collisions
 
-If the user proposes a milestone ID that already exists in `milestones.json` (even killed), refuse. *"`m3-egg-spawn` already exists (status: KILLED). Either pick a new slug like `m3b-egg-spawn-v2`, or run `/gmk-kill-milestone m3-egg-spawn --revive` to bring it back."* Don't silently overwrite.
+If the user proposes a milestone ID that already exists in `milestones.json` (even killed), refuse. *"`m3-egg-spawn` already exists (status: KILLED). Either pick a new slug like `m3b-egg-spawn-v2`, or run `/gmk-kill-milestone m3-egg-spawn --revive` to bring it back. [Rule 14] /gmk-roadmap → /gmk-kill-milestone --revive — verified target's preconditions can be satisfied from current state (killed milestone exists)."* Don't silently overwrite.
 
 ### Roadmap conflict with hand-edits
 

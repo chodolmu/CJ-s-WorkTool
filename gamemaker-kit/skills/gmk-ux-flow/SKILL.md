@@ -16,7 +16,7 @@ Output: a markdown file with **flow diagram (textual)**, **input map**, **FTUE**
 
 1. **Milestone exists** in `.gamemaker-kit/milestones.json` with `pillars_targeted` non-empty.
 2. **Validation has run AND passed** (`validation.verdict === "PASS"`). UX flow for a failing prototype is putting bandages on a broken mechanic.
-   - If validation is FAIL or absent: warn — *"Bot validation hasn't passed. UX flow on a not-yet-validated milestone is premature; the mechanic might not survive. Continue with --force or come back after /gmk-validate?"* Allow override; the user might be planning ahead.
+   - If validation is FAIL or absent: warn — *"Bot validation hasn't passed. UX flow on a not-yet-validated milestone is premature; the mechanic might not survive. Continue with --force or come back after /gmk-validate? [Rule 14] /gmk-ux-flow → /gmk-validate — verified target's preconditions can be satisfied from current state."* Allow override; the user might be planning ahead.
 3. **Design system spec is helpful but not required.** If absent, the flow draws from the hypothesis + prototype.
 
 _Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard) follow `gmk-prototype-rules` Rule 13-14._
