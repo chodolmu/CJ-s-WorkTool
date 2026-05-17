@@ -1,15 +1,40 @@
-# Handoff: gamemaker-kit — v0.6.0 release 완료, **ACCURATE 판정 첫 사이클**
+# Handoff: gamemaker-kit — v0.7.0 release 완료, **ACCURATE 2연속 (process 정착)**
 
-**Updated**: 2026-05-17 (22:40 KST)
+**Updated**: 2026-05-17 (23:40 KST)
 **Branch**: main
-**Latest commit**: `bc4c7bc feat(gamemaker-kit): v0.6.0 — complete v0.5 half-applied sweeps + structural guard`
-**Tag**: `v0.6.0` (origin 동기화 완료, GitHub release 발행)
-**Release URL**: https://github.com/chodolmu/CJ-s-WorkTool/releases/tag/v0.6.0
-**Status**: v0.6.0 release 완료. **3 evaluator checkpoint 모두 ACCURATE**: Protocol 1 (work-start), Protocol 3 (pre-release), Protocol 4 (post-release git verification). v0.4 → v0.5 → v0.6 사이클에서 **첫 non-OVERSTATED release**.
+**Latest commit**: `003d1fe feat(gamemaker-kit): v0.7.0 — kit_version read contract + structural guard maturation`
+**Tag**: `v0.7.0` (origin 동기화 완료, GitHub release 발행)
+**Release URL**: https://github.com/chodolmu/CJ-s-WorkTool/releases/tag/v0.7.0
+**Status**: v0.7.0 release 완료. **3 evaluator checkpoint 모두 ACCURATE** (2연속). v0.6.0과 동일 patternology — Protocol 1/3/4 cycle 적용. **process 정착 확인됨**.
 
 ---
 
-## v0.6 핵심 성과
+## v0.7 핵심 성과 (이번 사이클)
+
+| 항목 | 결과 |
+|---|---|
+| Protocol 1 verdict | **UNDERSTATED** — HANDOFF 4 candidates → 실제 7 items (3개 missed: line-level allowlist, pre-push hook, 3 new checks D/E/F). F21 anchoring 재발 → Protocol 1이 또 잡음 |
+| Rule 16 (kit_version read contract) | 신설, 4-case table, shape (d) warn-only. 27 SKILLs footer "Rule 13-14, 16"으로 amend |
+| Check A + C: WARN → FAIL 승격 | 완료. drift accumulator로 wire. Check B는 WARN 유지 (regex 정밀화 v0.8 이월) |
+| Check D/E/F 신규 (WARN-level) | kit_version 일관성 / 템플릿 line cap / hook API version anchor |
+| .rule14-allowlist.txt 라인 레벨 | 9 entries (7 SKILLs, gmk-loop/merge-gate 각 2 사이트) |
+| Rule 14 CYCLE rewrite | "fallback / currently unused safety valve"로 재프레이밍. 삭제 안 함 |
+| gmk-mock-inject | NO IMPLEMENTATION (Protocol 1에서 audit 완료, 변경 없음) |
+| scripts/hooks/pre-push | opt-in template (core.hooksPath 통해 활성화) |
+| Protocol 3 (pre-release) verdict | **ACCURATE** with 1 minor stylistic tightening (placeholder MAJOR.MINOR.PATCH 명시) |
+| Protocol 4 (post-release git) verdict | **ACCURATE** — 모든 38 file claim 검증 통과 |
+
+## v0.8 backlog candidates (Protocol 1로 보정 필요)
+
+다음 release에서 검토 후보 (HANDOFF 작성자도 anchoring하니 *작업 시작 전* 반드시 Protocol 1):
+
+1. **Check B regex 정밀화 + WARN → FAIL 승격**. `\bendpoint\b` whole-word + line-level allowlist. 그 다음 FAIL로 promote. (v0.7 명시적 이월)
+2. **`templates/prototype-shader.html` 401줄 → 300 이하 refactor**. Check E baseline WARN 해소. shader 템플릿 자체 구조 재검토.
+3. **`pillars.kind` read-side wiring**. Protocol 1 (v0.7) 노트: pillars-example.json:11/22/33의 `kind` 필드 (sensory/behavioral/decision-shape/emotional)는 write-only. 같은 declared-but-half-applied 결함. Rule 17 후보? 또는 기존 SKILL에 read-check 추가?
+4. **gmk-mock-inject Step 8 — remind on real-asset arrival**. Protocol 1 (v0.7) cold-read에서 발견된 ergonomic gap. v0.7 명시적 이월.
+5. **HANDOFF authorship anchoring 자체에 대한 structural guard**. F21 패턴 재발 방지 — HANDOFF backlog 작성 시 *작성자 자신의 grep 결과만으로* 채우지 못하게 하는 process gate.
+
+## v0.6 핵심 성과 (이전 사이클)
 
 | 항목 | 결과 |
 |---|---|
