@@ -1,12 +1,107 @@
-# Handoff: gamemaker-kit — v0.8 Protocol 1 완료, backlog 보정됨
+# Handoff: gamemaker-kit — v0.8.0 release 완료, **ACCURATE 3연속 (process 확정)**
 
-**Updated**: 2026-05-17 (23:50 KST)
-**Branch**: main (clean on gamemaker-kit/)
-**Latest commit**: `e084c78 docs(gamemaker-kit): post-v0.7 HANDOFF — second consecutive ACCURATE release reflection`
-**Last tag**: `v0.7.0` (origin 동기화 완료, GitHub release 발행)
-**Release URL**: https://github.com/chodolmu/CJ-s-WorkTool/releases/tag/v0.7.0
-**Status**: v0.7.0 ACCURATE 2연속 후, v0.8 사이클 Step 0 (Protocol 1 work-start evaluator) 완료. backlog UNDERSTATED 판정 → 5 corrected + 3 missing 보정됨. Tier 1부터 작업 대기.
-**v0.8 Protocol 1 보고서**: `_workspace/v0.8-protocol-1.md`
+**Updated**: 2026-05-18 (00:35 KST)
+**Branch**: main
+**Latest commit**: `b0a59c0 feat(gamemaker-kit): v0.8.0 — Rule 17 pillars.kind + Check B promote + allowlist staleness convention`
+**Tag**: `v0.8.0` (origin 동기화 완료, GitHub release 발행)
+**Release URL**: https://github.com/chodolmu/CJ-s-WorkTool/releases/tag/v0.8.0
+**Status**: v0.8.0 release 완료. **4 evaluator checkpoint 모두 ACCURATE** (Protocol 1 UNDERSTATED expected, Protocol 3 + Protocol 4 모두 ACCURATE). v0.6/v0.7/v0.8 3연속 ACCURATE — Protocol 1/3/4 cycle **process 확정**. 첫 0-warning pre-flight release (v0.7 Check E baseline WARN 해소).
+**v0.8 보고서**: `_workspace/v0.8-protocol-1.md`, `_workspace/v0.8-protocol-3.md`, `_workspace/v0.8-protocol-4.md`
+
+---
+
+## v0.8 핵심 성과 (이번 사이클)
+
+| 항목 | 결과 |
+|---|---|
+| Protocol 1 verdict | **UNDERSTATED** — HANDOFF 5 candidates → 실제 14 corrections + 3 missing (M-2/M-3 v0.9 이월). F21 3연속 (강도 약화). |
+| Rule 17 (`pillars.kind` enum read contract) | 신설. 4-case table (Rule 16 form mirror). 마지막 declared-but-half-applied field 종결. |
+| Check G (WARN-level) | 신규. pillars-example.json valid kind 검증. |
+| Check B WARN → FAIL | 정밀화 (`\bendpoint\b` whole-word, `-i` drop) + 승격. |
+| `.endpoint-allowlist.txt:37` stale entry | M-1이 잡아 제거. `marketplace.json:8` 매치 안 함. |
+| Allowlist staleness convention | `verified-at: <SHA>` stamps on both allowlist files. v0.8 본 자체에서 1번째 real drift 잡음 (gmk-art-gen 140→144). |
+| HANDOFF backlog template | `_workspace/handoff-backlog-template.md` — file:line targets + grep query + non-targets + classification. F21 closure 기준 정의 (ratio < 1.0 for 3 releases). |
+| gmk-art-gen mock cleanup reminder | Step 6 Next: 블록에 conditional 1-liner. |
+| `templates/prototype-shader.html` | 401 → 299 lines (under 300 soft cap). Bot hook API preserved. |
+| Protocol 3 verdict | **ACCURATE** — 6/6 candidates PASS, 0 release-blocking defects, green-light Y. |
+| Protocol 4 verdict | **ACCURATE** — 18 CHANGELOG claims 모두 git-diff 검증 통과, 0 critical/major defects. |
+| Pre-flight final | 7/7 checks pass, 0 warnings (v0.6 이후 처음으로 zero-warning). |
+
+## v0.8에서 확정된 정책
+
+### F21 closure 기준 정식 채택
+
+`_workspace/handoff-backlog-template.md`에 명시:
+- 매 release CHANGELOG entry에 *Protocol 1 corrections count* retrospective 필드 필수
+- F21 closure = correction ratio (corrections/candidate) < 1.0 for 3 consecutive releases
+- 현재 추세: v0.7 = 1.75, v0.8 = 2.80. 상승했으나 candidate 수도 증가 + Protocol 1 깊이 강화 효과.
+- v0.9부터 새 template으로 backlog 작성 시 ratio 하락 예상.
+
+### Process 정착 (3연속 ACCURATE)
+
+| Release | Protocol 1 | Protocol 3 | Protocol 4 | Pre-flight final |
+|---|---|---|---|---|
+| v0.6 | UNDERSTATED | ACCURATE | ACCURATE | 1 warning |
+| v0.7 | UNDERSTATED | ACCURATE | ACCURATE | 1 warning (Check E shader) |
+| v0.8 | UNDERSTATED | ACCURATE | ACCURATE | **0 warnings** |
+
+Protocol 1 UNDERSTATED는 *expected* (HANDOFF anchoring). Protocol 3 ACCURATE = 작업 완료 + 새 결함 없음. Protocol 4 ACCURATE = git-based 검증 통과.
+
+---
+
+## v0.9 backlog candidates (Protocol 1로 보정 필요)
+
+다음 release에서 검토 후보. v0.9부터는 새 HANDOFF backlog template (`_workspace/handoff-backlog-template.md`)으로 작성. 각 candidate에 (a) file:line targets + grep query, (b) explicit non-targets, (c) classification, (d) defect-class link 명시.
+
+### Tier 1 (must-have, v0.9 코어)
+
+**1. M-2: declared-but-never-exercised behaviors audit**
+- *Targets* (grep query: `grep -rn 'CYCLE\|kit_version >\|early_fail\|Math.random' skills/`):
+  - Rule 14 CYCLE form — 0 SKILLs emit; live use-case 없음 (v0.7에서 "fallback safety valve"로 reframe)
+  - `kit_version > current` 분기 (Rule 16 row 3) — downgrade scenario 없음
+  - `early_fail` field in `measured_by[]` (milestones-example.json:21) — gmk-validate actual read 검증 필요
+  - `Math.random()` 경고 (prototype-rules:496) — 현재 trip하는 prototype 0
+- *Non-targets*: Rule 13/15/16의 main path는 daily 사용 중이라 제외.
+- *Classification*: structural-guard (각 dead branch에 synthetic test invocation 추가 OR "safety valve, last-exercised: never" 명시)
+- *Defect class*: declared-but-never-exercised (Rule 14 CYCLE pattern)
+
+**2. M-3: README skill count "~28 skills" → "29 skills"**
+- *Targets*: `README.md:6` (grep query: `grep -n 'skills' README.md`)
+- *Non-targets*: plugin.json/marketplace.json description (Check 3가 plugin.json만 검증 — README 추가 검증 여부 결정)
+- *Classification*: single-fix (trivial)
+
+### Tier 2 (should-have)
+
+**3. Protocol 1 corrections ratio 트래킹 정식화**
+- *Targets*: `_workspace/handoff-backlog-template.md` 추적 표 + CHANGELOG `Process` 섹션 conventionalize
+- *Non-targets*: CHANGELOG history (Keep-a-Changelog 동결)
+- *Classification*: process
+
+**4. gmk-port 684줄 split candidate 평가**
+- *Targets*: `grep -n '^### ' skills/gmk-port/SKILL.md` — section boundary 식별
+- *Non-targets*: prototype-rules 519, gmk-validate 503 — 600 이하라 v0.9 미작업
+- *Classification*: single-fix (혹은 split 결정)
+- *Note*: Rule 2 scope 미적용 (SKILL 문서). 운영자 readability 개선 결정 시.
+
+### Tier 3 (defer 또는 brainstorm)
+
+- Check G WARN → FAIL 승격 검토 (baseline 정착 후)
+- `_save_breaking: false` field convention (gmk-merge-gate L156 warning row에서 언급된 field — 실제 wire 없음. half-applied class 후보?)
+
+---
+
+## Process 정착 (v0.7+ 영구 적용 결정, v0.8에서 재확인)
+
+매 release마다 다음 4 checkpoint:
+
+| Protocol | When | Cost | Purpose |
+|---|---|---|---|
+| 1 — Work-start | 작업 시작 전 | ~1 evaluator call | backlog scope 보정 (anti-anchoring) |
+| 2 — Mid-work (optional) | 작업 중간 (해당 시) | ~1 call | 진행 방식 sanity check |
+| 3 — Pre-release | release 직전 | ~1 call | 작업 완료 여부 + 새 결함 검증 |
+| 4 — Post-release | tag/push 직후 | ~1 call | git-based 최종 검증 |
+
+총 3-4 calls per release. 비용 < OVERSTATED hotfix cycle. **3연속 ACCURATE으로 process 비용-효율 검증됨.**
 
 ---
 
@@ -364,37 +459,35 @@ v0.5 audit → cite-driven self-verify → 7 fix 닫혔다고 self-publish → �
 
 ---
 
-## Resume Instructions (v0.8 작업 시작점)
+## Resume Instructions (v0.9 작업 시작점)
 
-Step 0 (Protocol 1) **완료** — backlog는 위 §"v0.8 backlog" Tier 1/2/3 구조로 보정됨.
+v0.8 사이클 완료. v0.9는 새 HANDOFF backlog template (`_workspace/handoff-backlog-template.md`)으로 full-apply.
 
-### Step 1 — Tier 1-A (M-1 + Candidate #1)
+### Step 0 — v0.9 작업 시작 *전* Protocol 1 (필수)
 
-먼저 allowlist staleness audit (M-1) → `.endpoint-allowlist.txt:37` 등 stale entry 제거 → Check B regex `\bendpoint\b` 정밀화 → `-i` 정책 결정 → 재실행 → WARN → FAIL 승격. 이 순서가 *중요* (regex 먼저 바꾸면 stale entry 잔존).
+W29 정책. 작업 안 하고 evaluator 먼저 호출. 입력: "v0.9 backlog의 M-2 + M-3 + Tier 2 candidates가 *놓친 위치*나 *부수 영향* 있는지 보라. 새 HANDOFF template 적용 후 첫 Protocol 1이므로 correction ratio 추적 시작 — v0.7/v0.8과 비교."
 
-### Step 2 — Tier 1-B (Rule 17 + Check G + read-site migration)
+새 template 적용 효과 측정 시작점이라 *특히 중요*.
 
-Rule 17 spec → Check G 추가 → 3개 consumer site (gmk-prototype:78-82, gmk-self-test:305, gmk-init:41/65) migrate → 27 SKILL footer "Rule 13-14, 16, 17"로 amend. **일괄 적용 필수** — partial 적용 시 v0.4/v0.5 패턴 재발.
+### Step 1 — M-2 (declared-but-never-exercised audit)
 
-### Step 3 — Tier 1-C (HANDOFF template + Protocol-1 retro)
+각 dead branch에 synthetic test invocation OR "safety valve, last-exercised: never" notation. Rule 14 CYCLE / kit_version > current / early_fail / Math.random() 경고 4 사이트.
 
-backlog candidate template 정의 → CHANGELOG retro 필드 추가 → F21 closure 기준 문서화. Process candidate — `scripts/`에 안 들어감.
+### Step 2 — M-3 (README skill count bump)
 
-### Step 4 — Tier 2 (선택, v0.8 capacity 따라)
+trivial. M-2와 함께 same commit.
 
-T2-A (gmk-art-gen reminder hook) → T2-B (shader template refactor). 둘 다 독립적.
+### Step 3 — Protocol 3 + release
 
-### Step 5 — Protocol 3 (pre-release evaluator)
+CHANGELOG v0.9 (Protocol 1 corrections count retro 필드 *반드시*) / plugin meta 0.9.0 / pre-flight / commit / push / tag / GitHub release.
 
-ACCURATE 받기 전엔 release 안 함. v0.6/v0.7 모두 통과 — process 정착 확인 중.
+### Step 4 — Protocol 4
 
-### Step 6 — Release + Protocol 4
+git-based 검증. v0.6/v0.7/v0.8 3연속 ACCURATE — v0.9 4연속 목표.
 
-CHANGELOG v0.8 (Protocol 1 corrections count retro 필드 포함) / plugin meta 0.8.0 / pre-flight / commit / push / tag / GitHub release / post-release evaluator.
+### Step 5 — Post-release HANDOFF + v1.0 brainstorm
 
-### Step 7 — v0.9 backlog 작성 (Candidate #5 deliverable 적용)
-
-새 HANDOFF template (Tier 1-C)으로 v0.9 backlog 작성. M-2/M-3 포함.
+v1.0 MAJOR bump 시점 결정. backward-compat break 가능 (Rule 16 보장 종료) — v1.0 candidate audit 필요.
 
 ---
 
