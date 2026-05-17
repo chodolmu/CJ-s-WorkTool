@@ -472,13 +472,53 @@ If a future MAJOR-version bump (1.0.0+) breaks schema compatibility, this rule w
 
 ### Where this rule applies
 
-Every SKILL with a `## Preconditions` section that reads `pillars.json` or `milestones.json`. The Rule 13-14 footer (`_Standard preconditions ... follow gmk-prototype-rules Rule 13-14._`) is amended in v0.7 to *Rule 13-14, 16* so an audit can grep for the citation and catch missing read-side checks.
+Every SKILL with a `## Preconditions` section that reads `pillars.json` or `milestones.json`. The Rule 13-14 footer (`_Standard preconditions ... follow gmk-prototype-rules Rule 13-14._`) is amended in v0.7 to *Rule 13-14, 16* so an audit can grep for the citation and catch missing read-side checks. v0.8 further amends shape-routing SKILLs only (`gmk-prototype`, `gmk-self-test`) to *Rule 13-14, 16, 17* — other SKILLs that don't route on pillar shape stay at *Rule 13-14, 16*.
 
 The structural guard (`scripts/check-plugin-meta.sh` Check D) verifies the *write* side: the schema example files declare `kit_version` matching the current plugin.json MAJOR.MINOR. The read side relies on Rule 16 + the citation footer being present in every reader SKILL.
 
 ### Why this rule exists
 
 v0.4 wrote `kit_version` but no SKILL read it. v0.5 / v0.6 inherited the write-only state. v0.6 Protocol 1 evaluator flagged this as the same defect class as the Rule 14 token half-application — declared standard, partial application. v0.7 closes the loop with the minimum behavior the v0.4 CHANGELOG promised (*"v0.5 may begin to require this field"*) translated into a non-blocking, no-data-loss warn-only contract.
+
+---
+
+## Rule 17 — `pillars[].kind` enum read contract (skill-wide pattern)
+
+Every SKILL that opens `pillars.json` to **route on the *shape* of a pillar** (behavioral / decision-shape / sensory / emotional) must read the per-pillar `kind` field and respond per this contract. v0.4 introduced the write side (`gmk-init` proposes one of the four shapes and records it on each pillar); v0.8 introduces the read side (skills act on it instead of grepping the pillar's free-text for shape words).
+
+### The contract (4 cases)
+
+| Pillar state | Skill behavior |
+|---|---|
+| `kind` is `"sensory"` / `"behavioral"` / `"decision-shape"` / `"emotional"` | Route on the field directly. This is the canonical case. |
+| `kind` absent | Fall back to free-text classification on the pillar's `name` + `description` (the pre-v0.8 behavior — match shape words like "feel", "satisfy", "chunky" → sensory; "decision", "choose", "weigh" → decision-shape; etc.). Don't refuse. |
+| `kind` present but not in the 4-value enum | Warn once — *"Pillar `{id}` has kind=`{value}` which is not a known shape (expected: sensory, behavioral, decision-shape, emotional). Falling back to free-text classification. Either fix the kind value or run /gmk-init --refresh-pillar-kinds."* — then fall back to free-text. |
+| `kind` present with wrong casing (e.g. `"Sensory"`, `"DECISION-SHAPE"`) | Warn — *"Pillar `{id}` has kind=`{value}`; expected lowercase (`{value.toLowerCase()}`). Lowercasing for this run."* — then normalize and route on the lowercased value. |
+
+Enum values are **lowercase, exact**: `"sensory"`, `"behavioral"`, `"decision-shape"`, `"emotional"`. The hyphen in `"decision-shape"` is significant (matches the gmk-init phrasing). No abbreviations, no synonyms — if a user wants a different shape, that's a `gmk-init` change, not a free-form field.
+
+### Where this rule applies
+
+Skills that currently route on pillar shape:
+
+| Skill | Site | What it does today |
+|---|---|---|
+| `gmk-prototype` | shape→metric matching table (§Step 3, "Behavioral pillar → behavioral metric") | Reads pillar name/description free-text, infers shape, picks metric class |
+| `gmk-self-test` | FAIL agent-routing row (§Step 8.5, "the pillar is sensory (tactile / responsiveness / juicy / chunky language)") | Greps pillar text for sensation words to decide whether to route to feel-engineer |
+
+Both sites must check `pillars[].kind` first and fall back to free-text only on absent. New skills that route on shape must follow the same pattern. Skills that *don't* route on shape (`gmk-status`, `gmk-validate`, etc.) don't need to read `kind`.
+
+The Rule 13-14 footer is amended in v0.8 to *Rule 13-14, 16, 17* in SKILLs that read pillar shape.
+
+### Why warn-only on bad enum, not refuse
+
+Pillars are user-authored content. A typo in `kind` shouldn't block the kit — the user might have a 3-pillar pillars.json where one pillar typoed `"behaviorl"` and the kit refusing on it locks them out of `gmk-prototype` entirely. Free-text fallback is the v0.4-and-earlier behavior; v0.8 just adds the *fast path* (read the field) without removing the *safety net* (free-text inference).
+
+The structural guard (`scripts/check-plugin-meta.sh` Check G) verifies the *write* side: every pillar in `_workspace/examples/pillars-example.json` declares a valid `kind`. The read side relies on Rule 17 + the citation footer being present in every shape-routing SKILL.
+
+### Why this rule exists
+
+v0.4 added `kind` to the pillar schema (per gmk-init's 4-shape framing in `pillars-example.json:11/22/33`), but no SKILL read it. v0.5 / v0.6 / v0.7 inherited the write-only state. v0.8 Protocol 1 evaluator identified this as the last declared-but-half-applied field — same defect class as Rule 14 (v0.6) and `kit_version` (v0.7). Closing it removes the open class from the kit.
 
 ---
 

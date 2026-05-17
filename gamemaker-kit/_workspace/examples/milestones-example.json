@@ -1,6 +1,6 @@
 {
-  "_comment": "milestones.json — v0.7 schema example (additive-only since v0.4). v0.4 deprecated 9 trace fields from v0.2 (hypothesis.trials[], validation_history[], re_validation_history[], kill_history[], kill_category, kill_followup, validation.guardrails, coded_themes, self_test.sessions[] body). v0.4 skills do not write them; v0.3 files containing them still validate (read-only — fields are ignored). kit_version is read v0.7+ per gmk-prototype-rules Rule 16 (warn-only on future versions).",
-  "kit_version": "0.7.0",
+  "_comment": "milestones.json — v0.8 schema example (additive-only since v0.4). v0.4 deprecated 9 trace fields from v0.2 (hypothesis.trials[], validation_history[], re_validation_history[], kill_history[], kill_category, kill_followup, validation.guardrails, coded_themes, self_test.sessions[] body). v0.4 skills do not write them; v0.3 files containing them still validate (read-only — fields are ignored). kit_version is read v0.7+ per gmk-prototype-rules Rule 16 (warn-only on future versions).",
+  "kit_version": "0.8.0",
   "project_name": "ZooMerge",
   "milestones": [
     {

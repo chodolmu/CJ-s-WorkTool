@@ -19,12 +19,17 @@
 #  E. Templates 300-line soft cap / 600-line hard cap (per gmk-prototype-rules Rule 2)
 #  F. Templates carrying __gmk_botHook__ must declare _gmkApiVersion: 1 (Rule 4)
 #
-# Severity (v0.7):
-#  Check A (Rule 14 token) — FAIL (promoted from WARN; baseline stable since v0.6).
-#  Check C (Rule 13-14 footer) — FAIL (promoted; mechanical grep, near-zero false positive).
-#  Check B (endpoint terminology) — WARN (still permissive; regex needs whole-word
-#    tightening + line-level allowlist before v0.8 FAIL promotion).
-#  Checks D / E / F — WARN (v0.7 baseline). v0.8 may promote once stable.
+# v0.8 additions:
+#  G. Every pillar in the pillars schema example declares a valid `kind` (Rule 17)
+#
+# Severity (v0.8):
+#  Check A (Rule 14 token) — FAIL (promoted from WARN in v0.7; baseline stable since v0.6).
+#  Check C (Rule 13-14 footer) — FAIL (promoted in v0.7; mechanical grep, near-zero false positive).
+#  Check B (endpoint terminology) — FAIL (v0.8 promoted from WARN; regex tightened
+#    to \bendpoint\b whole-word, dropped -i since no capital-E "Endpoint" exists
+#    in live scan paths, line-level allowlist with verified-at-SHA stamps).
+#  Checks D / E / F — WARN (v0.7 baseline). v0.9 may promote once stable.
+#  Check G — WARN (v0.8 baseline). Promotes once pillars-example.json has settled.
 #
 # Usage:
 #   bash scripts/check-plugin-meta.sh
@@ -32,7 +37,7 @@
 # Exit codes:
 #   0 — checks pass (warnings allowed)
 #   1 — drift detected on hard checks (version / skills floor / count mismatch /
-#       Check A / Check C)
+#       Check A / Check B / Check C)
 #   2 — missing meta file
 
 set -euo pipefail
@@ -131,15 +136,24 @@ else
   drift=$((drift + rule14_missing))
 fi
 
-# Check B (v0.6, WARN): "endpoint" terminology drift in user-facing docs
+# Check B (v0.6 WARN, v0.8 FAIL): "endpoint" terminology drift in user-facing docs
 # Per v0.5 honesty note + v0.6 amendment: dev-complete is a release-readiness
 # checkpoint, not an endpoint. Scan live docs (skills/, CONCEPT.md, README.md,
 # _workspace/structure.md, .claude-plugin/marketplace.json). The allowlist
 # excludes intentional uses (meta-discussion of the rename, semantic distinct,
 # intentional contrast). Frozen history (CHANGELOG, HANDOFF, _workspace/v0.X-*)
 # is excluded by path filter.
+#
+# v0.8 changes:
+#  - regex tightened: \bendpoint\b whole-word (was substring) to avoid catching
+#    "Endpoints", "endpointed", or future compound words that shouldn't trip
+#  - dropped -i case-insensitive flag; verified no capital-E "Endpoint" exists
+#    in any live scan path (Protocol 1 audit, 2026-05-17)
+#  - promoted from WARN to FAIL — purpose now is to *block* future contributors
+#    from re-introducing the term, not to catch present drift (current state
+#    is clean: 6 occurrences all allowlisted with per-line justification)
 echo ""
-echo "Check B: 'endpoint' terminology drift (WARN-level — pending whole-word regex tightening for v0.8)"
+echo "Check B: 'endpoint' terminology drift (FAIL-level in v0.8)"
 ALLOWLIST="scripts/.endpoint-allowlist.txt"
 endpoint_hits=0
 scan_paths=(
@@ -154,16 +168,16 @@ while IFS= read -r match; do
   if [ -f "$ALLOWLIST" ] && grep -Fxq "$match" "$ALLOWLIST"; then
     continue
   fi
-  echo "  WARN: $match"
+  echo "  FAIL: $match"
   endpoint_hits=$((endpoint_hits + 1))
-done < <(grep -rnIE -i 'endpoint' "${scan_paths[@]}" 2>/dev/null \
+done < <(grep -rnIwE 'endpoint' "${scan_paths[@]}" 2>/dev/null \
           | grep -vE '^_workspace/v0\.[0-9]+-' \
           | awk -F: '{print $1":"$2}')
 if [ "$endpoint_hits" -eq 0 ]; then
   echo "  OK — no unexpected 'endpoint' occurrences in live docs"
 else
   echo "  $endpoint_hits occurrence(s). Convert to 'checkpoint' or add to $ALLOWLIST with justification."
-  warn=$((warn + endpoint_hits))
+  drift=$((drift + endpoint_hits))
 fi
 
 # Check C (v0.6, WARN): Rule 13-14 citation footer in SKILLs with Preconditions
@@ -272,6 +286,45 @@ if [ "$api_missing" -eq 0 ]; then
   echo "  OK — all templates with __gmk_botHook__ have an API version anchor"
 else
   warn=$((warn + api_missing))
+fi
+
+# Check G (v0.8, WARN): pillars[].kind enum declaration (Rule 17)
+# Every pillar in the schema example must declare a valid `kind` field
+# (sensory | behavioral | decision-shape | emotional). v0.8 introduces the
+# read side of this field; the example file is the authoritative shape the
+# kit teaches users to write, so it must demonstrate the convention.
+echo ""
+echo "Check G: pillars[].kind enum declaration (WARN-level in v0.8, Rule 17)"
+PILLARS_EXAMPLE="_workspace/examples/pillars-example.json"
+kind_missing=0
+if [ ! -f "$PILLARS_EXAMPLE" ]; then
+  echo "  WARN: $PILLARS_EXAMPLE missing (cannot verify Rule 17)"
+  warn=$((warn + 1))
+else
+  # Count pillars (look for `"id":` lines inside the pillars array — every
+  # pillar object opens with an id). Then count valid kind declarations.
+  pillar_count=$(grep -cE '^\s*"id":' "$PILLARS_EXAMPLE" | head -1)
+  kind_valid=$(grep -cE '^\s*"kind":\s*"(sensory|behavioral|decision-shape|emotional)"' "$PILLARS_EXAMPLE")
+  echo "  pillars in example: $pillar_count, valid kind declarations: $kind_valid"
+  if [ "$pillar_count" != "$kind_valid" ]; then
+    # Find pillars without a valid kind — list lines with a `kind` that
+    # doesn't match the enum, or pillars whose kind is missing entirely.
+    bad_kinds=$(grep -nE '^\s*"kind":' "$PILLARS_EXAMPLE" \
+                | grep -vE '"kind":\s*"(sensory|behavioral|decision-shape|emotional)"' \
+                || true)
+    if [ -n "$bad_kinds" ]; then
+      echo "  WARN: kind values outside enum (sensory/behavioral/decision-shape/emotional):"
+      echo "$bad_kinds" | sed 's/^/    /'
+    fi
+    missing_count=$((pillar_count - kind_valid))
+    if [ "$missing_count" -gt 0 ]; then
+      echo "  WARN: $missing_count pillar(s) in $PILLARS_EXAMPLE lack a valid kind declaration"
+    fi
+    kind_missing=1
+    warn=$((warn + 1))
+  else
+    echo "  OK — every pillar in the example declares a valid kind"
+  fi
 fi
 
 echo ""

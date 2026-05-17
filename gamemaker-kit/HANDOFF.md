@@ -1,11 +1,12 @@
-# Handoff: gamemaker-kit — v0.7.0 release 완료, **ACCURATE 2연속 (process 정착)**
+# Handoff: gamemaker-kit — v0.8 Protocol 1 완료, backlog 보정됨
 
-**Updated**: 2026-05-17 (23:40 KST)
-**Branch**: main
-**Latest commit**: `003d1fe feat(gamemaker-kit): v0.7.0 — kit_version read contract + structural guard maturation`
-**Tag**: `v0.7.0` (origin 동기화 완료, GitHub release 발행)
+**Updated**: 2026-05-17 (23:50 KST)
+**Branch**: main (clean on gamemaker-kit/)
+**Latest commit**: `e084c78 docs(gamemaker-kit): post-v0.7 HANDOFF — second consecutive ACCURATE release reflection`
+**Last tag**: `v0.7.0` (origin 동기화 완료, GitHub release 발행)
 **Release URL**: https://github.com/chodolmu/CJ-s-WorkTool/releases/tag/v0.7.0
-**Status**: v0.7.0 release 완료. **3 evaluator checkpoint 모두 ACCURATE** (2연속). v0.6.0과 동일 patternology — Protocol 1/3/4 cycle 적용. **process 정착 확인됨**.
+**Status**: v0.7.0 ACCURATE 2연속 후, v0.8 사이클 Step 0 (Protocol 1 work-start evaluator) 완료. backlog UNDERSTATED 판정 → 5 corrected + 3 missing 보정됨. Tier 1부터 작업 대기.
+**v0.8 Protocol 1 보고서**: `_workspace/v0.8-protocol-1.md`
 
 ---
 
@@ -24,15 +25,74 @@
 | Protocol 3 (pre-release) verdict | **ACCURATE** with 1 minor stylistic tightening (placeholder MAJOR.MINOR.PATCH 명시) |
 | Protocol 4 (post-release git) verdict | **ACCURATE** — 모든 38 file claim 검증 통과 |
 
-## v0.8 backlog candidates (Protocol 1로 보정 필요)
+## v0.8 backlog — Protocol 1 보정 완료 (2026-05-17 23:48)
 
-다음 release에서 검토 후보 (HANDOFF 작성자도 anchoring하니 *작업 시작 전* 반드시 Protocol 1):
+**Protocol 1 verdict**: **UNDERSTATED** (F21 3연속, 강도 약화 추세). 원본 HANDOFF 5 candidates → 보정 후 5 + 추가 3 (M-1/M-2/M-3). 보고서: `_workspace/v0.8-protocol-1.md`.
 
-1. **Check B regex 정밀화 + WARN → FAIL 승격**. `\bendpoint\b` whole-word + line-level allowlist. 그 다음 FAIL로 promote. (v0.7 명시적 이월)
-2. **`templates/prototype-shader.html` 401줄 → 300 이하 refactor**. Check E baseline WARN 해소. shader 템플릿 자체 구조 재검토.
-3. **`pillars.kind` read-side wiring**. Protocol 1 (v0.7) 노트: pillars-example.json:11/22/33의 `kind` 필드 (sensory/behavioral/decision-shape/emotional)는 write-only. 같은 declared-but-half-applied 결함. Rule 17 후보? 또는 기존 SKILL에 read-check 추가?
-4. **gmk-mock-inject Step 8 — remind on real-asset arrival**. Protocol 1 (v0.7) cold-read에서 발견된 ergonomic gap. v0.7 명시적 이월.
-5. **HANDOFF authorship anchoring 자체에 대한 structural guard**. F21 패턴 재발 방지 — HANDOFF backlog 작성 시 *작성자 자신의 grep 결과만으로* 채우지 못하게 하는 process gate.
+**v0.8 한 줄 약속**: *"Close the last declared-but-half-applied field (`pillars.kind`), harden allowlists against silent rot, and formalize the HANDOFF backlog template so F21 doesn't keep needing Protocol 1 to catch it."*
+
+**Backlog shape**: v0.8+부터 각 candidate는 `_workspace/handoff-backlog-template.md`의 shape를 따른다 — file:line targets + grep query, explicit non-targets, classification, defect-class link. 본 v0.8 backlog는 *부분 적용* (template 자체가 v0.8 deliverable라 retro-fit 불가) — v0.9부터 full apply.
+
+### Tier 1 — must-have
+
+**T1-A. M-1 + Candidate #1 통합: allowlist staleness audit + endpoint Check B 정밀화/승격**
+- M-1 (선행): 두 allowlist file 전체 entry 재검증. 확인된 stale: `.endpoint-allowlist.txt:37` → `marketplace.json:8` (해당 라인에 "endpoint" 토큰 없음 — 실제로는 `marketplace.json:15`만). `.rule14-allowlist.txt` 9 entries (gmk-art-gen:140, brainstorm:24, kill-milestone:145, loop:128, loop:243, merge-gate:156, merge-gate:297, mock-inject:26, save-migrate:196) 각각 line 이동 여부 점검.
+- 각 entry에 `verified-at-SHA: xxxx` stamp 컨벤션 신설 (allowlist file header에 명시).
+- 그 다음 Candidate #1: Check B regex를 `\bendpoint\b` whole-word로 정밀화, `-i` 케이스 결정 명시 (현재 6 occurrence 전부 allowlisted: gmk-dev-complete:59, gmk-self-test:107, CONCEPT.md:11/40, marketplace.json:15, plugin.json:4). Check B WARN → FAIL 승격.
+- 값: 현재 drift 잡는 게 아니라 *future contributor가 "endpoint" 재도입 못 하게 차단*.
+
+**T1-B. Candidate #3 reframed: Rule 17 (`pillars.kind` enum read contract) + Check G + read-site migration**
+- 원본 HANDOFF는 "Rule 17 후보? 또는 기존 SKILL에 read-check 추가?" — **둘 다, 양자택일 아님**.
+- Rule 17 신설: `pillars[].kind` ∈ {sensory, behavioral, decision-shape, emotional}, 4-case table (Rule 16과 동일 form): absent / valid enum / unknown enum / wrong-casing 각각 SKILL 행동 정의.
+- `check-plugin-meta.sh`에 Check G 추가: 모든 pillar가 valid `kind` 선언.
+- Read-site migration (concrete consumer 이미 존재 — concept 기반 free-text 분기 중):
+  - `skills/gmk-prototype/SKILL.md:78-82` — Behavioral pillar → behavioral metric 분기 table
+  - `skills/gmk-self-test/SKILL.md:305` — "Pillar is sensory" free-text
+  - `skills/gmk-init/SKILL.md:41/65` — 4 shapes 안내
+- 27 SKILL footer 일괄 amend: `Rule 13-14, 16` → `Rule 13-14, 16, 17`.
+- sister fields (`anti_examples` / `supported_genres_check.*` / `skipped`) 모두 read 되므로 `kind`가 *유일한* write-only — declared-but-half-applied 마지막 case 종결.
+
+**T1-C. Candidate #5 reclassified: HANDOFF backlog template + Protocol-1 retro field (process, not check)**
+- 원본 "structural guard"는 부정확 — F21 fix는 `scripts/check-plugin-meta.sh`가 아니라 *HANDOFF.md template + Protocol cycle docs*에 속함.
+- HANDOFF backlog candidate template 신설 — 각 candidate에 필수 필드: (a) affected file:line 사이트 + 사용한 grep query, (b) 명시적 non-target ("would NOT touch X because Y"), (c) classification (sweep / single-fix / structural-guard / process).
+- CHANGELOG entry에 "Protocol 1 corrections count" retrospective 필드 추가 — success metric = 0 수렴.
+- F21 closure 기준 신설: Protocol 1 correction count < 1 for 3 consecutive releases.
+
+### Tier 2 — should-have
+
+**T2-A. Candidate #4 reframed: mock-asset lifecycle reminder — gmk-art-gen에서 trigger (NOT gmk-mock-inject Step 8)**
+- 원본 misframed: `gmk-mock-inject`은 Steps 1-7만 있고 (재invoke 안 됨), "Step 8" 위치 부정확.
+- 실제 trigger: `gmk-art-gen` 완료 path에 reminder hook 추가 — milestone X art-gen 완료 후 `prototypes/X-mocked.html` 존재 시 surface: *"Real assets landed. The mocked file at <path> is now stale — delete it and re-run /gmk-validate on the original."*
+- secondary trigger 후보: `gmk-validate`가 `-mocked.html`에 호출되고 non-mocked sibling 존재 시.
+- `gmk-mock-inject` SKILL 라인 19/172/203/220/237/281/282/284에 lifecycle 언급은 있으나 actionable step 없음 — 새 reminder 위치 cross-ref.
+
+**T2-B. Candidate #2: shader template 401 → ≤300 + scope justification**
+- `templates/prototype-shader.html` 401줄 → ≤300줄. Check E baseline WARN 해소.
+- one-liner justification (commit/CHANGELOG): *"Check E intentionally not extended to skills/ — SKILL files are reference docs not prototypes; the 300/600 numbers were calibrated for mechanic-prototype mental-model load (Rule 2 rationale at gmk-prototype-rules:58), not doc length."*
+- 참고: gmk-port 684줄, prototype-rules 515줄, gmk-validate 503줄 — Rule 2 scope 외, v0.8 미작업 (별도 release candidate).
+
+### Tier 3 — v0.9 이월
+
+- **M-2** declared-but-never-exercised behaviors audit (Rule 14 CYCLE, `kit_version > current` 분기, `early_fail` 필드, `Math.random()` 워닝). 범위 큼 — v0.8 포함 시 다른 작업 압박.
+- **M-3** `README.md:6` "~28 skills + 4 domain agents" → 29 정정. 사소.
+
+### v0.8에서 *안* 할 것
+
+| 항목 | 이유 |
+|---|---|
+| 새 SKILL / 새 agent | 0개 유지 (v0.4 이후 정책) |
+| dogfood | 영영 차단 (W24) |
+| Check E를 skills/로 확장 | Rule 2 scope 위반 (mechanic-prototype용) |
+| HANDOFF/CHANGELOG history 정정 | Keep-a-Changelog 규약 동결 |
+
+### Protocol 1 corrections count
+
+**v0.8 Protocol 1 corrections: 14** (6 ADD + 1 REMOVE + 4 VERIFY + 3 RECLASSIFY) + **3 missing candidates** (M-1/M-2/M-3).
+- v0.6 Protocol 1 corrections: 미집계 (process 신설)
+- v0.7 Protocol 1 corrections: 7 (HANDOFF 4 → 실제 7)
+- v0.8 Protocol 1 corrections: 14 (HANDOFF 5 → 실제 5 보정 + 3 신규)
+
+F21 *추세*: count가 증가했으나 candidate 수도 증가. ratio (corrections/candidates)로 보면 v0.7=1.75, v0.8=2.8 — 일관 추적은 v0.9부터.
 
 ## v0.6 핵심 성과 (이전 사이클)
 
@@ -304,35 +364,37 @@ v0.5 audit → cite-driven self-verify → 7 fix 닫혔다고 self-publish → �
 
 ---
 
-## Resume Instructions (다음 세션)
+## Resume Instructions (v0.8 작업 시작점)
 
-### Step 0 — v0.6 작업 시작 *전* evaluator (Protocol 1)
+Step 0 (Protocol 1) **완료** — backlog는 위 §"v0.8 backlog" Tier 1/2/3 구조로 보정됨.
 
-작업 안 하고 evaluator 먼저 호출. backlog의 MAJOR-1/MAJOR-2/MINOR-3/MINOR-4/STRUCTURAL GUARD가 *놓친 부수 위치* 있는지 점검. 결과 받아 backlog 보강.
+### Step 1 — Tier 1-A (M-1 + Candidate #1)
 
-### Step 1 — STRUCTURAL GUARD 먼저
+먼저 allowlist staleness audit (M-1) → `.endpoint-allowlist.txt:37` 등 stale entry 제거 → Check B regex `\bendpoint\b` 정밀화 → `-i` 정책 결정 → 재실행 → WARN → FAIL 승격. 이 순서가 *중요* (regex 먼저 바꾸면 stale entry 잔존).
 
-가장 작은 부피의 변경 + *나머지 작업의 검증 도구*. `check-plugin-meta.sh` 확장이 다음 단계의 grep audit 가능하게 함. 이걸 먼저 만들면 MAJOR-1, MAJOR-2 작업의 *완료 여부*를 자동으로 확인 가능.
+### Step 2 — Tier 1-B (Rule 17 + Check G + read-site migration)
 
-### Step 2 — MAJOR-1 Rule 14 토큰 sweep
+Rule 17 spec → Check G 추가 → 3개 consumer site (gmk-prototype:78-82, gmk-self-test:305, gmk-init:41/65) migrate → 27 SKILL footer "Rule 13-14, 16, 17"로 amend. **일괄 적용 필수** — partial 적용 시 v0.4/v0.5 패턴 재발.
 
-15 SKILL 일괄. 작업 중간에 Protocol 2 호출.
+### Step 3 — Tier 1-C (HANDOFF template + Protocol-1 retro)
 
-### Step 3 — MAJOR-2 endpoint 카피 정정
+backlog candidate template 정의 → CHANGELOG retro 필드 추가 → F21 closure 기준 문서화. Process candidate — `scripts/`에 안 들어감.
 
-8+ 위치 일괄.
+### Step 4 — Tier 2 (선택, v0.8 capacity 따라)
 
-### Step 4 — MINOR-3, MINOR-4
+T2-A (gmk-art-gen reminder hook) → T2-B (shader template refactor). 둘 다 독립적.
 
-작은 정정.
+### Step 5 — Protocol 3 (pre-release evaluator)
 
-### Step 5 — Pre-release evaluator (Protocol 3)
+ACCURATE 받기 전엔 release 안 함. v0.6/v0.7 모두 통과 — process 정착 확인 중.
 
-ACCURATE 받기 전까진 release 안 함.
+### Step 6 — Release + Protocol 4
 
-### Step 6 — Release + Post-release evaluator (Protocol 4)
+CHANGELOG v0.8 (Protocol 1 corrections count retro 필드 포함) / plugin meta 0.8.0 / pre-flight / commit / push / tag / GitHub release / post-release evaluator.
 
-CHANGELOG v0.6 / plugin meta 0.6.0 / HANDOFF / commit / push / tag.
+### Step 7 — v0.9 backlog 작성 (Candidate #5 deliverable 적용)
+
+새 HANDOFF template (Tier 1-C)으로 v0.9 backlog 작성. M-2/M-3 포함.
 
 ---
 

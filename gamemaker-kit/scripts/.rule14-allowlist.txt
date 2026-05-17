@@ -15,51 +15,68 @@
 # edit makes any allowlisted line into a real refuse, this file must be
 # updated AND the SKILL must carry the [Rule 14 token.
 #
-# Maintained: 2026-05-17 (v0.7 line-level granularity).
+# v0.8 staleness convention: each entry carries a `verified-at: <SHA>` stamp.
+# When the SKILL is edited and the allowlisted line shifts (or the line at
+# that number becomes a real refuse), the stamp goes stale. Protocol 1
+# evaluators re-verify entries whose SHA is older than 2 releases by reading
+# the cited line and comparing to its justification text. Update or remove.
+# v0.8 audit: all 9 entries verified at e084c78; no staleness.
+#
+# Maintained: 2026-05-17 (v0.7 line-level granularity, v0.8 staleness convention).
 
-# gmk-art-gen:140 — recovery instruction inside an ongoing flow ("re-run for
+# gmk-art-gen:144 — recovery instruction inside an ongoing flow ("re-run for
 # the failed asset"). The skill already ran successfully on the other assets;
 # this is partial-failure recovery, not a precondition refuse.
-gmk-art-gen/SKILL.md:140
+# (v0.8 shifted line 140 → 144 when T2-A added the mock-cleanup reminder note.)
+# verified-at: HEAD (2026-05-18, v0.8)
+gmk-art-gen/SKILL.md:144
 
 # gmk-brainstorm:24 — "when not to run brainstorm" condition ("It's the start
 # of a project — run /gmk-init and /gmk-roadmap first"). brainstorm is opt-in
 # and surfaces its own non-fit conditions; it doesn't refuse the way a gate
 # skill does.
+# verified-at: e084c78 (2026-05-17)
 gmk-brainstorm/SKILL.md:24
 
 # gmk-kill-milestone:145 — post-action follow-up note ("roadmap.md missing —
 # run /gmk-roadmap after this to regenerate the dep graph"). The kill already
 # succeeded; this is courtesy guidance about a downstream artifact, not a
 # refuse pointing at a missing precondition.
+# verified-at: e084c78 (2026-05-17)
 gmk-kill-milestone/SKILL.md:145
 
 # gmk-loop:128 — dispatch-table cell describing what /gmk-loop delegates to.
 # The cell prints a *recommendation* after a milestone ships ("run
 # /gmk-dev-complete next"), not a refuse-with-rec.
+# verified-at: e084c78 (2026-05-17)
 gmk-loop/SKILL.md:128
 
 # gmk-loop:243 — in-skill confirm prompt ("Run /gmk-validate m2-dragon-evo?").
 # This is the user-facing confirmation before /gmk-loop dispatches the next
 # step, not a Rule 14 refuse chain.
+# verified-at: e084c78 (2026-05-17)
 gmk-loop/SKILL.md:243
 
 # gmk-merge-gate:156 — warning-row text in Step 5.5 save-schema check.
 # Explicitly documented at L159 as "a warning, not a gate failure". Rule 14
 # governs refuses; warnings have their own discipline.
+# verified-at: e084c78 (2026-05-17)
 gmk-merge-gate/SKILL.md:156
 
 # gmk-merge-gate:297 — "What this skill does NOT do" bullet ("Doesn't run
 # /gmk-port"). Describes scope boundary, not a precondition refuse.
+# verified-at: e084c78 (2026-05-17)
 gmk-merge-gate/SKILL.md:297
 
 # gmk-mock-inject:26 — usage-trigger sentence in the description block
 # ("The user wants to run /gmk-validate *now*, not wait"). Names the user
 # condition that makes mock-inject the right tool, not a precondition refuse.
 # (Verified by v0.7 Protocol 1 evaluator cold-read; allowlist decision holds.)
+# verified-at: e084c78 (2026-05-17)
 gmk-mock-inject/SKILL.md:26
 
 # gmk-save-migrate:196 — advisory prose in the "Multi-milestone batch port"
 # edge-case section ("run /gmk-save-migrate per milestone, then combine").
 # Suggests a workflow pattern; not a refuse pointing at a missing precondition.
+# verified-at: e084c78 (2026-05-17)
 gmk-save-migrate/SKILL.md:196

@@ -39,7 +39,7 @@ Coding the user's *own* notes is not the same as coding external testers. You ar
    - Stop.
 4. **Hypothesis header migration check.** Open `prototypes/<name>.html` header comment. If it contains `human:` rows in `MEASURED BY`, warn once and offer to migrate to `self-test:` (per `gmk-prototype-rules` Rule 10). Apply the migration only with user confirmation; don't rewrite silently.
 
-_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard, kit_version read contract) follow `gmk-prototype-rules` Rule 13-14, 16._
+_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard, kit_version read contract, pillars.kind read contract) follow `gmk-prototype-rules` Rule 13-14, 16, 17._
 
 ## Flow
 
@@ -300,9 +300,11 @@ Next:
 
 When the verdict is **FAIL**, the "Next:" block must include the closest domain-agent route. Routing rules (apply in order, stop at first match):
 
+Read the pillar's `kind` field first (per gmk-prototype-rules Rule 17). If `kind` is absent, fall back to free-text classification on the pillar's `name` + `description` (the pre-v0.8 behavior — match sensation words like "tactile", "responsiveness", "juicy", "chunky").
+
 | Condition | Recommended agent | Why |
 |---|---|---|
-| Pillar-violation flag fired AND the pillar is sensory (tactile / responsiveness / juicy / chunky language) | `feel-engineer` | Sensory miss — agent's catalog of feel parameters applies directly. The pillar's anti-example already named the failure word. |
+| Pillar-violation flag fired AND the pillar's `kind` is `"sensory"` (or, on `kind` absent, free-text matches tactile / responsiveness / juicy / chunky language) | `feel-engineer` | Sensory miss — agent's catalog of feel parameters applies directly. The pillar's anti-example already named the failure word. |
 | User's notes mention sensation words (`limp`, `weak`, `미적지근`, `휙`, `둔탁`, `no impact`) | `feel-engineer` | Same as above; sensation words are the agent's trigger. |
 | Bot validation PASS but self-test FAIL | `feel-engineer` first, `playtest-analyst` second | "Sensory miss" pattern (bot OK + self-test FAIL on sensation). If the language isn't clearly sensory, route to playtest-analyst for diagnosis. |
 | User explicitly says "I don't know why it feels off" | `playtest-analyst` | The analyst reads logs + your notes and routes — useful when you have a FAIL gut but no clear cause word. |

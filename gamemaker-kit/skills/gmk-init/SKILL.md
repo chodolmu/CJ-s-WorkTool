@@ -160,7 +160,7 @@ Full layout spec — see `_workspace/structure.md` in the kit itself. `gmk-init`
 
 ```json
 {
-  "kit_version": "0.7.0",
+  "kit_version": "0.8.0",
   "project_name": "ZooMerge",
   "engine": "godot",
   "created_at": "2026-05-08T15:30:00Z",
@@ -169,6 +169,7 @@ Full layout spec — see `_workspace/structure.md` in the kit itself. `gmk-init`
       "id": "tactile-satisfaction",
       "name": "Tactile satisfaction",
       "description": "Every interaction has a chunky physical payoff. The game should feel good in the hands even before the player understands the rules.",
+      "kind": "sensory",
       "anti_examples": [
         "Merging two dragons feels like clicking a button on a spreadsheet — silent, instant, weightless."
       ]
@@ -184,13 +185,15 @@ Full layout spec — see `_workspace/structure.md` in the kit itself. `gmk-init`
 
 `id` is `name` lowercased, spaces to hyphens, special characters stripped.
 
+`kind` is the **pillar shape** the user picked in Step 1/2 (one of `sensory` / `behavioral` / `decision-shape` / `emotional`). Write it on every pillar — downstream skills (`gmk-prototype`, `gmk-self-test`) read it per `gmk-prototype-rules` Rule 17 to pick metric class and agent routing. Use the lowercase exact form (the hyphen in `decision-shape` is significant) — if a downstream skill encounters `"Sensory"` or `"DECISION-SHAPE"`, Rule 17 warns and lowercase-normalizes for that run, so the kit still works but the warning surfaces every invocation. Fix the source on first sighting. If you genuinely can't classify a pillar — e.g. the user wrote a hybrid like "satisfying decisions" — pick the *dominant* shape (here: `decision-shape`, because the metric will be decision-diversity not feel parameters) and note the ambiguity in the pillar description. The kit's free-text fallback (Rule 17 absent case) only fires for pre-v0.8 hand-edited files.
+
 `supported_genres_check` is **always written**, even if every value is `false`. Later skills read it to decide whether to add caveats ("bot signal is reduced for this milestone because input is non-deterministic").
 
 ### milestones.json (initial)
 
 ```json
 {
-  "kit_version": "0.7.0",
+  "kit_version": "0.8.0",
   "project_name": "ZooMerge",
   "milestones": []
 }
@@ -198,7 +201,7 @@ Full layout spec — see `_workspace/structure.md` in the kit itself. `gmk-init`
 
 Milestones get appended by `/gmk-prototype` later. Don't create any here.
 
-`kit_version` is the schema version this file conforms to (v0.7 writes `"0.7.0"`). When `/gmk-init` is re-invoked on an older project (no `kit_version` or `< current`), upgrade the value silently — the file shape is backward-compatible (additive-only across sub-releases). The read-side contract for this field is `gmk-prototype-rules` Rule 16: warn-only on files written by a newer kit version, never refuse.
+`kit_version` is the schema version this file conforms to (v0.8 writes `"0.8.0"`). When `/gmk-init` is re-invoked on an older project (no `kit_version` or `< current`), upgrade the value silently — the file shape is backward-compatible (additive-only across sub-releases). The read-side contract for this field is `gmk-prototype-rules` Rule 16: warn-only on files written by a newer kit version, never refuse.
 
 ### vision.md (initial)
 

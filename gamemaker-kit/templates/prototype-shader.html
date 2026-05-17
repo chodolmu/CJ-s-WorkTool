@@ -16,65 +16,29 @@ Hypothesis:
 Created: {{CREATED_AT}}
 Shape: shader
 
-SHADER TEMPLATE — intentionally minimal
-========================================
-This shader template is **intentionally minimal**: a single fullscreen fragment shader,
-a uniform clock, and 1-axis interaction (pointer or wheel). The bot hook is present
-and binds the standard 5-callback spec, but the bot verdict for shape='shader' is
-INCONCLUSIVE by design — bots cannot judge visual fun. /gmk-validate will record bot
-metrics (action_entropy, duration) but defer the verdict to /gmk-self-test. See
-gmk-prototype-rules Rule 11 (shader path) and CONCEPT.md §15 (academic honesty).
+SHADER TEMPLATE — intentionally minimal. Single fullscreen fragment shader, a
+uniform clock, 1-axis interaction. The bot hook binds the standard 5-callback
+spec, but the bot verdict for shape='shader' is INCONCLUSIVE by design — bots
+cannot judge visual fun. /gmk-validate records bot metrics (action_entropy,
+duration) but defers verdict to /gmk-self-test. See gmk-prototype-rules Rule 11
+and CONCEPT.md §15. To get an objective scalar beyond "ran 60s without crash",
+add a domain metric to summary.score (interaction count, scroll distance, etc).
 
-If the prototype must measure something objective beyond "the shader ran without
-crashing for 60s", add a bot-tractable scalar to summary.score (e.g., total
-interaction count, scroll-distance reached). Otherwise leave score=0 and rely on
-self-test for falsification.
-
-PORTING NOTE
-============
-Shader prototypes port to GDShader / HLSL with one-to-one mapping on uniforms,
-but tunable feel numbers (uMixSpeed, uTrailDecay below) need re-tuning on the
-target engine. See gmk-portability-check Stage 4 (Metric diff) — it will flag
-shader prototypes for required visual diff in addition to numeric diff.
+PORTING: shader prototypes port to GDShader / HLSL with 1:1 uniform mapping, but
+tunable feel numbers (MIX_STEP, trail decay) need re-tuning on the target
+engine. gmk-portability-check Stage 4 flags shader prototypes for visual diff in
+addition to numeric diff.
 -->
 <style>
-  html, body {
-    margin: 0; padding: 0; background: #000; color: #ddd;
-    font-family: monospace; overflow: hidden;
-  }
-  #stage {
-    position: relative;
-    width: 100vw; height: 100vh;
-    display: block;
-  }
-  #gl {
-    position: absolute; inset: 0;
-    width: 100%; height: 100%;
-    display: block;
-    touch-action: none;
-  }
-  #hud {
-    position: absolute; left: 12px; top: 12px;
-    background: rgba(0,0,0,0.5);
-    padding: 8px 10px; border-radius: 4px;
-    font-size: 12px; opacity: 0.75;
-    pointer-events: none;
-    line-height: 1.5;
-  }
+  html, body { margin: 0; padding: 0; background: #000; color: #ddd; font-family: monospace; overflow: hidden; }
+  #stage { position: relative; width: 100vw; height: 100vh; display: block; }
+  #gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+  #hud { position: absolute; left: 12px; top: 12px; background: rgba(0,0,0,0.5); padding: 8px 10px;
+         border-radius: 4px; font-size: 12px; opacity: 0.75; pointer-events: none; line-height: 1.5; }
   #hud span { margin-right: 12px; }
-  #hint {
-    position: absolute; left: 12px; bottom: 12px;
-    font-size: 11px; opacity: 0.4;
-    pointer-events: none;
-  }
-  #err {
-    position: absolute; left: 12px; top: 80px;
-    background: rgba(150,0,0,0.85);
-    padding: 8px 10px; border-radius: 4px;
-    font-size: 11px; max-width: 70vw;
-    white-space: pre-wrap;
-    display: none;
-  }
+  #hint { position: absolute; left: 12px; bottom: 12px; font-size: 11px; opacity: 0.4; pointer-events: none; }
+  #err { position: absolute; left: 12px; top: 80px; background: rgba(150,0,0,0.85); padding: 8px 10px;
+         border-radius: 4px; font-size: 11px; max-width: 70vw; white-space: pre-wrap; display: none; }
 </style>
 </head>
 <body>
@@ -92,24 +56,16 @@ shader prototypes for required visual diff in addition to numeric diff.
 
 <script src="./_bot_hook_lib.js"></script>
 <script>
-// =============================================================================
-// GAME LOGIC — shader shape
-// =============================================================================
-// gamemaker-kit asks the implementer to edit ONLY the marked sections below.
-// The bot hook block at the bottom binds to these — do not remove the binding.
-//
-// Bot verdict for shader prototypes is INCONCLUSIVE by design. See header note.
-// =============================================================================
+// GAME LOGIC — shader shape. Edit ONLY the marked sections; bot hook at bottom binds to these.
+// Bot verdict is INCONCLUSIVE by design (see header).
 
-// ---- Tunable constants (feel knobs) ---------------------------------------
-const RUN_SECONDS    = 60;     // bot run length in seconds (also human session cap)
-const MAX_ACTIONS    = 5000;   // safety: bot can't loop forever
-const MIX_STEP       = 0.05;   // change to uMix per action ('left' / 'right')
-const TICK_ACTION    = 1.0;    // change to uTime per action ('tick')
+// Tunable constants (feel knobs)
+const RUN_SECONDS = 60;     // bot run length (also human session cap)
+const MAX_ACTIONS = 5000;   // safety: bot can't loop forever
+const MIX_STEP    = 0.05;   // change to uMix per 'left' / 'right' action
+const TICK_ACTION = 1.0;    // change to uTime per 'tick' action
 
-// ---- Game state -----------------------------------------------------------
-// The state object is the single source of truth. Render reads it each frame;
-// bot reads via legalActions / collectSummary; user input writes via apply().
+// Single source of truth. Render reads; bot reads via legalActions/collectSummary; input writes via apply.
 let state = null;
 
 function newState(seed, rng) {
@@ -117,7 +73,7 @@ function newState(seed, rng) {
     seed,
     started_ms: 0,        // wall clock at startGame; lib injects via reset()
     sim_ms: 0,            // bot-driven simulated time; advances on 'tick'
-    mix: 0.5,             // [0..1] one driven uniform — the interaction axis
+    mix: 0.5,             // [0..1] driven uniform — the interaction axis
     trail: 0.5,           // smoothed mix (visual)
     interactions: 0,      // count of non-'tick' actions
     over: false,
@@ -125,18 +81,12 @@ function newState(seed, rng) {
   };
 }
 
-// ---- Action shape ---------------------------------------------------------
-// Bot's legalActions() returns one of:
-//   { type: 'left' }   — decrease mix
-//   { type: 'right' }  — increase mix
-//   { type: 'tick' }   — advance simulated time without interacting
-// The shader prototype's "decision" is what fraction of actions are interactions
-// vs. ticks. action_entropy reads this distribution; that's the only objective
-// signal a shader prototype gives a bot. Score stays 0 unless implementer adds one.
+// Bot actions: {type:'left'} decrease mix, {type:'right'} increase mix, {type:'tick'} advance sim time.
+// The "decision" a shader prototype offers is the interaction:tick ratio; action_entropy reads it.
+// That's the only objective signal — score stays 0 unless implementer adds one.
 
 function computeLegalActions(s) {
   if (s.over) return [];
-  // All three are always legal until the run ends.
   return [{ type: 'left' }, { type: 'right' }, { type: 'tick' }];
 }
 
@@ -152,9 +102,7 @@ function applyAction(s, action) {
   } else {
     throw new Error('unknown action type: ' + action.type);
   }
-  // Smooth trail toward mix for visual continuity.
   s.trail += (s.mix - s.trail) * 0.15;
-
   if (s.sim_ms >= RUN_SECONDS * 1000 || s.interactions + s.sim_ms / 16 > MAX_ACTIONS) {
     s.over = true;
     s.over_reason = s.sim_ms >= RUN_SECONDS * 1000 ? 'time-up' : 'action-cap';
@@ -162,10 +110,8 @@ function applyAction(s, action) {
 }
 
 function summarize(s) {
-  // Bot verdict is INCONCLUSIVE for shader prototypes — score stays 0 unless
-  // the implementer adds a domain-specific scalar (e.g., distance scrolled,
-  // distinct mix values explored). The custom fields are what /gmk-validate
-  // reads to compute action_entropy and state_coverage.
+  // Score stays 0 for shader unless implementer adds a domain scalar.
+  // /gmk-validate reads custom.* to compute action_entropy and state_coverage.
   return {
     score: 0,
     custom: {
@@ -173,49 +119,33 @@ function summarize(s) {
       sim_seconds: s.sim_ms / 1000,
       final_mix: s.mix,
       over_reason: s.over_reason,
-      // state_coverage proxy: how many distinct "mix bins" the bot visited.
-      // For a 10-bin partition, full coverage = 10.
+      // state_coverage proxy: distinct mix bins visited (10-bin partition, full = 10)
       mix_bin_visits: s.mix_bin_visits || 0,
     },
   };
 }
 
-// =============================================================================
-// SHADER (vanilla WebGL2)
-// =============================================================================
-// One fullscreen triangle, one fragment shader. The fragment shader receives:
-//   uniform float uTime   — wall-clock seconds since startGame
-//   uniform float uMix    — driven by interaction (state.trail, smoothed)
-//   uniform vec2  uRes    — viewport resolution in pixels
-// Edit FRAG_SRC to test your visual hypothesis. Keep uniform names — the bot
-// hook depends on a stable interaction surface, not on the shader contents.
+// SHADER (vanilla WebGL2). One fullscreen triangle, one fragment shader.
+// Uniforms: uTime (wall-clock seconds), uMix (state.trail — smoothed axis), uRes (viewport px).
+// Edit FRAG_SRC freely; keep uniform names — bot hook depends on the interaction surface, not shader contents.
 
 const VERT_SRC = `#version 300 es
-in vec2 aPos;
-out vec2 vUv;
-void main() {
-  vUv = aPos * 0.5 + 0.5;
-  gl_Position = vec4(aPos, 0.0, 1.0);
-}`;
+in vec2 aPos; out vec2 vUv;
+void main() { vUv = aPos * 0.5 + 0.5; gl_Position = vec4(aPos, 0.0, 1.0); }`;
 
 const FRAG_SRC = `#version 300 es
 precision highp float;
 in vec2 vUv;
-uniform float uTime;
-uniform float uMix;
-uniform vec2  uRes;
+uniform float uTime; uniform float uMix; uniform vec2 uRes;
 out vec4 outColor;
-
 // REPLACE THE BODY BELOW WITH YOUR VISUAL HYPOTHESIS.
-// The default is a placeholder gradient that responds to uMix and uTime.
+// Default: placeholder gradient responding to uMix and uTime.
 void main() {
   vec2 p = (vUv * 2.0 - 1.0) * vec2(uRes.x / uRes.y, 1.0);
-  float r = length(p);
-  float a = atan(p.y, p.x);
+  float r = length(p); float a = atan(p.y, p.x);
   float band = sin(a * 6.0 + uTime * 0.6) * 0.5 + 0.5;
   float ring = smoothstep(0.5, 0.5 + 0.02, mix(0.3, 0.8, uMix) - r * (0.5 + 0.5 * band));
-  vec3 col = mix(vec3(0.05, 0.08, 0.12), vec3(0.9, 0.6, 0.2), ring);
-  outColor = vec4(col, 1.0);
+  outColor = vec4(mix(vec3(0.05, 0.08, 0.12), vec3(0.9, 0.6, 0.2), ring), 1.0);
 }`;
 
 const canvas = document.getElementById('gl');
@@ -256,7 +186,6 @@ if (gl) {
   uTime = gl.getUniformLocation(program, 'uTime');
   uMix  = gl.getUniformLocation(program, 'uMix');
   uRes  = gl.getUniformLocation(program, 'uRes');
-
   // One fullscreen triangle (3 verts, no indices).
   const buf = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, buf);
@@ -266,16 +195,13 @@ if (gl) {
   gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
 }
 
-// =============================================================================
-// RENDER LOOP (for human play; bot reads state, not pixels)
-// =============================================================================
-
+// RENDER LOOP (for human play; bot reads state, not pixels).
 const tEl = document.getElementById('t');
 const xEl = document.getElementById('x');
 const intEl = document.getElementById('interactions');
 const statusEl = document.getElementById('status');
 let rafId = 0;
-let mixBins = new Set();  // tracks coverage of [0..1] in 10 bins
+let mixBins = new Set();  // coverage of [0..1] in 10 bins
 
 function resize() {
   if (!gl) return;
@@ -289,8 +215,7 @@ function resize() {
 function renderFrame() {
   if (!state || !gl) return;
   resize();
-  // Update visual trail per frame for smooth display (bot drives state.mix,
-  // not state.trail; trail catches up on each apply() and each render frame).
+  // Bot drives state.mix; trail catches up here for smooth display.
   state.trail += (state.mix - state.trail) * 0.15;
 
   gl.useProgram(program);
@@ -299,8 +224,7 @@ function renderFrame() {
   gl.uniform2f(uRes, canvas.width, canvas.height);
   gl.drawArrays(gl.TRIANGLES, 0, 3);
 
-  // Track mix-bin coverage for state_coverage proxy. Bot drives state.mix
-  // directly so this updates whether the human is playing or the bot is.
+  // mix-bin coverage updates whether human or bot is driving.
   const bin = Math.min(9, Math.floor(state.mix * 10));
   mixBins.add(bin);
   state.mix_bin_visits = mixBins.size;
@@ -313,10 +237,7 @@ function renderFrame() {
   rafId = requestAnimationFrame(renderFrame);
 }
 
-// =============================================================================
-// HUMAN INPUT (drag horizontally, or scroll)
-// =============================================================================
-
+// HUMAN INPUT (drag horizontally, or scroll).
 let dragging = false;
 canvas.addEventListener('pointerdown', (e) => {
   if (!state || state.over) return;
@@ -329,7 +250,6 @@ canvas.addEventListener('pointerup', (e) => {
 });
 canvas.addEventListener('pointermove', (e) => {
   if (!dragging || !state || state.over) return;
-  // Human drives mix directly via x position; counts as one interaction per move.
   const rect = canvas.getBoundingClientRect();
   const next = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
   if (Math.abs(next - state.mix) >= MIX_STEP / 2) {
@@ -344,57 +264,35 @@ canvas.addEventListener('wheel', (e) => {
   state.interactions++;
 }, { passive: false });
 
-// =============================================================================
-// BOT HOOK BINDING — DO NOT MODIFY
-// =============================================================================
-// The shared library at _bot_hook_lib.js exposes window.__gmk.makeHook.
-// We bind the standard 5-callback spec to our game logic. /gmk-validate
-// requires window.__gmk_botHook__ with this exact surface.
-//
-// Shape='shader' note: legalActions returns 3 abstract actions (left / right /
-// tick). action_entropy across these tells /gmk-validate how interactive the
-// bot is; that's the only bot-objective signal. The verdict itself is
-// INCONCLUSIVE — falsification goes through /gmk-self-test.
-
+// BOT HOOK BINDING — DO NOT MODIFY.
+// _bot_hook_lib.js exposes window.__gmk.makeHook; we bind the 5-callback spec to game logic above.
+// shader-shape: legalActions returns 3 abstract actions; action_entropy across them is the only
+// bot-objective signal. Verdict is INCONCLUSIVE — falsification goes through /gmk-self-test.
 window.__gmk_botHook__ = window.__gmk.makeHook({
   reset(seed, rng) {
     state = newState(seed, rng);
     state.started_ms = performance.now();
     mixBins = new Set();
-    // Cancel any prior frame loop before re-starting.
     if (rafId) cancelAnimationFrame(rafId);
     if (gl) rafId = requestAnimationFrame(renderFrame);
   },
-  isOver() {
-    return state.over;
-  },
-  legalActions() {
-    return computeLegalActions(state);
-  },
-  apply(action) {
-    applyAction(state, action);
-    // No render in apply() — bots run headless and don't need it.
-  },
-  collectSummary() {
-    return summarize(state);
-  },
-  // Optional v0.2 callbacks — present so suspicious-run extraction can read them.
-  // Returning null is fine; persona-mix will fall back to random for that persona.
+  isOver() { return state.over; },
+  legalActions() { return computeLegalActions(state); },
+  apply(action) { applyAction(state, action); },  // no render in apply — bots run headless
+  collectSummary() { return summarize(state); },
+  // Optional v0.2 callbacks for suspicious-run extraction. Returning null is fine.
   stateSignature() {
     if (!state) return null;
-    // Quantize mix to 0.05 buckets, bucket sim time to 5s windows.
     return Math.round(state.mix * 20) + ':' + Math.floor(state.sim_ms / 5000);
   },
   progressEstimate() {
     if (!state) return null;
     return Math.min(1, state.sim_ms / (RUN_SECONDS * 1000));
   },
-  // riskEstimate / noveltyScore intentionally omitted — shader prototypes have
-  // no notion of risk, and novelty is uMix delta which the harness already
-  // computes from stateSignature transitions.
+  // riskEstimate / noveltyScore omitted — shader prototypes have no risk; novelty is uMix delta
+  // which the harness already computes from stateSignature transitions.
 });
 
-// Initial state for human players (seed = wall-clock so each load is fresh).
 window.__gmk_botHook__.startGame(Date.now() & 0xffff);
 </script>
 </body>

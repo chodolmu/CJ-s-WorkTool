@@ -23,7 +23,7 @@ Before writing anything, verify:
 3. **`milestones.json` exists**. Create as `{ "project_name": "...", "milestones": [] }` if missing. Schema reference: `_workspace/examples/milestones-example.json`.
 4. **`templates/_bot_hook_lib.js` reachable**. The prototype either inlines the library (Rule 7 Option B) or references it via `<script src>` (Option A). Either way, the kit's `templates/_bot_hook_lib.js` is the canonical source.
 
-_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard, kit_version read contract) follow `gmk-prototype-rules` Rule 13-14, 16._
+_Standard preconditions (milestone-id resolution, empty/partial state, refuse-chain cycle guard, kit_version read contract, pillars.kind read contract) follow `gmk-prototype-rules` Rule 13-14, 16, 17._
 
 ## Flow
 
@@ -75,11 +75,12 @@ For `kind: 'self-test'` rows, `confidence` and `sample_size` are not required (t
 | `target` is a freeform string like `"> 4min"` | Offer to migrate to structured form: *"v0.2 uses structured targets. `\"> 4min\"` → `{op: '>', value: 240000}`. Apply?"* |
 | bot row missing `confidence` or `sample_size` | *"Bot rows need confidence (0.80/0.90/0.95) and sample_size — `/gmk-validate` uses these for CI checks."* |
 
-The pillar shape should match the measurement type (from `gmk-init`):
-- **Behavioral pillar** → behavioral metric (restart time, session length, action frequency)
-- **Decision-shape pillar** → decision metric (action diversity, dominant strategy ratio)
-- **Sensory pillar** → user's-own-language signal ("juicy", "chunky", "satisfying") + behavioral proxy
-- **Emotional pillar** → user self-report + behavioral proxy
+The pillar shape should match the measurement type (from `gmk-init`). Read the pillar's `kind` field first (per gmk-prototype-rules Rule 17 — values: `sensory` / `behavioral` / `decision-shape` / `emotional`). If `kind` is absent (pre-v0.4 pillars or hand-edited files), fall back to free-text classification on the pillar's `name` + `description`.
+
+- **Behavioral pillar** (`kind: "behavioral"`) → behavioral metric (restart time, session length, action frequency)
+- **Decision-shape pillar** (`kind: "decision-shape"`) → decision metric (action diversity, dominant strategy ratio)
+- **Sensory pillar** (`kind: "sensory"`) → user's-own-language signal ("juicy", "chunky", "satisfying") + behavioral proxy
+- **Emotional pillar** (`kind: "emotional"`) → user self-report + behavioral proxy
 
 If the user proposes a Then like *"the game is fun"* — push back. *"'Fun' is what we're trying to prove, not what we measure. What does a fun-having player **do** differently?"*
 

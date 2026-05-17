@@ -7,32 +7,54 @@
 # different semantic, or as part of a meta-discussion of the rename itself.
 # If you cannot write a one-sentence justification, the line is not allowlisted.
 #
-# Maintained: 2026-05-17 (v0.6 introduction)
+# v0.8 staleness convention: each entry carries a `verified-at: <SHA>` stamp
+# in its justification comment. When the cited file is edited and the
+# allowlisted line shifts (or the line at that number becomes a real refuse),
+# the stamp goes stale. Future Protocol 1 evaluators re-verify entries whose
+# SHA is older than 2 releases by running `grep -in endpoint <path> | head -N`
+# and updating the stamp if the line still matches its justification, or
+# removing the entry if not. v0.8 audit removed marketplace.json:8 — line had
+# no "endpoint" token (real occurrences only at :15).
+#
+# Regex policy (v0.8): Check B uses `grep -wE 'endpoint'` (whole-word, no -i).
+# Capital-E "Endpoint" was verified absent from all live scan paths during the
+# v0.8 Protocol 1 audit; if it ever needs to appear (e.g., API endpoint
+# discussion in a new doc), prefer dropping the word entirely or wrapping it
+# in code-block markers — re-enabling -i would broaden the regex unnecessarily.
+#
+# Maintained: 2026-05-17 (v0.6 introduction, v0.8 staleness convention + regex policy)
 
 # CONCEPT.md:40 — the meta-discussion of the v0.5 rename ("Why 'checkpoint' and not 'endpoint'").
 # Removing the word here would destroy the explanation.
+# verified-at: e084c78 (2026-05-17)
 CONCEPT.md:40
 
 # skills/gmk-self-test/SKILL.md:107 — "they bounced before a clear endpoint" refers to
 # a player's gameplay session ending, not gamemaker-kit's dev-complete state.
 # Different semantic; the word fits and should stay.
+# verified-at: e084c78 (2026-05-17)
 skills/gmk-self-test/SKILL.md:107
 
 # .claude-plugin/plugin.json:4 — the plugin description says "dev-complete is a
 # checkpoint (recomputable), not an endpoint" — intentional contrast added in v0.5.
+# verified-at: e084c78 (2026-05-17)
 .claude-plugin/plugin.json:4
 
 # skills/gmk-dev-complete/SKILL.md:59 — references the "checkpoint, not endpoint"
 # framing as a contrast clause. The word appears only to name what the checkpoint
 # is *not*, mirroring CONCEPT.md:40's meta-discussion.
+# verified-at: e084c78 (2026-05-17)
 skills/gmk-dev-complete/SKILL.md:59
 
 # CONCEPT.md:11 — the §0 summary contrasts "checkpoint" against "a one-way endpoint"
 # to anchor the v0.5 framing. Removing the word would weaken the contrast.
+# verified-at: e084c78 (2026-05-17)
 CONCEPT.md:11
 
-# .claude-plugin/marketplace.json:8 + :15 — the v0.6 changelog blurbs name the
+# .claude-plugin/marketplace.json:15 — the v0.6 changelog blurb names the
 # "endpoint→checkpoint at 17 locations" sweep as a release highlight. The word
 # appears only to describe the rename work itself, mirroring plugin.json:4.
-.claude-plugin/marketplace.json:8
+# (v0.8 audit: removed sibling :8 entry — that line is the parent-description
+# block and contains no "endpoint" token; the real occurrence is only :15.)
+# verified-at: e084c78 (2026-05-17)
 .claude-plugin/marketplace.json:15

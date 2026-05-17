@@ -124,6 +124,10 @@ Also write `_workspace/milestones/<id>/art-gen-log.md` — an immutable per-run 
 
 ### Step 6 — Print the summary
 
+Before printing, check **mock-asset cleanup**: if `prototypes/<id>-mocked.html` exists (a sibling file produced by `/gmk-mock-inject` for this milestone), the real assets that just landed make it stale. Surface a one-line reminder in the Next: block — do NOT auto-delete the mocked file (the user may want to compare). The reminder is the only action gmk-art-gen takes; the cleanup is the user's call.
+
+Detection: `test -f prototypes/${milestone_id}-mocked.html` after the real assets are written. Skip the reminder line if no mocked sibling exists.
+
 ```
 Art generation complete: m2-dragon-evo
   Generated: 12/13
@@ -143,6 +147,10 @@ Next:
     prototype. Note: gmk-prototype-rules §6 says no external asset files in
     prototypes except via data-URI or the hypothesis-is-about-art exception.
     For most milestones, assets live in the engine project, not the HTML.
+  - Mock cleanup (only if a mocked sibling exists):
+      Real assets landed. The mocked file at prototypes/m2-dragon-evo-mocked.html
+      is now stale — delete it and re-run /gmk-validate on the original
+      (or keep both temporarily to side-by-side compare).
 ```
 
 ## Edge cases & policy

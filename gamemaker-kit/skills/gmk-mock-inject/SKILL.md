@@ -281,7 +281,7 @@ Skip. Fonts are handled by the engine port; HTML uses system fonts. Mock fonts w
 - **Doesn't modify the original prototype.** Original stays clean for when real assets arrive.
 - **Doesn't generate "good-looking" mocks.** Mocks are *legible* (labels visible) and *deterministic*, not pretty. Use real assets when you want pretty.
 - **Doesn't validate the mocked prototype.** That's `/gmk-validate --file=mocked`.
-- **Doesn't auto-delete the mocked file when real assets arrive.** The user deletes; the kit doesn't track.
+- **Doesn't auto-delete the mocked file when real assets arrive.** The user deletes; the kit doesn't track. (v0.8: `/gmk-art-gen` prints a one-line reminder in its Step 6 summary when a mocked sibling exists — the reminder is informational, not a destructive auto-cleanup.)
 - **Doesn't mock hypothesis-relevant assets.** If the hypothesis is about a visual or audio feel, refuse.
 - **Doesn't add CDN imports.** All mocks are self-contained.
 
