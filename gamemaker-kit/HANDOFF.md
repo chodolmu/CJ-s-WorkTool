@@ -1,16 +1,66 @@
-# Handoff: gamemaker-kit — v0.9 Step 0 완료 (Protocol 1 UNDERSTATED, backlog 재작성됨)
+# Handoff: gamemaker-kit — v0.9.0 release 완료, **ACCURATE 4연속**
 
-**Updated**: 2026-05-18 (21:13 KST)
+**Updated**: 2026-05-18 (21:45 KST)
 **Branch**: main
-**Latest commit**: `bd819d3 docs(gamemaker-kit): post-v0.8 HANDOFF — third consecutive ACCURATE release reflection`
-**Tag**: `v0.8.0` (origin 동기화 완료)
-**Status**: v0.8.0 release 완료, **3연속 ACCURATE** (v0.6/v0.7/v0.8). v0.9 사이클 Step 0 (Protocol 1 work-start evaluator) 완료 — verdict UNDERSTATED, 18 corrections + 3 missing candidates, backlog 재작성 완료. 작업 시작 가능.
-**v0.8 보고서**: `_workspace/v0.8-protocol-1.md`, `_workspace/v0.8-protocol-3.md`, `_workspace/v0.8-protocol-4.md`
-**v0.9 Protocol 1 보고서**: `_workspace/v0.9-protocol-1.md`
+**Latest commit**: `c35eeae feat(gamemaker-kit): v0.9.0 — Rule 16 safety-valve annotation + _save_breaking drop + v1.0 backcompat inventory`
+**Tag**: `v0.9.0` (origin 동기화 완료, GitHub release 발행)
+**Release URL**: https://github.com/chodolmu/CJ-s-WorkTool/releases/tag/v0.9.0
+**Status**: v0.9.0 release 완료. **4 evaluator checkpoint 모두 ACCURATE** (Protocol 1 UNDERSTATED expected, Protocol 3 + Protocol 4 모두 ACCURATE, 23/23 CHANGELOG claims PASS). v0.6/v0.7/v0.8/v0.9 **4연속 ACCURATE** — Protocol 1/3/4 cycle process가 명확히 효과 입증됨. 두 번째 연속 0-warning pre-flight release (v0.8 baseline 유지).
+**v0.9 보고서**: `_workspace/v0.9-protocol-1.md`, `_workspace/v0.9-protocol-3.md`, `_workspace/v0.9-protocol-4.md`
 
 ---
 
-## v0.8 핵심 성과 (이번 사이클)
+## v0.9 핵심 성과 (이번 사이클)
+
+| 항목 | 결과 |
+|---|---|
+| Protocol 1 verdict | **UNDERSTATED** — HANDOFF 6 candidates → 18 corrections (7 ADD + 3 REMOVE + 6 VERIFY + 2 RECLASSIFY) + 3 missing. F21 4연속. ratio = 3.00 (new template-conformance dimension 효과). |
+| T1-A: Rule 16 §Exercise paths annotation | 신설. 3 unreachable rows (absent / > current / unparseable)를 "safety valve, last-exercised: never"로 명시. v0.7 Rule 14 CYCLE 패턴 일관 적용. M-2 reframed (4 false-positives REMOVE). |
+| T1-B: skill count "~28" → "29" | 5 사이트 sweep (README:6/43/192, CONCEPT:111/409). CONCEPT.md living-doc로 처리 (v0.2-0.9 range). |
+| T1-C: CHANGELOG ### Process 섹션 + template 테이블 | 신설. v0.9 CHANGELOG entry에 corrections/ratio/F21 trend interpretation. handoff-backlog-template.md:96-103 v0.9 row fill. |
+| T2-A: gmk-port split 결정 | KEEP (no split). 5 reasons + 5 re-open triggers documented. |
+| T2-B: `_save_breaking` drop (Path b) | 완료. `grep -rn '_save_breaking' skills/` → 0 hits. **마지막 live half-applied field 종결** — class 완전히 비었음. |
+| T2-C: v1.0 backcompat inventory | 신설. 6 categories × per-category break candidates. v1.0 work-start Protocol 1 입력. |
+| Protocol 3 verdict | **ACCURATE** — 6/6 in-scope candidates PASS, 100% template conformance (v0.8 48% → v0.9 100%), green-light Y |
+| Protocol 4 verdict | **ACCURATE** — 23 CHANGELOG claims 모두 git-diff 검증 통과, 0 release-blocking defects |
+| Pre-flight final | 7/7 PASS, 0 warnings (v0.8 baseline 유지 — 두 번째 연속 0-warning) |
+| 4-consecutive-ACCURATE | **달성** (v0.6 → v0.7 → v0.8 → v0.9) |
+
+## v0.9에서 학습 / 확인된 패턴
+
+### F21 closure 추세 (3 release tracking)
+
+| Release | Candidates | Corrections | Missing | Ratio | Template conformance |
+|---|---|---|---|---|---|
+| v0.7 | 4 | 7 | 0 | 1.75 | n/a (template pre-existence) |
+| v0.8 | 5 | 14 | 3 | 2.80 | 48% (template 도입 cycle) |
+| v0.9 | 6 | 18 | 3 | **3.00** | **100% (in-scope)** |
+
+Ratio 상승 = anti-improvement *아님*. (a) template-conformance dimension 추가 (4 mandatory fields 채우지 못한 candidate가 자동 RECLASSIFY 발생), (b) Tier 3 candidates 압축 작성, (c) baseline 누적 drift (gmk-port HANDOFF cite 519 → 실제 570).
+
+**v0.10 ratio 예상**: 1.5-2.0. template-adoption one-time cost가 v0.9에서 끝났고, conformance 100%면 RECLASSIFY 0; ADD/REMOVE/VERIFY만 발생.
+
+### Last live half-applied field 종결
+
+v0.4 introduced 9 deprecated fields (write-only). v0.5 closed v0.4의 half-application. v0.7 closed `kit_version` write-only (Rule 16). v0.8 closed `pillars.kind` write-only (Rule 17). **v0.9 closed `_save_breaking` (Path b drop) — 마지막 instance.**
+
+이제 declared-but-half-applied class는 비었음. v1.0+에서 새 field가 도입되면 v0.4-v0.9 패턴 *반복 가능*하지만, current state는 empty. v1.0 work는 *closure* 작업 아닌 *initial-write* 단계.
+
+### v1.0 transition planning
+
+v0.9는 마지막 v0.x. v1.0은 첫 MAJOR bump = backward-compat break 가능. `_workspace/v1.0-backcompat-inventory.md`가 6 categories × break candidates 정리:
+- Category 1: schema additive-only (Rule 16 row 2) — break = `kit_version` mandatory
+- Category 2: deprecated-field forgiveness — break = stop silently ignoring (warn+strip 또는 refuse)
+- Category 3: bot hook API additivity (`_gmkApiVersion: 1`) — break = bump to 2
+- Category 4: pillar shape free-text fallback (Rule 17 row 2) — break = require `kind`
+- Category 5: endpoint terminology (Check B) — break candidate 없음
+- Category 6: `human:` → `self-test:` migration — break = refuse `human:` outright
+
+각 break은 cost vs benefit 평가 필요. 첫 응시 권장: cheap breaks만 (Category 1, 4, 6).
+
+---
+
+## v0.8 핵심 성과 (이전 사이클)
 
 | 항목 | 결과 |
 |---|---|
@@ -49,7 +99,82 @@ Protocol 1 UNDERSTATED는 *expected* (HANDOFF anchoring). Protocol 3 ACCURATE = 
 
 ---
 
-## v0.9 backlog candidates (Protocol 1 보정 완료, 2026-05-18 21:11 KST)
+## v0.10 backlog candidates (Protocol 1로 보정 필요)
+
+다음 release에서 검토 후보. 모든 candidate는 `_workspace/handoff-backlog-template.md` template shape (file:line+grep / non-targets / classification / defect-class link) 준수 필수. v0.9에서 100% conformance 달성했으므로 v0.10도 동일 기대.
+
+**v0.10 한 줄 약속 후보**: *"Empty the v0.9 deferred Tier 3 (Check G FAIL promote + Rule 14 line-cap exercise path policy), drive Protocol 1 corrections ratio under 2.0 by adopting template discipline from the start, and either (a) commit v0.6/v0.7 retroactive Protocol 4 reports OR (b) document why the chain rests on commit-message attestation."*
+
+### Tier 1 (must-have)
+
+**T1-A. Check G WARN → FAIL promotion (deferred from v0.9 T3-A)**
+- *Targets* (grep query: `grep -n 'Check G' scripts/check-plugin-meta.sh`):
+  - `scripts/check-plugin-meta.sh:291-327` Check G block — change `WARN` → `FAIL`, wire into drift accumulator (mirror Check D pattern)
+  - `scripts/check-plugin-meta.sh:147` Check B header convention — Check G header에도 `(FAIL-level in v0.10)` 표기 amend
+- *Non-targets*:
+  - 새 pillar-kind read site 추가 — v0.10 scope 외 (Rule 17 자체는 v0.8 안정)
+  - Check G 로직 변경 — promotion만, 검증 내용은 동일
+- *Classification*: structural-guard
+- *Defect class*: declared-but-half-applied field (v0.8 Rule 17 closure completion)
+- *Pre-condition*: v0.8 도입 후 2 cycles WARN baseline (v0.8 + v0.9) 충족 — Check B (v0.6 WARN, v0.8 FAIL = 2 cycles) 선례 따름.
+
+**T1-B. Rule 14 line-cap 토큰 exercise path policy (deferred from v0.9 T3-B / M-NEW-2)**
+- *Targets* (grep query: `grep -n 'Rule 14\|line.cap\|over.cap' skills/gmk-prototype-rules/SKILL.md scripts/check-plugin-meta.sh`):
+  - `skills/gmk-prototype-rules/SKILL.md:530-531` line-cap policy ("hard refusal, soft warning")
+  - 신설: `templates/_test_over_cap.html` synthetic fixture (301 lines, exercise path) OR Rule 14 line-cap에 §"Exercise paths" annotation (Rule 16과 동일 form)
+  - 정책 결정: v0.9 T1-A는 *annotation*, T1-B(이)는 fixture vs annotation 결정 필요
+- *Non-targets*:
+  - Rule 14 token form 변경 (단순/CYCLE) — daily 사용 중
+  - Real prototype 강제 변경 — v0.8 shader 299줄, 의도된 상태
+- *Classification*: structural-guard (fixture) OR audit-only (annotation)
+- *Defect class*: declared-rule-with-no-exercise-path (real Rule 14 exercise gap, M-2 reach였던 것)
+- *Pre-condition*: v0.9 T1-A 결정 (annotation 선택) — T1-B도 동일 정책 적용 가능 vs synthetic fixture 차별화
+
+### Tier 2 (should-have)
+
+**T2-A. Protocol 4 archival completion (v0.6/v0.7 retroactive)**
+- *Targets* (grep query: `find _workspace -name 'v0.*-protocol-4.md'`):
+  - 신설: `_workspace/v0.6-protocol-4.md` + `_workspace/v0.7-protocol-4.md`
+  - git log 기반 retrospective audit (post-tag 검증 git log/diff 활용)
+  - OR: HANDOFF + CHANGELOG에 "Protocol 4 attestation: commit-message only for v0.6/v0.7, archived from v0.8 onward — chain integrity rests on cross-commit reference" 명시
+- *Non-targets*:
+  - v0.8/v0.9 reports — 이미 commit됨
+  - Protocol 1/3 reports — 이미 commit됨
+- *Classification*: process (retroactive documentation OR archival)
+- *Defect class*: missing-release-readiness-artifact (v0.8 P4 §6에서 documented, v0.9 P4도 carry-over)
+
+**T2-B. Untracked `skills/scripts/` empty directory cleanup**
+- *Targets*:
+  - `skills/scripts/` (working tree only) — empty dir, v0.8 P4부터 carry-over
+- *Non-targets*:
+  - `scripts/` (project root) — 본 디렉토리는 active (check-plugin-meta.sh, hooks/pre-push 등)
+- *Classification*: doc-cleanup (working tree noise)
+- *Defect class*: none — operational cleanup
+
+### Tier 3 (defer to v1.0)
+
+**T3-A. v1.0 brainstorm formal kickoff**
+- v1.0 backcompat inventory (T2-C in v0.9)를 바탕으로 break candidate 별 cost-benefit 평가
+- v1.0 Protocol 1 work-start evaluator 가용 시점 확인
+- Defer 이유: v0.10 scope과 v1.0 brainstorm 분리 — v0.10 = v0.x 마무리, v1.0 = clean start
+
+### v0.10에서 *안* 할 것
+
+| 항목 | 이유 |
+|---|---|
+| 새 SKILL / 새 agent | 0개 유지 (v0.4 이후 정책) |
+| dogfood | 영영 차단 (W24) |
+| Backward-compat break | v0.x 사이클 — break은 v1.0에서만 |
+| 새 Rule 18+ 도입 | declared field convention 추가 = half-applied risk; v1.0+에서 검토 |
+| `_save_breaking` Path (a) reverse | Path (b) drop 결정 정착, 사용자 요청 없음 |
+
+### Protocol 1 corrections retrospective (v0.10 forecast)
+
+v0.10이 template discipline을 *작성 시점부터* 적용하면 ratio < 2.0 가능. RECLASSIFY 0 + ADD/REMOVE/VERIFY만 발생. F21 closure (< 1.0 × 3 releases) 시점은 v0.12 정도 예상.
+
+---
+
+## v0.9 backlog candidates (Protocol 1 보정 완료, 2026-05-18 21:11 KST — historical record)
 
 **Protocol 1 verdict**: **UNDERSTATED**. 원본 HANDOFF 6 candidates → 보정 후 18 corrections (7 ADD + 3 REMOVE + 6 VERIFY + 2 RECLASSIFY) + 3 missing. Ratio = 3.0 (v0.7=1.75, v0.8=2.80). 보고서: `_workspace/v0.9-protocol-1.md`.
 
@@ -541,53 +666,47 @@ v0.5 audit → cite-driven self-verify → 7 fix 닫혔다고 self-publish → �
 
 ---
 
-## Resume Instructions (v0.9 작업 시작점, Protocol 1 완료 후)
+## Resume Instructions (v0.10 작업 시작점)
 
-v0.8 사이클 완료. v0.9 Step 0 Protocol 1 완료 (2026-05-18 21:11 KST) — UNDERSTATED, backlog 재작성 완료. 위 "v0.9 backlog candidates" 섹션이 보정된 final scope.
+v0.9 사이클 완료 (4연속 ACCURATE 달성). v0.10은 **Tier 3 deferred 처리 + Protocol 4 archival completion**이 코어.
 
-### ✅ Step 0 — v0.9 Protocol 1 (work-start evaluator) — 완료
+### Step 0 — v0.10 작업 시작 *전* Protocol 1 (필수)
 
-W29 정책 적용. 보고서: `_workspace/v0.9-protocol-1.md`. Verdict UNDERSTATED. 18 corrections + 3 missing. Ratio 3.0.
+W29 정책. 작업 안 하고 evaluator 먼저 호출. 입력: *"v0.10 backlog의 T1-A (Check G FAIL promote) + T1-B (Rule 14 line-cap exercise path policy) + T2-A (Protocol 4 archival) + T2-B (untracked skills/scripts 정리)가 *놓친 위치*나 *부수 영향* 있는지 보라. v0.9에서 100% template conformance 달성했으므로 ratio < 2.0 기대 — RECLASSIFY 0이 정상."*
 
-### Step 1 — T1-A (M-2 reframed: Rule 16 unreachable rows audit)
+v0.9의 ratio 3.00에서 v0.10의 ratio 1.5-2.0으로 *명확히 하락* 여부가 F21 closure 추세 검증의 첫 데이터 포인트.
 
-3 branches만: kit_version absent (row 1), > current (row 3), unparseable (row 4). 정책 1개 결정 (synthetic fixture vs safety-valve annotation) 후 일관 적용. early_fail / Math.random / Rule 14 CYCLE은 *제외* (Protocol 1 REMOVE).
+### Step 1 — T1-A (Check G FAIL promote)
 
-### Step 2 — T1-B (skill count 5 사이트 sweep)
+`scripts/check-plugin-meta.sh:291-327` Check G WARN → FAIL. drift accumulator 연결. Check D 패턴 참조. 2-cycle baseline (v0.8 + v0.9) 충족.
 
-README.md:6/43/192 + CONCEPT.md:111/409. CONCEPT.md living-vs-snapshot 정책 commit msg에서 결정. CHANGELOG history 동결.
+### Step 2 — T1-B (Rule 14 line-cap exercise path)
 
-### Step 3 — T1-C (CHANGELOG ### Process 섹션 + template 테이블 v0.9 row)
+정책 결정 (synthetic fixture vs annotation). v0.9 T1-A는 annotation 선택 — T1-B도 동일 적용 vs 차별화.
 
-v0.9 CHANGELOG entry에 retrospective 섹션. template:96-103 v0.9 row fill.
+### Step 3 — T2-A (Protocol 4 archival)
 
-### Step 4 — T2-A (gmk-port split 결정)
+v0.6/v0.7 retroactive P4 reports 작성 OR commit-message-only 명시. v0.8/v0.9는 이미 commit됨.
 
-`_workspace/v0.9-gmk-port-split-decision.md` 작성. split or keep. 결정 후 follow-up.
+### Step 4 — T2-B (skills/scripts/ cleanup)
 
-### Step 5 — T2-B (`_save_breaking` 결정)
+working tree noise 제거.
 
-path (a) make-it-read 또는 (b) drop suggestion. *반드시* v0.9에서 닫음 (v1.0 carry 금지).
+### Step 5 — Protocol 3 (pre-release evaluator)
 
-### Step 6 — T2-C (v1.0 backcompat inventory)
+ACCURATE 받아야 release.
 
-`_workspace/v1.0-backcompat-inventory.md` 작성. v0.x guarantees 전수.
+### Step 6 — Release: CHANGELOG / plugin meta 0.10.0 / pre-flight / commit / push / tag / GitHub release
 
-### Step 7 — Protocol 3 (pre-release evaluator)
+7 사이트 version bump. pre-flight 7/7 PASS 0 warnings 확인.
 
-전체 작업 완료 후 release *전*. ACCURATE 받아야 release.
+### Step 7 — Protocol 4 (post-release git verifier)
 
-### Step 8 — Release: CHANGELOG / plugin meta 0.9.0 / pre-flight / commit / push / tag / GitHub release
+5연속 ACCURATE 목표.
 
-5 사이트 version bump. pre-flight 7/7 PASS 0 warnings 확인.
+### Step 8 — Post-release HANDOFF + v1.0 brainstorm 본격화
 
-### Step 9 — Protocol 4 (post-release git verifier)
-
-git-based 검증. v0.6/v0.7/v0.8 3연속 ACCURATE — v0.9 4연속 목표.
-
-### Step 10 — Post-release HANDOFF + v1.0 brainstorm
-
-v0.9 사이클 요약. v1.0 MAJOR bump 시점 결정 (T2-C inventory 활용).
+v1.0 backcompat inventory 활용. v0.10이 v0.x 마무리 → v1.0 brainstorm.
 
 ---
 
