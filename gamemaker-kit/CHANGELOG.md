@@ -6,6 +6,86 @@ Versioning follows [SemVer](https://semver.org/).
 
 ---
 
+## [0.9.0] — 2026-05-18
+
+v0.6/v0.7/v0.8 were three consecutive ACCURATE releases. v0.9 targets a fourth. v0.9 closes the last *live* half-applied field (`_save_breaking` → 0 mentions), annotates the three unreachable rows of Rule 16's `kit_version` contract as safety valves (same pattern as v0.7 Rule 14 CYCLE) instead of executing M-2's 4-branch audit as written (Protocol 1 found 3 of M-2's 4 "dead branches" were live or already-closed — `early_fail` is read by gmk-validate in 6 sites, `Math.random()` is a live guard pattern in 5+ skills, Rule 14 CYCLE was already preserved as safety valve in v0.7), bumps the stale `~28 skills` count across 5 doc sites, captures a gmk-port split decision (KEEP at 684 lines with documented re-open triggers), and produces a v1.0 backward-compat inventory enumerating six categories of v0.x guarantees as deliberate-break candidates for the eventual MAJOR bump. Protocol 1 graded the original HANDOFF backlog **UNDERSTATED**; Protocol 3 graded the implementation **ACCURATE** with 0 release-blocking defects and 100% template conformance on the 6 in-scope candidates (vs. v0.8's 48%).
+
+### Process — Protocol 1 retrospective
+
+**Protocol 1 corrections**: 18 items (7 ADD + 3 REMOVE + 6 VERIFY + 2 RECLASSIFY) + 3 missing candidates (M-NEW-1 folded into T1-B; M-NEW-2 deferred as T3-B; M-NEW-3 promoted to T2-C). Ratio (corrections/candidate) = 3.00.
+
+**Ratio trend**: v0.7 = 1.75 → v0.8 = 2.80 → v0.9 = 3.00. Rising. **Interpretation**: not worse authorship. The new HANDOFF backlog template introduces a 4-field conformance dimension (file:line + grep query + non-targets + classification + defect-class link) the prior protocols didn't grade against; the first release adopting the template carries one-time template-adoption corrections. v0.9's HANDOFF also under-scoped 2 sites (M-2 over-scoped 4→1; M-3 under-scoped 1→5 sites — the v0.6 endpoint-sweep first-grep-hit-stop pattern recurring), which inflates corrections without indicating worse hygiene. Predicted v0.10 ratio with template-discipline-adoption complete: ~1.5–2.0.
+
+**F21 closure**: Not yet (target = ratio < 1.0 for 3 consecutive releases). Realistic earliest closure: v0.12.
+
+**4-consecutive-ACCURATE chain**: v0.6 → v0.7 → v0.8 → v0.9 (this release). Protocol 3 verdict confirms; Protocol 4 (post-release) verifies via git-based audit.
+
+### Added
+
+**`skills/gmk-prototype-rules` — Rule 16 §Exercise paths annotation:**
+- New subsection between Rule 16's `### Why this rule exists` and Rule 17. Documents that rows 1 (`kit_version` absent), 3 (`> current`), and 4 (unparseable) are safety valves with no in-repo exercise path; row 2 (`≤ current MAJOR.MINOR`) is the live row.
+- Same policy as v0.7 Rule 14 CYCLE annotation at `prototype-rules:388/398` ("safety valve, currently unused — intended state"). Decision: annotate rather than add synthetic fixtures, because the trip scenarios are user-environment (downgrade, manual file edit), not in-repo states; the warn text is short and unambiguous; the fixture cost exceeds the regression-protection value.
+- Closes v0.9's T1-A (M-2 reframed). Original M-2 proposed 4 dead branches; Protocol 1 verified `early_fail` / `Math.random()` / Rule 14 CYCLE are not dead. Only the 3 Rule 16 rows qualified.
+
+**`_workspace/v0.9-protocol-1.md` (NEW)**: work-start evaluator report. UNDERSTATED verdict, 18 corrections + 3 missing candidates, ratio 3.00. Drives the v0.9 final scope.
+
+**`_workspace/v0.9-protocol-3.md` (NEW)**: pre-release evaluator report. ACCURATE verdict, 100% template conformance on in-scope candidates, green-light Y.
+
+**`_workspace/v0.9-gmk-port-split-decision.md` (NEW)**: T2-A decision artifact. Verdict KEEP (no split in v0.9). Documents 5 reasons (no compliance gate, operational cohesion, smallest section too small to extract, no user reports, comparable to gmk-prototype-rules) + 5 re-open triggers (grows past 800 lines, sub-skill need, per-stage hooks, navigation reports, future SKILL.md doc-cap rule).
+
+**`_workspace/v0.9-save-breaking-decision.md` (NEW)**: T2-B decision artifact. Path (b) selected (drop suggestion). Documents 5 reasons against Path (a) make-it-read.
+
+**`_workspace/v1.0-backcompat-inventory.md` (NEW)**: T2-C deliverable. Enumerates six categories of v0.x backward-compat guarantees with sources and per-category v1.0 break candidates: schema additive-only (Rule 16 row 2), deprecated-field forgiveness (no data loss), bot hook API additivity (`_gmkApiVersion: 1`), pillar shape free-text fallback (Rule 17 row 2), endpoint terminology, `human:`→`self-test:` migration. Informational only — v0.9 breaks nothing.
+
+### Changed
+
+**`README.md` — skill count bumped to 29 in 3 sites:**
+- Line 6 lead paragraph: `~28 skills` → `29 skills`
+- Line 43 section heading: `## Skills (~28)` → `## Skills (29)`
+- Line 192 comparison table row: `| Skills | ~28 | 72 | n/a |` → `| Skills | 29 | 72 | n/a |`
+
+**`CONCEPT.md` — skill count bumped + matrix anchor updated:**
+- Line 111 matrix heading: `## 4. Skill matrix (v0.2 — ~28 skills, 4 domain agents)` → `## 4. Skill matrix (v0.2–0.9 — 29 skills, 4 domain agents)`. CONCEPT.md treated as a living doc (versioned matrix range, not v0.2-anchored snapshot).
+- Line 409 comparison table row: `| Skills | ~28 | 72 |` → `| Skills | 29 | 72 |`
+
+This closes M-3 + M-NEW-1 combined (5 sites). Plugin meta description in `plugin.json:4` + `marketplace.json:8/15` already declared "29 skills" since v0.8 — no further work needed there.
+
+**`skills/gmk-merge-gate/SKILL.md:156` — `_save_breaking` field mention dropped (Path b):**
+- Warning text now reads: *"Either run `/gmk-save-migrate <id>` or confirm the change is non-breaking before merge."* (was: *"…by adding a `_save_breaking: false` note to the milestone."*)
+- After this commit, `grep -rn '_save_breaking' skills/` returns 0 hits. The field is no longer part of the kit's API surface.
+- Rationale: 1 mention site, 0 readers, 0 user adoption observed since v0.4. Adding a reader (Path a) would have introduced Rule 18 with ongoing maintenance cost for a feature 0 users use. The user-acknowledgment path already exists without the field — user just runs `/gmk-save-migrate` or manually confirms non-breaking before merge.
+- Defect-class link: closes the last live "declared-but-half-applied field" instance (v0.8 closed `pillars.kind`; v0.9 closes `_save_breaking`; the class is now empty).
+
+**`_workspace/handoff-backlog-template.md:96-103` — v0.9 row filled:**
+- Tracking table now reads: v0.7 (1.75), v0.8 (2.80 + 3 missing), v0.9 (3.00 + 3 missing).
+
+**`_workspace/examples/pillars-example.json` + `milestones-example.json` `_comment`:** mention v0.9's Rule 16 safety-valve annotation; milestones example also notes the `_save_breaking` drop.
+
+**`skills/gmk-init/SKILL.md` schema example:** `kit_version` placeholder updated to `"0.9.0"`; prose anchor at L204 reflects v0.9.
+
+### Plugin meta
+
+- `.claude-plugin/plugin.json:3` → `0.9.0`; description updated to mention v0.9 deliverables.
+- `.claude-plugin/marketplace.json:9` (outer `metadata.version`) + `:16` (`plugins[0].version`) → `0.9.0`; both descriptions updated.
+- `_workspace/examples/pillars-example.json:3` `kit_version` → `0.9.0`.
+- `_workspace/examples/milestones-example.json:3` `kit_version` → `0.9.0`.
+- `skills/gmk-init/SKILL.md:163, :196` schema example `kit_version` → `0.9.0`.
+
+Check D verifies the consistency mechanically.
+
+### Deferred to v1.0
+
+- **T3-A — Check G WARN → FAIL promotion**: 1-cycle baseline insufficient (Check B took 2 cycles from WARN→FAIL in v0.6→v0.8). v0.9 added no new pillar-kind read sites, so promotion is not justified by widened surface area. Re-evaluate when v1.0 work-start Protocol 1 runs.
+- **T3-B — Rule 14 line-cap exercise path (synthetic fixture)**: same policy decision needed as T1-A (synthetic fixture vs. safety-valve annotation). Defer until v1.0 considers the line-cap rule's exercise discipline holistically.
+
+### Notes
+
+- No data loss. No schema changes. v0.9 is purely additive on docs and subtractive on `_save_breaking` (which had 0 readers, so the subtraction breaks nothing).
+- No new SKILLs / agents (29 + 4 unchanged since v0.4).
+- v0.9 is the **last v0.x release**. v1.0 will be the first MAJOR bump and may break some of the guarantees enumerated in `_workspace/v1.0-backcompat-inventory.md`.
+
+---
+
 ## [0.8.0] — 2026-05-18
 
 v0.6 was the first ACCURATE release, v0.7 the second. v0.8 makes it three consecutive ACCURATE-verdict releases under the 4-checkpoint Protocol 1/3/4 cycle — process is now firmly 정착. v0.8 closes the last declared-but-half-applied field (`pillars.kind`), promotes Check B (endpoint terminology) from WARN to FAIL after regex tightening, hardens both allowlists against silent rot with verified-at-SHA stamps (caught its first real staleness drift in under a minute), refactors the shader template under the 300-line soft cap, adds a mock-asset cleanup reminder, and formalizes the HANDOFF backlog template to mitigate the F21 anchoring pattern that has now repeated for the third consecutive release (mildly improving). Protocol 1 caught the original HANDOFF 5-candidate backlog being **UNDERSTATED** — 14 corrections + 3 missing candidates. Protocol 3 graded the implementation **ACCURATE** with 0 release-blocking defects.

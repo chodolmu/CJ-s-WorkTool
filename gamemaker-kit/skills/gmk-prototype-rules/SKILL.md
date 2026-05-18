@@ -480,6 +480,21 @@ The structural guard (`scripts/check-plugin-meta.sh` Check D) verifies the *writ
 
 v0.4 wrote `kit_version` but no SKILL read it. v0.5 / v0.6 inherited the write-only state. v0.6 Protocol 1 evaluator flagged this as the same defect class as the Rule 14 token half-application — declared standard, partial application. v0.7 closes the loop with the minimum behavior the v0.4 CHANGELOG promised (*"v0.5 may begin to require this field"*) translated into a non-blocking, no-data-loss warn-only contract.
 
+### Exercise paths (live vs safety valve, as of v0.9)
+
+Of the 4 contract rows, only row 2 has live exercise paths in the in-repo fixtures. The other 3 are **safety valves with no current trip** — declared rule, defensive code, last-exercised: never (same shape as the Rule 14 CYCLE annotation at rule:388/398).
+
+| Row | Status (v0.9) | Why annotated, not fixture-tested |
+|---|---|---|
+| Row 1 — `kit_version` absent | Safety valve, last-exercised: never (all repo fixtures stamp `kit_version`; `gmk-init` always writes it on creation) | The path only fires for files written by gamemaker-kit ≤ 0.3.0 — a pre-write-side state the kit will never re-produce. Synthetic fixture would test the warn text but not exercise a realistic user-facing scenario. |
+| Row 2 — `kit_version` ≤ current MAJOR.MINOR | **Live** (`pillars-example.json:3`, `milestones-example.json:3` both declare `"0.8.0"` against the current 0.9.x kit) | Daily-exercised; no annotation needed. |
+| Row 3 — `kit_version` > current MAJOR.MINOR | Safety valve, last-exercised: never (no downgrade scenario produces a future-versioned file in-repo) | The path only fires when a user downgrades the plugin and re-opens a file written by a newer kit — a user-environment scenario, not an in-repo state. Synthetic fixture (e.g., a `"99.0.0"` file) would test the warn text but the warn text is short and unambiguous; the cost of a fixture exceeds the regression-protection value. |
+| Row 4 — `kit_version` present but unparseable | Safety valve, last-exercised: never (no fixture in-repo declares a malformed version string) | Same reasoning as row 3 — user-environment scenario (manual edit gone wrong), not an in-repo state. |
+
+**Policy** (uniformly applied to rows 1, 3, 4): annotate as safety valve in this rule, do not add synthetic fixtures. If a real user-environment trip is ever reported, the row graduates from safety-valve to live and a regression fixture lands at that point. This matches the v0.7 Rule 14 CYCLE policy (rule:388/398) and avoids the v0.4–v0.7 trap of declaring tests that never run.
+
+This annotation closes v0.9's M-2 audit. The candidate originally proposed 4 dead branches (Rule 14 CYCLE, `kit_version > current`, `early_fail`, `Math.random()`); Protocol 1 (v0.9-protocol-1.md §2) verified that `early_fail` is live (6 read sites in `gmk-validate`), `Math.random()` is a live guard pattern (5+ skills), and Rule 14 CYCLE was already closed in v0.7. Only the 3 `kit_version` rows here qualified as actually unexercised.
+
 ---
 
 ## Rule 17 — `pillars[].kind` enum read contract (skill-wide pattern)

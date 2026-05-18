@@ -108,7 +108,7 @@ ZooMerge/                                # user's game project
 
 ---
 
-## 4. Skill matrix (v0.2 — ~28 skills, 4 domain agents)
+## 4. Skill matrix (v0.2–0.9 — 29 skills, 4 domain agents)
 
 ### Group A — common / axis infrastructure (6)
 
@@ -406,7 +406,7 @@ The cycle through axes 1 → 2 → 3 → 4 → 1 is what the kit calls the **mil
 | Capture-but-don't-apply regression | ✓ | ✗ |
 | Killable milestones (Cleveland rule) | ✓ | ✗ |
 | Development-completion checkpoint (release out of scope) | ✓ | ✗ (release-inclusive) |
-| Skills | ~28 | 72 |
+| Skills | 29 | 72 |
 | Stars | 0 | 18.2k |
 
 **Positioning**: small + sharp + four-axis coverage, not breadth.

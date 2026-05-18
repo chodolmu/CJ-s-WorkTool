@@ -99,7 +99,7 @@ Track over time:
 | v0.6 | (process new) | (process new) | (process new) | n/a |
 | v0.7 | 4 | 7 | 0 | 1.75 |
 | v0.8 | 5 | 14 | 3 | 2.80 + 3 |
-| v0.9 | TBD | TBD | TBD | TBD |
+| v0.9 | 6 | 18 | 3 | 3.00 + 3 |
 
 A *rising* ratio means HANDOFF authors are getting worse at scope estimation. A *falling* ratio means the template (this document) and discipline are working. F21 is closed when ratio < 1.0 for 3 releases.
 

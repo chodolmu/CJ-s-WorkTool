@@ -3,7 +3,7 @@
 > Prototype game milestones in HTML, falsify "un-fun" with bots + your own play, port only what survives to Godot/Unity.
 > **Release-readiness checkpoint: "development complete". Release and live-ops are out of scope by design.**
 
-Claude Code plugin. Zero external accounts. ~28 skills + 4 domain agents covering 4 axes (time / discipline / validation / integration).
+Claude Code plugin. Zero external accounts. 29 skills + 4 domain agents covering 4 axes (time / discipline / validation / integration).
 
 ---
 
@@ -40,7 +40,7 @@ Most milestones loop `/gmk-prototype` → `/gmk-validate` → `/gmk-self-test` s
 
 ---
 
-## Skills (~28)
+## Skills (29)
 
 ### Common / axis infrastructure
 | Skill | Purpose |
@@ -189,7 +189,7 @@ VS Code reads it. Git versions it. Notion / Linear can mirror it one-way. **gmk 
 | HTML → engine port with 6-stage re-validation | ✓ | ✗ | ✗ (direct to engine) |
 | Merge gate (asset conflict + secret scan) | ✓ | ✗ | ✗ |
 | Capture-but-don't-apply regression | ✓ | ✗ | ✗ |
-| Skills | ~28 | 72 | n/a |
+| Skills | 29 | 72 | n/a |
 | Stars | 0 | 18.2k | 3.2k |
 
 **Positioning**: small + sharp + four-axis coverage. Not breadth.
