@@ -59,6 +59,18 @@ Line counting: **non-blank, non-comment lines of code**. Inline `<style>` and `<
 
 The numbers are not negotiable. Don't add a `--max-lines 1000` flag. The user who *thinks* they need 1000 lines is the user the kit is trying to protect.
 
+### Scope: mechanic prototypes only — not SKILL.md, not other docs
+
+Rule 2 applies to **files under `prototypes/`** (the user-authored single-file HTML mechanic prototypes) and the **prototype templates at `templates/prototype-*.html`** (the kit's own seed material for them). It does **not** apply to:
+
+- `skills/*/SKILL.md` — reference docs the kit's plugin runtime reads procedurally, not code the user reasons about while debugging a state machine.
+- `CONCEPT.md`, `README.md`, `HANDOFF.md`, `CHANGELOG.md`, `_workspace/**/*.md` — narrative / process / schema-reference documents.
+- `scripts/*.sh`, `templates/_bot_hook_lib.js`, JSON schema files — operational code/data, not mechanic prototypes.
+
+The rationale above ("mental-model load while reasoning about state transitions") is mechanic-prototype-specific. A reader of `skills/gmk-port/SKILL.md` is following a procedure linearly, not simulating a state machine in their head. A reader of `_bot_hook_lib.js` is consuming a library API, not auditing game logic. The 300/600 numbers were calibrated for the prototype reading mode, and applying them to docs would be a category error — it would either force gratuitous doc splits (making procedures harder to follow by scattering them across files) or pressure docs to drop necessary content for cap conformance.
+
+If a SKILL.md grows large enough that *operators* (the model running the skill, the user reading the procedure) report difficulty navigating it, that's a readability decision handled per-document — not a Rule 2 trigger. The v0.9 `_workspace/v0.9-gmk-port-split-decision.md` lists the specific triggers that would re-open such a decision for `gmk-port` (currently 684 lines, by far the largest SKILL.md, deliberately kept whole because its 6-stage flow is operationally one procedure).
+
 ---
 
 ## Rule 3 — Deterministic seeding (mandatory)

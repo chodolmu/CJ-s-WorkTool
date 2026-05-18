@@ -5,8 +5,9 @@
 **Latest commit**: `c35eeae feat(gamemaker-kit): v0.9.0 — Rule 16 safety-valve annotation + _save_breaking drop + v1.0 backcompat inventory`
 **Tag**: `v0.9.0` (origin 동기화 완료, GitHub release 발행)
 **Release URL**: https://github.com/chodolmu/CJ-s-WorkTool/releases/tag/v0.9.0
-**Status**: v0.9.0 release 완료. **4 evaluator checkpoint 모두 ACCURATE** (Protocol 1 UNDERSTATED expected, Protocol 3 + Protocol 4 모두 ACCURATE, 23/23 CHANGELOG claims PASS). v0.6/v0.7/v0.8/v0.9 **4연속 ACCURATE** — Protocol 1/3/4 cycle process가 명확히 효과 입증됨. 두 번째 연속 0-warning pre-flight release (v0.8 baseline 유지).
+**Status**: v0.9.0 release 완료. **4연속 ACCURATE** (v0.6-v0.9). **v0.10 PIVOT**: external holistic evaluator (2 reports) verdict = "materially v1.0-worthy but blocked by zero end-to-end dogfood evidence. v0.8/v0.9 should not have happened as evaluator cycles." → v0.10 backlog **dogfood-driven 재작성 완료** (process-driven candidates drop/carry). Step 1 (Rule 2 SKILL.md carve-out) 이번 세션에서 완료 — gmk-port 684줄 credibility tension 처분.
 **v0.9 보고서**: `_workspace/v0.9-protocol-1.md`, `_workspace/v0.9-protocol-3.md`, `_workspace/v0.9-protocol-4.md`
+**v0.10 평가 보고서** (외부 holistic): `_workspace/v0.9-overall-evaluation.md`, `_workspace/v0.9-evaluation-followup.md`
 
 ---
 
@@ -99,78 +100,117 @@ Protocol 1 UNDERSTATED는 *expected* (HANDOFF anchoring). Protocol 3 ACCURATE = 
 
 ---
 
-## v0.10 backlog candidates (Protocol 1로 보정 필요)
+## v0.10 backlog — **PIVOT: dogfood-driven, NOT process-driven** (2026-05-18 22:20 KST)
 
-다음 release에서 검토 후보. 모든 candidate는 `_workspace/handoff-backlog-template.md` template shape (file:line+grep / non-targets / classification / defect-class link) 준수 필수. v0.9에서 100% conformance 달성했으므로 v0.10도 동일 기대.
+### 왜 PIVOT됐나
 
-**v0.10 한 줄 약속 후보**: *"Empty the v0.9 deferred Tier 3 (Check G FAIL promote + Rule 14 line-cap exercise path policy), drive Protocol 1 corrections ratio under 2.0 by adopting template discipline from the start, and either (a) commit v0.6/v0.7 retroactive Protocol 4 reports OR (b) document why the chain rests on commit-message attestation."*
+v0.9 직후 외부 evaluator 2개 보고서 (`_workspace/v0.9-overall-evaluation.md` + `v0.9-evaluation-followup.md`)가 다음을 명시:
+
+- **v0.9는 능력적으로 v1.0-worthy** — schemas/rules/hook API/SKILL contracts 다 stable
+- **유일한 Critical blocker**: 비-저자 end-to-end 실행 0건 (dogfood evidence 부재)
+- **v0.5-v0.9 evaluator cycle 평가**: v0.5-v0.6 net-positive → v0.7 marginal → **v0.8/v0.9 should not have happened as evaluator cycles** (평가자 §5a self-correction)
+- **결함 분포 (aggressive 재평가)**: 20-25% real shipped-blocking / 50-55% defensive / 25-30% process-internal — process loop가 자기지속 단계
+
+따라서 *원래의 v0.10 backlog* (Check G FAIL promote, Rule 14 line-cap fixture, Protocol 4 archival 등)는 모두 process-driven candidates → **drop or carry to v1.0**. v0.10 = **dogfood-driven**.
+
+### v0.10 한 줄 약속
+
+*"Execute one real dogfood cycle (grid merge game, outside the kit repo) through `gmk-init → m1+m2+m3 RE_PASS`, ship QUICKSTART.md as the verbatim transcript, resolve the gmk-port doc-cap tension via Rule 2 carve-out — then v1.0."*
 
 ### Tier 1 (must-have)
 
-**T1-A. Check G WARN → FAIL promotion (deferred from v0.9 T3-A)**
-- *Targets* (grep query: `grep -n 'Check G' scripts/check-plugin-meta.sh`):
-  - `scripts/check-plugin-meta.sh:291-327` Check G block — change `WARN` → `FAIL`, wire into drift accumulator (mirror Check D pattern)
-  - `scripts/check-plugin-meta.sh:147` Check B header convention — Check G header에도 `(FAIL-level in v0.10)` 표기 amend
+**T1-A. ✅ Rule 2 SKILL.md carve-out (이미 완료, 2026-05-18 22:20)**
+- *Status*: closed-in-prep (v0.10 작업 시작 전에 이미 commit 예정)
+- *Action*: `skills/gmk-prototype-rules/SKILL.md` Rule 2에 §"Scope: mechanic prototypes only — not SKILL.md, not other docs" 추가
+- *Effect*: gmk-port 684줄 처분 (no split, no allowlist). Rule 2 rationale이 mechanic-prototype mental-model load 전용임을 명시. SKILL.md / 모든 docs 적용 외.
+- *Defect class*: rule-scope-ambiguity (kit이 자기 enforce rule을 자기 위반하는 credibility tension)
+
+**T1-B. Dogfood project — grid merge-pair game 실행**
+- *Targets* (grep query: 해당 없음 — *kit 외부* 파일 생성):
+  - `C:\GameMaking\Godot\gmk-dogfood-merge3\` (실제 프로젝트 디렉토리, **kit repo 외부**)
+  - 3 pillars (sensory + behavioral + decision-shape; emotional skip)
+  - 2 milestones (`m1-merge-basic` + `m2-greed-tension`) + 1 integration (`m3-merge-integration` via `gmk-mechanic-merge`)
+  - Engine: Godot (Unity는 gmk-port Stage 1에서 멈춤 — Stages 2-5 실증 불가)
+  - 1 pillar를 ambiguous하게 (Rule 17 routing stress test)
 - *Non-targets*:
-  - 새 pillar-kind read site 추가 — v0.10 scope 외 (Rule 17 자체는 v0.8 안정)
-  - Check G 로직 변경 — promotion만, 검증 내용은 동일
-- *Classification*: structural-guard
-- *Defect class*: declared-but-half-applied field (v0.8 Rule 17 closure completion)
-- *Pre-condition*: v0.8 도입 후 2 cycles WARN baseline (v0.8 + v0.9) 충족 — Check B (v0.6 WARN, v0.8 FAIL = 2 cycles) 선례 따름.
+  - kit repo (`C:\GameMaking\Tool\gamemaker-kit\`) — dogfood content는 **절대** 안 들어감 (W24, `project_gmk_dogfood_separate.md` memory)
+  - ZooMerge — 별개 프로젝트, 디렉토리 열어보지 말 것
+  - 4 shape 다 커버 — 평가자 §1a "wrong"; 다른 shape은 post-v1.0 별개 dogfood
+  - `emotional` pillar — kit 자체가 squishy로 분류 (kit recommended mode가 아님)
+  - `gmk-narrative` / `gmk-save-migrate` / `gmk-art-gen` — narrow-scenario, v0.10 핵심 path 외
+- *Classification*: **dogfood** (new classification — process/sweep/single-fix/structural-guard 어느 것에도 속하지 않음)
+- *Defect class*: untested-end-to-end-on-non-author-project (v0.9 평가의 single Critical blocker)
+- *Expected outcome*: 평가자 §5c 예측 = 3 real defects (medium confidence on shape, low on specifics), 10% tail risk of hook-library 놀라움. 매 defect = ~30분 fix. Total 2-3 weeks.
 
-**T1-B. Rule 14 line-cap 토큰 exercise path policy (deferred from v0.9 T3-B / M-NEW-2)**
-- *Targets* (grep query: `grep -n 'Rule 14\|line.cap\|over.cap' skills/gmk-prototype-rules/SKILL.md scripts/check-plugin-meta.sh`):
-  - `skills/gmk-prototype-rules/SKILL.md:530-531` line-cap policy ("hard refusal, soft warning")
-  - 신설: `templates/_test_over_cap.html` synthetic fixture (301 lines, exercise path) OR Rule 14 line-cap에 §"Exercise paths" annotation (Rule 16과 동일 form)
-  - 정책 결정: v0.9 T1-A는 *annotation*, T1-B(이)는 fixture vs annotation 결정 필요
-- *Non-targets*:
-  - Rule 14 token form 변경 (단순/CYCLE) — daily 사용 중
-  - Real prototype 강제 변경 — v0.8 shader 299줄, 의도된 상태
-- *Classification*: structural-guard (fixture) OR audit-only (annotation)
-- *Defect class*: declared-rule-with-no-exercise-path (real Rule 14 exercise gap, M-2 reach였던 것)
-- *Pre-condition*: v0.9 T1-A 결정 (annotation 선택) — T1-B도 동일 정책 적용 가능 vs synthetic fixture 차별화
-
-### Tier 2 (should-have)
-
-**T2-A. Protocol 4 archival completion (v0.6/v0.7 retroactive)**
-- *Targets* (grep query: `find _workspace -name 'v0.*-protocol-4.md'`):
-  - 신설: `_workspace/v0.6-protocol-4.md` + `_workspace/v0.7-protocol-4.md`
-  - git log 기반 retrospective audit (post-tag 검증 git log/diff 활용)
-  - OR: HANDOFF + CHANGELOG에 "Protocol 4 attestation: commit-message only for v0.6/v0.7, archived from v0.8 onward — chain integrity rests on cross-commit reference" 명시
-- *Non-targets*:
-  - v0.8/v0.9 reports — 이미 commit됨
-  - Protocol 1/3 reports — 이미 commit됨
-- *Classification*: process (retroactive documentation OR archival)
-- *Defect class*: missing-release-readiness-artifact (v0.8 P4 §6에서 documented, v0.9 P4도 carry-over)
-
-**T2-B. Untracked `skills/scripts/` empty directory cleanup**
+**T1-C. QUICKSTART.md 작성**
 - *Targets*:
-  - `skills/scripts/` (working tree only) — empty dir, v0.8 P4부터 carry-over
+  - `QUICKSTART.md` (repo root, 신설) — verbatim transcript of T1-B first session (gmk-init → first prototype + first PASS)
+  - 1 "What can also happen" sidebar (T1-B에서 실제 hit한 hiccup만 — 가설적 failure 카탈로그 금지)
+  - 200줄 내외
 - *Non-targets*:
-  - `scripts/` (project root) — 본 디렉토리는 active (check-plugin-meta.sh, hooks/pre-push 등)
-- *Classification*: doc-cleanup (working tree noise)
-- *Defect class*: none — operational cleanup
+  - Full first-week workflow (전체 chain) — first session only
+  - `_workspace/quickstart.md` 또는 `skills/_meta/QUICKSTART.md` — repo root가 표준 위치 (npm/cargo/python convention)
+  - Curated/idealized output — verbatim이 정직함 (kit이 더 polished해 보이게 거짓말 안 함)
+  - dogfood 게임 코드 자체 — transcript의 file:line cite만; 실제 게임은 외부 디렉토리
+- *Classification*: **single-fix** (one new doc file)
+- *Defect class*: missing-onboarding-artifact (v0.9 평가 §3.2 onboarding cliff)
+- *Sequencing*: T1-B 완료 후 작성 (fixed-state transcript 기반, 평가자 §4 Option C-modified)
+
+### Tier 2 (should-have, dogfood가 surface하면)
+
+**T2-A. Dogfood-driven defect fixes**
+- *Targets*: T1-B 진행 중 surface되는 결함들 (예측: `gmk-prototype` ↔ `gmk-validate` handoff 부근)
+- *Non-targets*: 가설적/이론적 결함 (Protocol 1 patterns)
+- *Classification*: real-defect (case-by-case)
+- *Defect class*: per-defect (실제 결함 보고 시 분류)
 
 ### Tier 3 (defer to v1.0)
 
 **T3-A. v1.0 brainstorm formal kickoff**
-- v1.0 backcompat inventory (T2-C in v0.9)를 바탕으로 break candidate 별 cost-benefit 평가
-- v1.0 Protocol 1 work-start evaluator 가용 시점 확인
-- Defer 이유: v0.10 scope과 v1.0 brainstorm 분리 — v0.10 = v0.x 마무리, v1.0 = clean start
+- `_workspace/v1.0-backcompat-inventory.md` 활용
+- T1-B/C 완료 후 진입
+
+**T3-B. Process-driven candidates (모두 v1.0 이후로 carry 또는 drop)**
+- 이전 v0.10 backlog의 다음 항목들은 평가자 권고로 *모두* v1.0+ 또는 drop:
+  - Check G WARN → FAIL promote — v1.0 break menu의 cheap candidate로 carry (1-cycle baseline 부족)
+  - Rule 14 line-cap exercise path — v1.0 brainstorm 중 결정
+  - Protocol 4 archival (v0.6/v0.7 retroactive) — drop (commit-message attestation으로 충분, 평가자도 process-internal로 분류)
+  - skills/scripts/ cleanup — drop (housekeeping, 단독 release 가치 부족)
 
 ### v0.10에서 *안* 할 것
 
 | 항목 | 이유 |
 |---|---|
 | 새 SKILL / 새 agent | 0개 유지 (v0.4 이후 정책) |
-| dogfood | 영영 차단 (W24) |
+| dogfood content를 kit repo에 commit | **절대 금지** (W24, project_gmk_dogfood_separate.md memory) |
+| Protocol 1/3/4 evaluator cycle as primary work | dogfood가 primary work; protocols는 release 직전 sanity check만 |
 | Backward-compat break | v0.x 사이클 — break은 v1.0에서만 |
-| 새 Rule 18+ 도입 | declared field convention 추가 = half-applied risk; v1.0+에서 검토 |
-| `_save_breaking` Path (a) reverse | Path (b) drop 결정 정착, 사용자 요청 없음 |
+| 새 Rule 18+ 도입 | half-applied risk; v1.0+에서 검토 |
+| QUICKSTART을 dogfood 전에 작성 | sequencing 평가자 §4: dogfood → fix → QUICKSTART (fixed-state transcript) |
 
-### Protocol 1 corrections retrospective (v0.10 forecast)
+### Sequencing (평가자 §4 Option C-modified)
 
-v0.10이 template discipline을 *작성 시점부터* 적용하면 ratio < 2.0 가능. RECLASSIFY 0 + ADD/REMOVE/VERIFY만 발생. F21 closure (< 1.0 × 3 releases) 시점은 v0.12 정도 예상.
+```
+Step 1 (이번 세션, 30분): Rule 2 carve-out 추가 → gmk-port 처분 끝     [T1-A]
+Step 2: Dogfood execute (verbatim transcript 캡처)                 [T1-B]
+  - Phase A: gmk-init → first prototype + first PASS
+  - Phase B: full chain to RE_PASS
+  - Phase C: m2 + merge-gate path
+  - Phase D: m3 integration via gmk-mechanic-merge
+Step 3: Defect triage + 수정                                       [T2-A]
+Step 4: QUICKSTART 작성 (fixed-state transcript 기반)              [T1-C]
+Step 5: v0.10 release (CHANGELOG / plugin meta 0.10.0)
+Step 6: (대기) → v1.0 brainstorm                                   [T3-A]
+```
+
+### Protocol 1 retrospective (v0.10 — meta-process 후퇴)
+
+v0.10은 dogfood-driven이므로 *원래 의미의 Protocol 1 안 함*. 대신:
+- 작업 시작 전 Protocol 1 = **이 보고서 2개** (v0.9-overall-evaluation.md + v0.9-evaluation-followup.md). 이미 *holistic external evaluation*으로 backlog가 정의됨 — 추가 Protocol 1 호출 = 평가자가 자기 권고 재검토하는 self-referential loop.
+- Protocol 3 (pre-release) = dogfood가 실제 end-to-end PASS 했는지가 verdict
+- Protocol 4 (post-release) = QUICKSTART이 transcript와 일치하는지 확인 정도
+
+F21 corrections ratio 추적도 v0.10에선 무의미 (process-driven backlog 아니므로). v1.0부터 ratio 트래킹 재개 여부 결정.
 
 ---
 
@@ -666,47 +706,59 @@ v0.5 audit → cite-driven self-verify → 7 fix 닫혔다고 self-publish → �
 
 ---
 
-## Resume Instructions (v0.10 작업 시작점)
+## Resume Instructions (v0.10 작업 시작점 — dogfood-driven)
 
-v0.9 사이클 완료 (4연속 ACCURATE 달성). v0.10은 **Tier 3 deferred 처리 + Protocol 4 archival completion**이 코어.
+v0.9 사이클 완료 (4연속 ACCURATE), v0.10 PIVOT 완료 (external evaluator 권고 → dogfood-driven). Step 1 (Rule 2 carve-out)은 이번 세션에서 처리 — 다음 세션은 Step 2 (dogfood execute)부터.
 
-### Step 0 — v0.10 작업 시작 *전* Protocol 1 (필수)
+### ✅ Step 1 — Rule 2 SKILL.md carve-out (완료, 이번 세션)
 
-W29 정책. 작업 안 하고 evaluator 먼저 호출. 입력: *"v0.10 backlog의 T1-A (Check G FAIL promote) + T1-B (Rule 14 line-cap exercise path policy) + T2-A (Protocol 4 archival) + T2-B (untracked skills/scripts 정리)가 *놓친 위치*나 *부수 영향* 있는지 보라. v0.9에서 100% template conformance 달성했으므로 ratio < 2.0 기대 — RECLASSIFY 0이 정상."*
+`skills/gmk-prototype-rules/SKILL.md` Rule 2에 §"Scope: mechanic prototypes only — not SKILL.md, not other docs" 추가. gmk-port 684줄 credibility tension 처분. pre-flight 7/7 PASS 0 warnings 유지.
 
-v0.9의 ratio 3.00에서 v0.10의 ratio 1.5-2.0으로 *명확히 하락* 여부가 F21 closure 추세 검증의 첫 데이터 포인트.
+### Step 2 — T1-B Phase A: dogfood gmk-init → first PASS
 
-### Step 1 — T1-A (Check G FAIL promote)
+**먼저**: `C:\GameMaking\Godot\gmk-dogfood-merge3\` (또는 합의된 이름) 디렉토리 생성. **kit repo 절대 외부**.
 
-`scripts/check-plugin-meta.sh:291-327` Check G WARN → FAIL. drift accumulator 연결. Check D 패턴 참조. 2-cycle baseline (v0.8 + v0.9) 충족.
+그 디렉토리에서:
+- `/gmk-init` — 3 pillars (sensory + behavioral + decision-shape, emotional skip), 1 pillar ambiguous (Rule 17 stress)
+- `/gmk-roadmap` — 2-3 milestones decomp
+- `/gmk-shape-advisor m1` — grid shape 권고 확인
+- `/gmk-prototype m1` — 단일 HTML 생성
+- `/gmk-validate m1` — bot trial, first PASS verdict 목표
 
-### Step 2 — T1-B (Rule 14 line-cap exercise path)
+**verbatim transcript 캡처** (QUICKSTART 소재). hiccup 발견 시 *기록*하고 계속 진행 (Phase B/C 후 일괄 triage).
 
-정책 결정 (synthetic fixture vs annotation). v0.9 T1-A는 annotation 선택 — T1-B도 동일 적용 vs 차별화.
+### Step 3 — T1-B Phase B: full chain to RE_PASS
 
-### Step 3 — T2-A (Protocol 4 archival)
+- `/gmk-self-test m1` — 실제 플레이
+- `/gmk-port m1 --to godot` — 6-stage port re-validation
+- RE_PASS 도달
 
-v0.6/v0.7 retroactive P4 reports 작성 OR commit-message-only 명시. v0.8/v0.9는 이미 commit됨.
+### Step 4 — T1-B Phase C: m2 + merge-gate
 
-### Step 4 — T2-B (skills/scripts/ cleanup)
+- `/gmk-prototype m2 (greed-tension)` → validate → self-test → port
+- `/gmk-merge-gate m2` — m1 의 prior PASS 와 interaction 검증
+- `/gmk-regression` — m1 still PASS
 
-working tree noise 제거.
+### Step 5 — T1-B Phase D: m3 integration
 
-### Step 5 — Protocol 3 (pre-release evaluator)
+- `/gmk-mechanic-merge m1+m2` → m3 통합 milestone 생성
+- m3에 대해 prototype → validate → self-test → port
 
-ACCURATE 받아야 release.
+### Step 6 — T2-A: defect triage + fix
 
-### Step 6 — Release: CHANGELOG / plugin meta 0.10.0 / pre-flight / commit / push / tag / GitHub release
+T1-B 진행 중 surface된 결함들을 kit 본체에서 수정. 각 fix는 commit. CHANGELOG에 dogfood-found defect로 표시.
 
-7 사이트 version bump. pre-flight 7/7 PASS 0 warnings 확인.
+### Step 7 — T1-C: QUICKSTART.md 작성
 
-### Step 7 — Protocol 4 (post-release git verifier)
+T1-B Phase A 의 verbatim transcript 기반. ~200줄. `QUICKSTART.md` repo root. "What can also happen" sidebar 1개 (실제 hiccup만).
 
-5연속 ACCURATE 목표.
+### Step 8 — v0.10 release
 
-### Step 8 — Post-release HANDOFF + v1.0 brainstorm 본격화
+CHANGELOG / plugin meta 0.10.0. 평가자가 권고했듯이 *Protocol 1 work-start 추가 호출 안 함* (이미 외부 holistic eval이 backlog 정의). Protocol 3은 dogfood RE_PASS 자체가 verdict. Protocol 4는 QUICKSTART ↔ transcript 일치 정도만 빠르게 확인.
 
-v1.0 backcompat inventory 활용. v0.10이 v0.x 마무리 → v1.0 brainstorm.
+### Step 9 — v1.0 brainstorm
+
+`_workspace/v1.0-backcompat-inventory.md` 활용. cheap breaks (Category 1, 4, 6) 우선 검토. v0.10이 v0.x 마무리 → v1.0 transition.
 
 ---
 
