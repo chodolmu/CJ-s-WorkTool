@@ -36,7 +36,7 @@ Before running anything, verify and stop with a clear message if any fails:
    - (i) `typeof window.__gmk_botHook__ === 'object'`
    - (ii) `window.__gmk_botHook__._gmkApiVersion === 1`
    - (iii) `startGame`, `isOver`, `legalActions`, `act`, `summary` all `typeof === 'function'`
-   - (iv) **Determinism** — two consecutive `seed=0` runs produce identical `summary()` (deep-equal). If they diverge, stop with: *"Prototype is non-deterministic. Same seed, two runs, different outcomes. Likely causes (in order): `Math.random` in game logic, `Date.now` in state, wall-clock in legalActions/isOver. Fix and rerun."*
+   - (iv) **Determinism** — two consecutive `seed=0` runs produce identical `summary()` deep-equal **excluding the wall-clock field `duration_ms`** (per `gmk-prototype-rules` §5 row 4). The library auto-populates `duration_ms` from `performance.now()` and that single field is permitted to vary across same-seed runs; all other summary contents must deep-equal. If they diverge on anything other than `duration_ms`, stop with: *"Prototype is non-deterministic. Same seed, two runs, different outcomes (field: <name>). Likely causes (in order): `Math.random` in game logic, `Date.now` in state, wall-clock in legalActions/isOver. Fix and rerun."*
    - (v) **Bounded** — `isOver()` becomes true within `maxActions` for at least one of `seed ∈ {0, 1, 2}`. If not, stop with: *"Prototype never ends across 3 seeds. Check the win/loss condition or lower `maxActions`."*
    Each miss has its own message; don't bundle them.
 5. **Persona capabilities** — read `_gmkPersonaCapabilities` from the hook. Log which optional callbacks exist:

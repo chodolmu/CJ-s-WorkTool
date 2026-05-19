@@ -164,7 +164,7 @@ Before any bot run, `/gmk-validate` performs a **5-point smoke check**. The prot
 | 1. Hook exists | `typeof window.__gmk_botHook__ === 'object'` |
 | 2. API version | `window.__gmk_botHook__._gmkApiVersion === 1` |
 | 3. Required functions | `startGame`, `isOver`, `legalActions`, `act`, `summary` all typeof `function` |
-| 4. Determinism | Two runs with `seed=0` produce identical summary objects |
+| 4. Determinism | Two runs with `seed=0` produce identical summary objects **excluding the wall-clock field `duration_ms`**. The library auto-populates `duration_ms` from `performance.now()` for trial-level reporting; that single field is permitted to vary across same-seed runs. All other summary contents — `score`, `actions_taken`, `crashed`, `stuck`, `build_used`, `custom.*` — must deep-equal. |
 | 5. Bounded | `isOver()` becomes true within `maxActions` for at least one of `seed ∈ {0, 1, 2}` |
 
 If any fails, validation refuses with a named reason. The kit does not patch a broken hook — the user fixes the prototype.

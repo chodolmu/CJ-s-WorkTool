@@ -40,7 +40,7 @@
     }
   ],
   "supported_genres_check": {
-    "is_2d": true,
+    "two_d": true,
     "deterministic_input": true,
     "session_under_5min": true,
     "_comment_check": "All three true → standard bot validation confidence. Any false → gmk-validate adds a caveat (bot signal is reduced for this milestone)."

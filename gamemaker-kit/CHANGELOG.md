@@ -6,6 +6,44 @@ Versioning follows [SemVer](https://semver.org/).
 
 ---
 
+## [Unreleased] — v0.10 dogfood-driven cycle
+
+External holistic evaluator (v0.9-overall-evaluation.md + v0.9-evaluation-followup.md) graded v0.9 as materially v1.0-worthy but blocked by zero end-to-end dogfood evidence. v0.10 pivots from process-driven to dogfood-driven: execute one real grid merge-cozy game project (external to kit repo at `C:/GameMaking/Godot/gmk-dogfood-merge3/`) through gmk-init → gmk-roadmap → gmk-shape-advisor → gmk-prototype → gmk-validate first-PASS, then carry kit-side fixes for defects surfaced during dogfood. **Phase A first-PASS achieved 2026-05-19.** Surfaced 12 defects (D-001 through D-012) of which kit-side fixes are committed in this Unreleased section.
+
+### Process — dogfood execution snapshot (Phase A)
+
+- **Pillars locked**: 3 (behavioral/emotional, decision-shape/sensory ambiguous Rule 17 stress, sensory/behavioral). All cite explicit research sources per D-006 discipline.
+- **Roadmap**: 3 milestones (m1-merge-on-canvas, m2-walk-collect-place, m3-landscape-sense). handoff T1-B's m2-greed-tension placeholder rejected — v8 frame anti-example.
+- **m1 prototype**: 288 lines (under 300 soft cap). Free-placement merge on invisible 32px snap-grid. Shape='grid' (action-space discreteness, not visual).
+- **m1 validation**: 200-run persona-mix, 57s wall time, **VERDICT: PASS**. defer_merge_ratio = 0.704 (target > 0.20), dominant_strategy_ratio = 0.005, crash_rate = 0.000.
+
+### Fixed (kit-side, dogfood-surfaced)
+
+**D-009 — `_workspace/examples/pillars-example.json:43` schema key `is_2d` → `two_d`** (severity LOW)
+- `gmk-init` SKILL spec L179 declares `two_d`; CONCEPT.md/structure.md/extension-design.md all use `two_d`. Only the example fixture used `is_2d`. Reader skills (gmk-shape-advisor, gmk-portability-check) surface scope-check failure counts via prose, never read the key by name, so the mismatch silently passed every Protocol 1/3/4 cycle since v0.4. Only dogfood (fresh-eye user copying the example) surfaced it.
+- One-line correction. No reader behavior change.
+
+**D-011 — `gmk-prototype-rules` §5 row 4 + `gmk-validate` preconditions (iv): determinism check excludes wall-clock `duration_ms`** (severity CRITICAL — kit-internal contradiction)
+- `_bot_hook_lib.js:179-189` auto-populates `summary().duration_ms` from `performance.now() - startedAt` for trial-level reporting. SKILL rule §5 row 4 demanded "identical summary objects" deep-equal across two `seed=0` runs. **Contradiction**: every prototype's summary varies on `duration_ms` (wall-clock), so the strict deep-equal check refuses every prototype. v0.4 onward (Wave B introduced the lib), the kit could not have been ground-truth end-to-end validated against this rule.
+- Confirms external evaluator's "v0.8/v0.9 should not have happened as evaluator cycles" — Protocol 1/3/4 cycles never cross-checked SKILL text against lib code.
+- **Fix**: rule §5 row 4 + gmk-validate (iv) now explicitly exclude `duration_ms` from the deep-equal comparison (`score`, `actions_taken`, `crashed`, `stuck`, `build_used`, `custom.*` still required identical). `_bot_hook_lib.js:179-189` gains a 9-line comment block documenting *why* `duration_ms` is wall-clock and where the deep-equal contract excludes it. Lib behavior unchanged.
+- Path (b) selected over Path (a) (deterministic sim-time): `duration_ms`'s *purpose* is wall-clock measurement (cozy session length hypotheses depend on real elapsed time). Replacing with sim-time would invalidate the semantic of every existing hypothesis using `session_length_avg_ms`.
+
+### Carried (not in this Unreleased; tracked in dogfood-transcript)
+
+- **D-001..D-007**: gmk-init research/sourcing/cognitive-load/reward-chain/per-turn-myopic-synthesis/asymmetric-research defects. *Process* defects — fix in gmk-init SKILL Step 1.5 + Step 2. Larger scope; warrants own backlog cycle.
+- **D-008**: frame-pivot stale prior lock (Pillar 2 v8 invalidated Pillar 1 v2 mid-flight). gmk-init Step 2 cross-pillar audit needed.
+- **D-010**: gmk-shape-advisor "grid" ≠ visual-grid mental-model mismatch. Doc clarity, QUICKSTART surface candidate.
+- **D-012**: placement_diversity metric ceiling-saturated (all 200 trials hit 1.000). Prototype-side hypothesis tightening, not kit-side.
+
+### Dogfood evidence
+
+`_dogfood-transcript.md` (external project) captures the verbatim session — Step 1 seed verbatim, all 12 defects with class/severity/root-cause/relationship-to-prior-defects/disposition, Pillar 2 iterations v1 through v8 with explicit research-to-element mapping for the locked v8 ("풍경을 놓는 동네", PC Steam Dorfromantik-shaped market gap).
+
+Subsequent phases (B: gmk-self-test, C: m2, D: gmk-mechanic-merge to m3, E: gmk-port to Godot) pending the user's playtest session for Phase B (the only non-autonomous phase).
+
+---
+
 ## [0.9.0] — 2026-05-18
 
 v0.6/v0.7/v0.8 were three consecutive ACCURATE releases. v0.9 targets a fourth. v0.9 closes the last *live* half-applied field (`_save_breaking` → 0 mentions), annotates the three unreachable rows of Rule 16's `kit_version` contract as safety valves (same pattern as v0.7 Rule 14 CYCLE) instead of executing M-2's 4-branch audit as written (Protocol 1 found 3 of M-2's 4 "dead branches" were live or already-closed — `early_fail` is read by gmk-validate in 6 sites, `Math.random()` is a live guard pattern in 5+ skills, Rule 14 CYCLE was already preserved as safety valve in v0.7), bumps the stale `~28 skills` count across 5 doc sites, captures a gmk-port split decision (KEEP at 684 lines with documented re-open triggers), and produces a v1.0 backward-compat inventory enumerating six categories of v0.x guarantees as deliberate-break candidates for the eventual MAJOR bump. Protocol 1 graded the original HANDOFF backlog **UNDERSTATED**; Protocol 3 graded the implementation **ACCURATE** with 0 release-blocking defects and 100% template conformance on the 6 in-scope candidates (vs. v0.8's 48%).

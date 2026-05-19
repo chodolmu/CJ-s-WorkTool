@@ -177,6 +177,16 @@
           }
         }
         const now = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+        // NOTE: `duration_ms` is intentionally wall-clock-based — it measures
+        // trial-level reporting (how long the bot took to play out the run on
+        // *this machine*), not gameplay sim time. Because it's wall-clock,
+        // it varies across same-seed runs.
+        //
+        // `gmk-prototype-rules` §5 row 4 (determinism check) and `gmk-validate`
+        // preconditions (iv) both exclude `duration_ms` from the deep-equal
+        // comparison for this reason. All OTHER summary fields — score,
+        // actions_taken, crashed, stuck, build_used, custom.* — must be
+        // identical across same-seed runs, or the prototype is non-deterministic.
         return {
           score: base.score,
           duration_ms: Math.round(now - startedAt),
