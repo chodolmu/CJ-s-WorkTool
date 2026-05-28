@@ -1,0 +1,66 @@
+{
+  "_comment": "auto-state.json — v0.10 auto-mode state plane example. WRITTEN BY: auto-runner.js (Phase 1+) and /gmk-auto-start preflight. READ BY: /gmk-auto-status, /gmk-auto-stop, /gmk-auto-report. Plan reference: C:\\Users\\chodo\\.claude\\plans\\eager-whistling-catmull.md §state layer. Additive-only schema since v0.10 (matches v0.4-v0.9 contract — no breaking changes within MAJOR). kit_version is read per gmk-prototype-rules Rule 16 (warn-only on future versions). This file is recreated fresh per /gmk-auto-start invocation; it is NOT a long-lived journal. Append-only journals live in auto-incidents.json and auto-checkpoints/.",
+  "kit_version": "0.10.0",
+  "phase": "preflight",
+  "phase_history": [
+    { "phase": "preflight", "entered_at": "2026-05-27T22:30:00Z" }
+  ],
+  "started_at": "2026-05-27T22:30:00Z",
+  "last_checkpoint_at": null,
+  "runner": {
+    "pid": null,
+    "host": "DESKTOP-USER",
+    "branch": null,
+    "heartbeat_at": null
+  },
+  "budget": {
+    "usd_cap": 5.00,
+    "usd_spent": 0.0,
+    "max_hours": 4,
+    "started_at": "2026-05-27T22:30:00Z"
+  },
+  "target": {
+    "milestone_id": "m1-merge-feel",
+    "project_root": "C:/GameMaking/Godot/gmk-dogfood-merge3"
+  },
+  "stop_requested": false,
+  "exit": null,
+  "preflight": {
+    "_comment": "Filled by /gmk-auto-start. All four checks must report ok:true before runner can launch. Each check stores the raw probe output so failures are inspectable post-hoc without re-running.",
+    "cli_flags": {
+      "ok": null,
+      "checked_at": null,
+      "claude_version": null,
+      "flags_required": ["--max-budget-usd", "--output-format", "--allowedTools", "--session-id"],
+      "flags_found": [],
+      "flags_missing": []
+    },
+    "git_base": {
+      "ok": null,
+      "checked_at": null,
+      "current_branch": null,
+      "porcelain_clean": null,
+      "upstream_diverged": null,
+      "unpushed_commits": null,
+      "branch_allowlist": ["main"],
+      "user_override_recorded": false
+    },
+    "runner_lock": {
+      "ok": null,
+      "checked_at": null,
+      "lock_file": ".gamemaker-kit/auto/runner.lock",
+      "previous_lock": null,
+      "stale_reason": null
+    },
+    "milestone_eligibility": {
+      "ok": null,
+      "checked_at": null,
+      "milestone_id": "m1-merge-feel",
+      "self_test_verdict": null,
+      "mechanic_density_score": null,
+      "blocked_reason": null
+    }
+  },
+  "current_unit": null,
+  "completed_units_count": 0
+}

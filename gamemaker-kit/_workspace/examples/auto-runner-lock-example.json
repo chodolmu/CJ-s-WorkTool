@@ -1,0 +1,9 @@
+{
+  "_comment": "runner.lock — v0.10 single-instance guard for auto-runner.js. WRITTEN BY: auto-runner.js on startup (replaces .gamemaker-kit/.loop.lock model, which only gmk-loop owned). READ BY: /gmk-auto-start preflight check (c) and /gmk-auto-status. STALE RULE: heartbeat_at older than 5 minutes → preflight may auto-clear with a logged note. Active rule: if pid is alive on this host AND heartbeat_at is fresh, /gmk-auto-start refuses. The lock is intentionally a separate file from auto-state.json because crash-recovery has to differentiate 'state exists but runner died' from 'runner is live'.",
+  "kit_version": "0.10.0",
+  "pid": 23104,
+  "host": "DESKTOP-USER",
+  "branch": "auto-night-2026-05-27",
+  "started_at": "2026-05-27T22:31:00Z",
+  "heartbeat_at": "2026-05-27T22:33:15Z"
+}
