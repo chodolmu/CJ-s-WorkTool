@@ -1,20 +1,21 @@
-# Handoff: S0 완료, S1 detail 작성 차례
+# Handoff: S0 + 외부 리서치 동결 완료, S1 detail 작성 차례
 
-**Generated**: 2026-05-28 23:15 KST (S0 실행 완료 시각, 마지막 commit에서 갱신)
+**Generated**: 2026-05-29 00:30 KST
 **Branch**: main
-**Status**: ✅ **v1.0-α 진행 중. S0 (v0.10 freeze) 완료. 다음 = S1 detail 작성.**
+**Status**: ✅ **v1.0-α 진행 중. S0 완료 + 외부 리서치 5 critical gap 동결. 다음 = S1 detail 작성.**
 
 ---
 
-## ⚠️ 다음 세션 Claude — 3-file read protocol (P8)
+## ⚠️ 다음 세션 Claude — 4-file read protocol (P8 + 리서치 동결본)
 
-`v1.0-concept.md` §P8에 따라, 새 세션은 다음 3개 파일만 읽으면 *완전히 이어받음*:
+`v1.0-concept.md` §P8에 따라, 새 세션은 다음 4개 파일만 읽으면 *완전히 이어받음*:
 
 1. **`_workspace/v1.0-concept.md`** (LOCKED v3) — 방향 + 8 원칙 (P1-P8)
-2. **`_workspace/v1.0-resume.md`** — 현재 상태 + 다음 액션 (✅ S0 완료 후 작성됨)
-3. **`_workspace/v1.0-detail-S1.md`** — *아직 없음, 다음 세션이 작성*
+2. **`_workspace/v1.0-resume.md`** — 현재 상태 + 다음 액션 + 사용자 결정 4개 대기 목록
+3. **`_workspace/v1.0-research-distilled.md`** — 외부 prior art 5 critical gap (Codex 검증). S1+ detail이 cite하는 입력
+4. **`_workspace/v1.0-detail-S1.md`** — *아직 없음, 다음 세션이 작성*
 
-이 HANDOFF.md는 *맥락 요약*이지 진실의 원본은 아님. 충돌 시 위 3개 파일이 우선.
+이 HANDOFF.md는 *맥락 요약*이지 진실의 원본은 아님. 충돌 시 위 4개 파일이 우선.
 
 ---
 
@@ -31,19 +32,31 @@
 
 ---
 
-## 이번 세션 (2026-05-28)에서 한 일
+## 이번 세션 (2026-05-28 ~ 29)에서 한 일
 
-### S0 실행 완료
-- archive/v0.10-auto-mode-wip 브랜치 생성 + push (8 파일, 1845 insertions, `a55397e`)
-- main에서 v0.10 자산 정리 (rm 효과는 archive 브랜치 add를 통해 main에서 자동 분리됨)
-- `ddbfb9b` push (D-009 + D-011 fix, v1.0에도 유효)
-- CHANGELOG.md / HANDOFF.md 갱신 + v1.0 산출물 5개 commit
-- `_workspace/v1.0-resume.md` atomic write (P8 enforcement)
-- Stale 변경 (`.bkit/*`, `prepare-vendor.sh`, 부모 폴더) 건드리지 않음
+### Phase 1: S0 실행 완료 (15분)
+- archive/v0.10-auto-mode-wip 브랜치 생성 + push (8 파일, `a55397e`)
+- main에서 v0.10 자산 정리 (git 자연 분리로 처리)
+- `ddbfb9b` push (D-009 + D-011 fix)
+- CHANGELOG/HANDOFF 갱신 + v1.0 산출물 5개 commit (`b6bc443`)
+- `v1.0-resume.md` atomic write (`8bf68f8`)
 
-### S0 학습 (S1 detail 작성에 반영)
-- archive 브랜치 commit 방식이 *git의 자연스러운 분리*로 main 정리를 자동 처리 — Step 2 rm은 결과적으로 불필요했음. S1 detail에서 절차 단순화 가능.
-- ddbfb9b push가 무충돌 (다른 세션 X) — 일반적인 case.
+### Phase 2: 외부 리서치 3-round (1-2시간)
+- Round 1: 메모리 인덱스만 본 게으른 리서치 → 사용자 지적
+- Round 2: 25 GitHub WebSearch + 18 WebFetch → 6 gap 후보
+- Codex 검증: URL 정확, 가치 평가 부풀림 → 3 critical로 축소
+- Round 3: Codex 지적 4 카테고리 보완 → 2 critical 추가 (PlayCoder, OpenGame)
+- godogen README 직접 정독 → publish-render + stop-hook 발견
+
+### Phase 3: 리서치 동결 + commit (`4f63293`)
+- `_workspace/v1.0-research-distilled.md` 작성 — 5 critical gap + 7 pruned
+- Cite-from-detail-plans 원칙 적용 (S1+ detail이 cite, 재리서치 금지)
+
+### S0 + 리서치 학습 (S1 detail 작성에 반영)
+- **archive 브랜치 commit 방식이 git 자연 분리로 main 정리 자동 처리** — Step 2 rm 불필요. S1+에서 git 자연-동작이 처리할 일은 절차에 박지 말 것.
+- **외부 리서치 round 1 (메모리만) 항상 skip** — round 2 (진짜 WebSearch+WebFetch)부터 + Codex 검증 필수.
+- **godogen 정독이 가장 큰 ROI 줌** — README 직접 읽는 게 subagent 요약보다 강함. 1순위 레포는 직접 정독.
+- **PlayCoder + OpenGame이 v1.0 정합성 매우 높음** — `pillars.json` + milestone hypothesis가 그대로 "structured requirement spec" 역할.
 
 ---
 
@@ -91,8 +104,22 @@ Layer 3   — Dispatch-based Mobile-Trigger Cycles (PC 켜둠, 모바일 트리�
 
 **S1 detail 작성** (`_workspace/v1.0-detail-S1.md`):
 - S1 = Layer 1 — `gmk-init` 재설계 (autonomous reference research, WebSearch+WebFetch)
-- 입력: `v1.0-concept.md` §S1 + `v1.0-detail-backlog.md` 체크리스트 + S0 학습
-- 출력: 5-10 step numbered procedure + artifact-level quit signals + fallback
+- 입력:
+  - `v1.0-concept.md` §S1 + §P1-P8
+  - `v1.0-detail-backlog.md` 체크리스트
+  - `v1.0-research-distilled.md` §Gap 1-5 (cite, restate 금지)
+  - `skills/gmk-init/SKILL.md` (현 279 LOC, 재설계의 입력 — 재활용 ~70% 가정)
+  - S0 학습 + 리서치 학습 (resume.md에 박힘)
+- 출력: 5-10 step numbered procedure + artifact-level quit signal 표 + fallback 4개
+
+**사용자에게 물어야 할 결정 4개** (S1 detail 안에 각 옵션 분기 procedure까지):
+1. Layer 1 WebSearch 패턴 — Codex 5-stage research vs 단순 1-stage
+2. F2P contamination filter 강도 — 관대 / 보통 / 엄격
+3. 3회 시도 정의 — 검색 3회 / 페이지 3개 / 시도 3-cycle?
+4. genre-decisions 포맷 잠정 결정 — S1에서 잡고 갈지 S1.5로 미룰지
+
+**S1 detail 작성 시 적용할 7원칙** (리서치 산출, resume.md에 정리됨):
+Resume Verification First / User Decisions Up-Front / Cite-Don't-Restate / Step ID + Quit Signal / Atomic Write + HANDOFF as Last Step / Reuse-vs-New Ratio / One-Detail-At-A-Time
 
 작성 후 사용자 컨펌 받고 S1 실행 시작.
 
@@ -123,7 +150,8 @@ Layer 3   — Dispatch-based Mobile-Trigger Cycles (PC 켜둠, 모바일 트리�
 | File | 용도 |
 |------|------|
 | `_workspace/v1.0-concept.md` | **LOCKED v3 — 매 세션 시작 시 정독** |
-| `_workspace/v1.0-resume.md` | 현재 위치 + 다음 액션 (atomic write) |
+| `_workspace/v1.0-resume.md` | 현재 위치 + 다음 액션 + 사용자 결정 4개 대기 (atomic write) |
+| `_workspace/v1.0-research-distilled.md` | **외부 prior art 5 critical gap (Codex 검증). S1+ detail이 cite** |
 | `_workspace/v1.0-detail-backlog.md` | Detail plan 큐 + 체크리스트 |
 | `_workspace/v1.0-detail-S0.md` | S0 실행 절차 (완료, 역사적 기록) |
 | `_workspace/v1.0-plan.md` | 초기 plan 349줄, 역사적 기록 |
@@ -182,14 +210,14 @@ LOCKED v1까지 *세션 한계*를 plan이 모르고 있었음. **방어: P8 + R
 ## End of Session Summary
 
 이번 세션:
-- S0 (v0.10 freeze) 완료
-- archive 브랜치 보존, ddbfb9b push, v1.0 산출물 5개 commit
-- v1.0-resume.md 생성 (P8 enforcement)
-- HANDOFF.md v1.0-α 상태로 갱신 (이 파일)
+- Phase 1: S0 (v0.10 freeze) 완료
+- Phase 2: 외부 리서치 3-round (25 GitHub WebSearch + Codex 검증 + 4 카테고리 보완 + godogen 정독)
+- Phase 3: `v1.0-research-distilled.md` 동결 commit (`4f63293`)
+- Phase α (이 변경 묶음): resume.md + HANDOFF.md 갱신 + push
 
 다음 세션은:
-1. 이 HANDOFF + `v1.0-concept.md` + `v1.0-resume.md` 3개 읽음
-2. S1 detail 작성 (`v1.0-detail-S1.md`)
+1. 4-file read protocol: concept + resume + **research-distilled** + (작성될) detail-S1
+2. S1 detail 작성 (`v1.0-detail-S1.md`) — 사용자 결정 4개 분기 포함
 3. 사용자 컨펌 후 S1 실행 시작
 
 수고하셨습니다.
