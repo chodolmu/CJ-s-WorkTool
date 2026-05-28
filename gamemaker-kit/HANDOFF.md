@@ -242,5 +242,3 @@ LOCKED v1까지 *세션 한계*를 plan이 모르고 있었음. **방어: P8 + R
 2. 사용자 §9 confirmation 4가지 받음 (특히 dogfood seed A/B)
 3. S1 Step 0 (Resume Verification) 실행 → ... → Step 8 commit + push
 4. S1 완료 후 S1.5 detail 작성으로 진입
-
-수고하셨습니다.

@@ -1,0 +1,14 @@
+{
+  "genre": "merge3",
+  "reference_titles": ["Royal Match"],
+  "platform": "PC Steam",
+  "vibe": "cozy",
+  "user_seed_raw": "merge3 / cozy / PC Steam / Royal Match 비슷한",
+  "_meta": {
+    "source": "v1.0-concept.md §3 example, confirmed by user as S1 dogfood seed (Option A)",
+    "captured_at": "2026-05-29T04:55:00+09:00",
+    "detail_ref": "v1.0-detail-S1.md §2 Step 1",
+    "decision_ref": "S1 §9 confirmation #4 = Option A (merge3 / Royal Match)",
+    "p3_note": "P3 (unfamiliar genre) defense is S2 territory, NOT this dogfood. This seed tests SKILL mechanics, not Layer 1 research validity."
+  }
+}
