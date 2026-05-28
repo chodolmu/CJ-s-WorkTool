@@ -6,9 +6,51 @@ Versioning follows [SemVer](https://semver.org/).
 
 ---
 
-## [Unreleased] — v0.10 dogfood-driven cycle
+## [Unreleased] — v1.0 concept-locked, reference-clone-first primary mode
+
+**2026-05-28 PIVOT to v1.0**: v0.10 auto-mode track (Phase 0 + Phase 1 WIP) is frozen and archived on `archive/v0.10-auto-mode-wip` branch. Root-cause re-diagnosis surfaced a deeper problem than auto-mode addressed: the kit's *primary mode itself* was misaligned — `mechanic-validation from blank canvas` does not match the user's actual workflow (`reference-clone-with-differences`). v1.0 changes primary mode to **reference-clone-first autonomous game building** while keeping mechanic-validation available as secondary.
+
+Concept LOCKED v3 at `_workspace/v1.0-concept.md` (8 principles P1-P8, 4-layer architecture, S0-S7 sequencing). Layer 3 = Claude Code Dispatch (PC background worker + mobile trigger via Telegram/Discord channel) — no self-built OS-level runner. Detail plans drafted JIT per concept §P6; S0 (this freeze) detail at `_workspace/v1.0-detail-S0.md`.
+
+Validation: Codex 5 passes + Evaluator 3 passes through plan → concept LOCK v1 → v2 → v3 transitions. Plan history retained at `_workspace/v1.0-plan.md` (initial 349-line plan, historical record) and `_workspace/v1.0-plan-comparison.md` (3-plan comparison).
+
+### v0.10 auto-mode track — frozen, preserved
+- All v0.10 auto-mode code (`scripts/auto-runner.js` ~880 LOC, `runner/*.js`, `skills/gmk-auto-start/`, `_workspace/examples/auto-{state,runner-lock}-example.json`) moved to `archive/v0.10-auto-mode-wip` branch and removed from `main`. Branch is preserved as historical record; ideas (5-stage patch gate, D-013 mechanic-density anti-degenerate gate, single-instance runner lock pattern) will be re-implemented as v1.0 SKILLs as needed.
+- v0.10 dogfood kit-side fixes (D-009 schema + D-011 determinism, commit `ddbfb9b`) carried forward to v1.0 main — both fixes remain valid for v1.0's secondary `gmk-validate`.
+
+---
+
+## [Unreleased v0.10 — frozen/archived] — v0.10 dogfood-driven cycle + auto-mode pivot
 
 External holistic evaluator (v0.9-overall-evaluation.md + v0.9-evaluation-followup.md) graded v0.9 as materially v1.0-worthy but blocked by zero end-to-end dogfood evidence. v0.10 pivots from process-driven to dogfood-driven: execute one real grid merge-cozy game project (external to kit repo at `C:/GameMaking/Godot/gmk-dogfood-merge3/`) through gmk-init → gmk-roadmap → gmk-shape-advisor → gmk-prototype → gmk-validate first-PASS, then carry kit-side fixes for defects surfaced during dogfood. **Phase A first-PASS achieved 2026-05-19.** Surfaced 12 defects (D-001 through D-012) of which kit-side fixes are committed in this Unreleased section.
+
+**Mid-cycle PIVOT (2026-05-26): auto-mode track added.** User's stated original motivation surfaced explicitly in conversation — *"자고 일어나면 게임이 한 발짝 나아가 있는 자율 게임 개발 루프"* (overnight autonomous game-dev loop). v0.9's `gmk-loop` SKILL declared "One gate per call. The user is the recursion." — structurally opposite of the user's goal. Dogfood Phase B blocked at `m2 self-test` ("user playthrough required") confirmed the supervised-workflow nature is the root mismatch, not a per-skill defect. External Codex-rescue review verdict: **do not deprecate v0.9; add `auto-mode` beside it**. v0.9 stays as the design/control plane (interactive); a new external Node runner (`scripts/auto-runner.js`) owns the execution plane (OS-level loop, `claude -p` per work unit, JSON state, no `--resume`, `--max-budget-usd` cap). Plan recorded at `~/.claude/plans/eager-whistling-catmull.md`; second Codex pass graded the plan **SHIP-WITH-CHANGES** and required a Phase 0 preflight contract before any Phase 1 code lands. This Unreleased section now tracks two parallel workstreams (dogfood defects + auto-mode Phase 0); they are not merged into one release until Phase 0 verification passes.
+
+### Added (auto-mode, Phase 0)
+
+**v0.10 Phase 0 — Preflight Contract for auto-mode**
+- `skills/gmk-auto-start/SKILL.md` (NEW) — opus-model SKILL. Runs four preflight checks before auto-mode runner launch: (a) Claude CLI flag probe (`--max-budget-usd`, `--output-format`, `--allowedTools`, `--session-id`); (b) Git base protection (`status --porcelain`, branch allowlist, unpushed-commit warn); (c) Single-instance lock check (`.gamemaker-kit/auto/runner.lock`, 5-min heartbeat staleness, per-host PID liveness); (d) Milestone eligibility — **anti-D-013 gate** requiring either human self-test PASS in last 30 days, OR mechanic-density sanity (`dominant_strategy_ratio ∈ [0.05, 0.60]` AND `action_entropy ≥ 0.5` AND `state_coverage ≥ 3`). Writes `.gamemaker-kit/auto/auto-state.json` on PASS; refuses on any single fail with the verbatim probe output. SKILL does **not** spawn the runner — separation of concerns is load-bearing (Claude session can't outlive the runner). User launches `node scripts/auto-runner.js` themselves after preflight.
+- `_workspace/examples/auto-state-example.json` (NEW) — v0.10 auto-mode state-plane example. Fields: `phase`, `phase_history[]`, `runner.{pid,host,branch,heartbeat_at}`, `budget.{usd_cap,usd_spent,max_hours}`, `target.{milestone_id,project_root}`, `preflight.{cli_flags,git_base,runner_lock,milestone_eligibility}.ok`, `current_unit`, `stop_requested`. Additive-only schema (kit_version 0.10.0).
+- `_workspace/examples/auto-runner-lock-example.json` (NEW) — single-instance lock format example. Fields: `pid`, `host`, `branch`, `started_at`, `heartbeat_at`. Differentiates from v0.9's `.gamemaker-kit/.loop.lock` model by adding `heartbeat_at` (detect *stuck* vs *crashed* runners).
+- **Not yet added (Phase 1+)**: `scripts/auto-runner.js`, the four `gmk-auto-{status,stop,report,decide}` SKILLs, `runner/{state_io,patch_guard,seed_pool,incident_classifier,scheduler,cross_milestone_pattern,playtest_analyst_bridge}.js`. **v0.9 SKILLs are not modified** — auto-mode is purely additive.
+
+### Process — auto-mode pivot rationale
+
+The user surfaced the original motivation in a conversation where they were explicitly considering canceling their Claude subscription. The two-week build trajectory (v0.1 → v0.9, 4 consecutive ACCURATE Protocol verdicts) had optimized for *release-process health* rather than the *user's overnight-loop goal* — a meta-process drift the kit's own Protocol 1/3/4 cycles couldn't detect because they grade against the HANDOFF backlog, not against original intent. The pivot is recorded as a v0.10 mid-cycle event (not a v0.11 future feature) because that drift is itself the load-bearing lesson — v0.10 either fixes the original motivation mismatch or proves the kit can't.
+
+External validation chain: (1) Codex first pass — confirmed `gmk-loop`'s "user is the recursion" is structurally incompatible with the user's goal; recommended `auto-mode` additive rather than v0.9 deprecation. (2) Plan agent (Claude) — designed the architecture per Codex's recommendation. (3) Codex second pass on the plan — graded SHIP-WITH-CHANGES; added Phase 0 (preflight contract), Metric Validity (D-013 amplification) as 5th trap, single-runner-lock + git base safety as missing operational layers. The Phase 0 SKILL in this Unreleased entry incorporates all five Codex-second-pass additions.
+
+### Anti-goal commitments (auto-mode)
+
+These remain explicitly out of scope for v0.10 — they will not be added in any later Phase without a new pivot:
+- Auto-judgment of "fun" (the kit's v0.2-v0.9 academic-honesty framing stays — bots falsify, humans validate).
+- Auto-port to Godot/Unity (`gmk-port`'s 6-stage human RE_PASS gate stays).
+- Auto-kill milestones (kill-recommended queue only; actual kill goes through interactive `/gmk-kill-milestone` to preserve Cleveland reason-capture).
+- Auto-merge to `main` (all auto-mode commits land on `auto-night-<date>` branches; merge is a morning decision).
+- Deprecating any v0.9 SKILL (zero removed, zero modified; interactive mode and auto-mode coexist).
+- Pillar auto-revision (pillars are design layer; auto-mode plateauing against a pillar is itself a `pillar-may-need-revision` morning-report signal, not a kit response).
+
+---
 
 ### Process — dogfood execution snapshot (Phase A)
 
