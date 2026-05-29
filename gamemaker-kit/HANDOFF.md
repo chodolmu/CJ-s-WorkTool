@@ -1,10 +1,19 @@
-# Handoff: S1~S5 완료, S6 (Dispatch 통합) 진입 대기
+# Handoff: S6 detail 작성 완료 (Codex+Opus 검증), S6 실행은 사용자 비준 후
 
-**Generated**: 2026-05-30 07:30 KST (Phase ι — S5 실행 완료)
+**Generated**: 2026-05-30 08:00 KST (Phase κ — S6 detail 작성 + 2중 검증)
 **Branch**: main
-**Status**: ✅ **S1 + S1.5 + S2 + S3 + S4 + S5 완료.** Layer 1 + 1.5 + 2 + P5 시각 컨펌 빌드 완료 + **merge3 M1 full dogfood (사용자 실플레이) PASS**. **S5 = 사용자가 직접 M1 플레이.** 판정: 메커니즘 fidelity OK + juice 부재로 심심(dogfood라 고칠 필요 없음). **3-게이트 수렴 완성** — 봇 fidelity(숫자) + 시각컨펌(관측) + 실플레이(whole-experience: juice 부재는 사람만 잡음). concept P3 "사용자 직접 플레이" 실증. **검증 규약 정정**: S5는 자잘한 작업이라 Codex+Opus 생략 — 규약을 모든 S에 기계적 적용 말 것. **다음 = S6 (Dispatch 통합 — PC worker + Channel 알림). ⚠ 사용자 환경 의존 큼, 진입 시 셋업 범위 결정 필요.**
+**Status**: ✅ **S1~S5 완료 + S6 detail 작성 완료.** 사용자 되물음("모바일 클로드코드 앱은 안돼?")이 방향 바꿈 — 공식 문서 정독 → concept이 명시한 **Telegram/Discord 봇(Channels) 폐기, `claude remote-control`(공식) 채택**. P7을 봇보다 더 충족. **검증 규약 큰 작업 → Codex+Opus 둘 다**: Opus(86 PWC, 문서정합) + Codex(DO-NOT-SHIP, 런타임 — **모바일=로컬세션의 창, file:// 빌드 직접 못 엶**) 둘 다 반영. Codex를 trust source로 안 박고 공식문서로 직접 사실정정. **다음 = S6 실행 전 2 사용자 결정**: (1) concept §8 RE-OPEN 비준(§3/P7 "Channel"→"Dispatch/Remote Control"), (2) §0a Dispatch vs Remote Control 선택. 그 후 §2 Step1~ = **사용자 환경 셋업**(PC `claude remote-control` + 모바일 로그인 ~10분, PC앞+모바일 손에 있는 시간 필요). ⚠ 사용자 구독 고민 중 — "한 phase 더만" 금지.
 
-> **진실의 원본은 `_workspace/v1.0-resume.md`** (status=s5_done_full_dogfood_pass). 이 HANDOFF는 맥락 요약. 충돌 시 resume + concept이 우선.
+> **진실의 원본은 `_workspace/v1.0-resume.md`** (status=s6_detail_done_pending_user_ratify). 이 HANDOFF는 맥락 요약. 충돌 시 resume + concept이 우선. **단 concept §3/P7은 아직 "Channel" 명세 — RE-OPEN 비준 전엔 `v1.0-detail-S6.md`가 메커니즘 우선.**
+
+## Phase κ (2026-05-30 ~08:00): S6 detail 작성 + Codex+Opus 2중 검증
+
+- **방향 전환**: 사용자 되물음 → 공식 문서(`code.claude.com/docs/en/remote-control`) 정독. Claude Code 모바일↔로컬 4기능 구분(Dispatch/Remote Control/Channels/web). Telegram/Discord 봇(Channels) = 플러그인 설치 필요 = 작은 자체 인프라(함정1 약한 재현) → **remote-control 공식기능 채택, P7 더 충족**.
+- **2중 검증** ([[feedback_eval_codex_opus_split]] 큰 작업): **Opus 86 PWC** (MAJ-1 step별 resume갱신 미박힘 / MAJ-2 §7 gmk-port 누락 / MIN-1 line192 오인용 → 전부 수정. RE-OPEN 처리·P7 독해는 모범 평가). **Codex DO-NOT-SHIP** (BLOCKER: 모바일이 PC file:// 빌드 직접 못 엶 / 명령이름 미검증 우려 / 푸시-부분PASS↔S7 충돌). 공식문서로 사실정정 — **명령이름은 실재 확정**(Codex 우려 기각), **file://는 Codex 맞음**(빌드재생 가정 폐기, 컨펌은 S4 paste 매개), 세션죽음 감지 추가, 푸시누락=S7 latency quit signal 후보로 명시.
+- **산출**: `_workspace/v1.0-detail-S6.md` (§0 방향전환 + §0a 메커니즘선택 + §2 Step0-5 + §8 RE-OPEN 후보 + §9 검증규약). 메모리 `project_gmk_s6_remote_control_pivot.md`.
+- **S6 실행 안 함** — 사용자 환경 셋업이라 다음 세션 + 2 사용자 결정 후.
+
+**Phase κ 학습**: (1) 사용자 한 줄 되물음이 LOCKED concept 메커니즘을 뒤집을 수 있음 — handoff resume 시 "plan 1순위 전제 의심"의 실증. (2) Codex 런타임 검증이 또 Opus가 grep으로 못 본 결함(file:// 모바일) 잡음 — S4 file:// 결함과 같은 클래스. (3) subagent/web 주장은 공식 문서 직접 정독으로 교차검증 필수(명령이름은 실재였으나 file:// 제약도 실재).
 
 ## Phase ι (2026-05-30 ~07:30): S5 실행 완료 (사용자 실플레이 dogfood)
 
