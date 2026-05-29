@@ -228,9 +228,28 @@ PASS.
 
 **Skipped** — all 4 categories had ≥1 convention after Cycle 1. Per detail §2 Step 4 Cycle 2 ("identify *missing* categories"), no missing category → 0 calls. Cumulative stays **10**.
 
-#### §Cycle3 — Cross-verification (Royal Match)
+#### §Cycle3 — Cross-verification (scoped per concept P9 + audit axis 3)
 
-(execution pending — next)
+**Scope change (2026-05-29 14:35)**: per concept P9, Cycle 3's purpose narrowed from "verify all 30 conventions" to "verify the *high-signal* conventions likely to become pillar candidates + weak-source claims needing dev-grade corroboration." Numeric conventions already verbatim-verified (HS-9, RM-9 pricing) and the corrected RM-4 are excluded. This also resolves the audit's "worst-case 30 calls" concern (Codex axis 2 Q4).
+
+**High-signal selection (6 claims → 4 cross-verify searches, each against sources OUTSIDE the original domain)**:
+
+| claim | original source | cross-verify result | verdict |
+|-------|-----------------|---------------------|---------|
+| **RM-8** 5 lives / 1-per-30min regen | fandom wiki (weak) | Independent source confirms "one life every 30 min", max 5 (→8 via Royal Pass). | ✅ verified, enriched (max extendable to 8) |
+| **GS-9 / GS-3** dual difficulty curve (projected vs playtest-actual), vanilla-winrate tuning | gameworldobserver (Playrix interview) | **Socialpoint Analytics (independent studio, Medium) + arxiv academic paper** confirm projected-vs-actual curve + vanilla-winrate is an **industry-wide** match-3 method, NOT Playrix-only. | ✅ verified — **upgrades from "Playrix house style" to GENRE convention** (resolves Playrix-bias worry) |
+| **GS-5 / HS-3** meta-layer narrative as retention/monetization engine | playrix + scapes deconstructions | GameRefinery (independent) frames "match3 + meta layer = new winning formula"; first-party Playrix CD quote: *"our metagame is so different… you want to find out what is happening with the characters."* | ✅ verified — genre-defining convention, first-party + independent agree |
+| **RM-9** near-miss difficulty (exact-average-moves → win-on-last / lose-by-one → buy 1 more move) | naavik (Royal Match) | **NCBI academic study (Candy Crush near-miss) + USPTO patent filings** confirm "give exactly the average moves to engineer near-miss → monetize extra move" is a **deliberate cross-genre** convention. | ✅ verified — genre-wide intentional pattern, academic-grade |
+
+**Verified: 4/4.** No claim refuted. Two claims (GS-9, RM-9) **upgraded** from single-studio to genre-wide via independent + academic sources — this directly mitigates the intra-Playrix-bias risk flagged in audit axis 3 Q4.
+
+**Anti-Playrix-bias note (audit axis 3 Q4 response)**: The load-bearing conventions that would drive pillars (data-driven difficulty tuning, near-miss tension, meta-narrative retention) are confirmed as **family/genre-wide**, verified against non-Playrix sources (Socialpoint, GameRefinery, NCBI, USPTO). The Playrix-specific items (4 internal rules GS-3, identical formula HS-1) remain studio-flavored but are NOT the pillar-candidate drivers. Bias risk acknowledged and bounded.
+
+**Cost delta**: Cycle 3 = 4 WebSearch + 0 WebFetch (+ 2 WebFetch done earlier in axis-3 verification: naavik, gamigion). Cumulative = 20 + 4 = **24** (+ 2 audit fetches = 26 effective). Well under 100 cap.
+
+#### §Cycle3 — Gardenscapes / Homescapes
+
+Covered above in the cross-genre high-signal table (GS-9/GS-3/GS-5/HS-3 verified jointly). No separate per-ref Cycle 3 needed — the high-signal claims span refs and were verified once against independent sources, which is stronger than per-ref same-family checks.
 
 ### §Gardenscapes
 
@@ -312,6 +331,8 @@ PASS.
 | 13:50 | Stage 3 RM Cycle1 | 4 cat search + 1 fetch (naavik) | +4 | +1 | 10 |
 | 13:55 | Stage 3 GS Cycle1 | 4 cat search + 1 fetch (gamedeveloper) | +4 | +1 | 15 |
 | 14:00 | Stage 3 HS Cycle1 | 4 cat search + 1 fetch (pocketgamer) | +4 | +1 | 20 |
+| 14:10 | audit verify | RM-4/RM-9/HS-9 진위 (naavik + gamigion fetch) | 0 | +2 | 22 |
+| 14:35 | Stage 3 Cycle3 | high-signal cross-verify (4 search) | +4 | 0 | 26 |
 
 ## §failures (per Step 4 — references that completed 3-cycle with 0 conventions)
 
