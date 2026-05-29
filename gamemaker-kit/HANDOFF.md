@@ -1,23 +1,27 @@
-# Handoff: S1 detail 작성 완료 (evaluator PASS), S1 실행 대기
+# Handoff: S1 Step 3 Codex 검증 완료 (SHIP-WITH-CHANGES), fix 적용 대기
 
-**Generated**: 2026-05-29 04:30 KST (Phase β)
+**Generated**: 2026-05-29 05:10 KST (Phase γ)
 **Branch**: main
-**Status**: ✅ **v1.0-β 진행 중. S1 detail 작성 + evaluator 재검토 PASS. 다음 = 사용자 §9 confirmation → S1 실행.**
+**Status**: ⏳ **v1.0-γ 진행 중. S1 Step 0+1 PASS (Phase β commit `8d7296e`). Step 3 진입 전 Codex 검증 → 4 fix + target_family 결정 받음. 다음 세션 = fix 적용 + Step 3 실행.**
 
-**이전 generation**: 2026-05-29 00:30 KST (Phase α — pre_S1 상태). 이 문서가 갱신.
+**이전 generation**:
+- 2026-05-29 00:30 KST (Phase α — pre_S1 상태)
+- 2026-05-29 04:30 KST (Phase β — S1 detail 작성 + evaluator PASS + Step 0+1 PASS)
+- 2026-05-29 05:10 KST (Phase γ — *이 문서*, Codex Step 3 검증 + fix 인벤토리 frozen)
 
 ---
 
-## ⚠️ 다음 세션 Claude — 4-file read protocol (P8 + 리서치 동결본)
+## ⚠️ 다음 세션 Claude — 5-file read protocol (Phase γ 갱신, P8 + 리서치 + Codex 검증 동결본)
 
-`v1.0-concept.md` §P8에 따라, 새 세션은 다음 4개 파일만 읽으면 *완전히 이어받음*:
+`v1.0-concept.md` §P8에 따라, 새 세션은 다음 5개 파일만 읽으면 *완전히 이어받음*:
 
 1. **`_workspace/v1.0-concept.md`** (LOCKED v3) — 방향 + 8 원칙 (P1-P8)
-2. **`_workspace/v1.0-resume.md`** — 현재 상태 (detail_ready) + 다음 액션 + 사용자 §9 confirmation 4개 대기
-3. **`_workspace/v1.0-research-distilled.md`** — 외부 prior art 5 critical gap (S1 직접 영향 없음, S2~S5 영역)
-4. **`_workspace/v1.0-detail-S1.md`** — 8-step procedure (evaluator post-fix PASS, 452 LOC)
+2. **`_workspace/v1.0-resume.md`** — 현재 상태 (codex_validated_pending_apply) + 4 Codex fix 인벤토리 + 다음 액션 sequence
+3. **`_workspace/v1.0-research-distilled.md`** — 외부 prior art 5 critical gap (S1 직접 영향 없음)
+4. **`_workspace/v1.0-detail-S1.md`** — 8-step procedure (evaluator post-fix PASS, 452 LOC). **fix 적용 대상**.
+5. **`_workspace/v1.0-codex-S1-step3-review.md`** (Phase γ 신규) — Codex SHIP-WITH-CHANGES verdict verbatim + 4 fix 액션 sequence + target_family 결정
 
-이 HANDOFF.md는 *맥락 요약*이지 진실의 원본은 아님. 충돌 시 위 4개 파일이 우선.
+이 HANDOFF.md는 *맥락 요약*이지 진실의 원본은 아님. 충돌 시 위 5개 파일이 우선.
 
 ---
 
@@ -56,7 +60,20 @@
 
 ### Phase α (commit `174ada6`): resume + HANDOFF pre_S1 갱신
 
-### Phase β (이번 세션 = 2026-05-29 ~04:30): S1 detail 작성 + evaluator PASS
+### Phase γ (이번 세션 = 2026-05-29 ~05:10): Codex Step 3 검증 + fix 인벤토리 frozen
+- Step 0 Resume Verification *재실행* — 새 세션 진입 시 P8 룰 따름. 6 sub-check 모두 PASS. Disk state drift 없음.
+- Step 3 진입 직전 Codex 검증 (`codex:rescue`) 1회 invocation. Verdict = **SHIP-WITH-CHANGES**.
+- Codex 5개 발견 중 4개 진짜 fix + 1개 false positive (seed.json JSON 손상 → 실제 정상):
+  - Fix 1: Stage 1 query `"merge3"` 단일 → multi-term `("merge-3" OR "merge 3" OR "merge puzzle" OR ...)`
+  - Fix 2: Stage 2 quit signal에 dev-grade source-type 필터 추가 (Stage 4 너무 늦음)
+  - Fix 3: Stage 2 reference count `>= 3` → `== 3` hard cap (Stage 3 cost 폭주 방어)
+  - Fix 4: 새 Step 3.0 Pre-flight sub-step — 승인된 query + family + rule을 web call *전*에 박기
+- 사용자 결정 받음: (a) fix 적용은 다음 세션, (b) **target_family = `match3-with-meta`** (Royal Match + Gardenscapes 패밀리)
+- `v1.0-codex-S1-step3-review.md` 신규 작성 — Codex output verbatim + Claude 해석 + 다음 세션 sequence
+- `v1.0-resume.md` atomic 갱신 — status=codex_validated_pending_apply, 5-file read protocol
+- 이 HANDOFF.md Phase γ section (이 변경)
+
+### Phase β (2026-05-29 ~04:30): S1 detail 작성 + evaluator PASS + Step 0+1 실행
 - 사용자 §9 confirmation 4 결정 받음: (1) Codex 5-stage research, (2) 엄격+예외 F2P filter, (3) Stage 3 안에서만 3-cycle, (4) genre-decisions schema S1.5로 미룸
 - `v1.0-detail-S1.md` 1차 작성 (343 LOC) — 8 step procedure + 4 결정 baked-in + 7원칙 반영
 - Evaluator 1차 검토: PASS-WITH-CHANGES (Critical 3 + Major 3 + Minor 1)
@@ -111,7 +128,7 @@ Layer 3   — Dispatch-based Mobile-Trigger Cycles (PC 켜둠, 모바일 트리�
 | Step | 무엇 | 상태 |
 |------|------|------|
 | S0 | v0.10 freeze (이번 세션 산출물 commit + archive 브랜치 보존) | ✅ **완료** |
-| S1 | Layer 1 SKILL: gmk-init 재설계 | ⏳ detail 작성 완료 (evaluator PASS), 사용자 §9 confirmation 대기 → 실행 진입 |
+| S1 | Layer 1 SKILL: gmk-init 재설계 | ⏳ detail PASS + Step 0+1 PASS + **Codex Step 3 review SHIP-WITH-CHANGES**. 다음 세션 = 4 fix 적용 → Step 3 실행 |
 | S1.5 | Layer 1.5: genre-decisions schema + gmk-genre-decide SKILL | 대기 (S1 완료 후 detail 작성) |
 | S2 | 모르는 장르 mini-dogfood (Layer 1+1.5만) | 대기 |
 | S3 | Layer 2 SKILL: gmk-module-build | 대기 |
@@ -124,22 +141,29 @@ Layer 3   — Dispatch-based Mobile-Trigger Cycles (PC 켜둠, 모바일 트리�
 
 ## Next Session — 즉시 다음 액션
 
-**S1 실행 진입** (사용자 §9 confirmation 받은 후):
+**Codex 4 fix 적용 + S1 Step 3 실행**:
 
-`v1.0-detail-S1.md` §9 의 4가지 confirmation:
-1. 4 decisions baked-in 확인 (§0 표)
-2. 8-step procedure shape 수락
-3. Cost cap 수락 (~90+90 + 30분 + 100 cumulative calls)
-4. **Dogfood seed 선택**: A (merge3/Royal Match, 권장 — concept §3 example) vs B (unfamiliar genre)
-
-Confirmation 후 → **S1 Step 0 (Resume Verification) 실행**:
-- Step 0 sub-step 6개: SKILL.md 존재 + LOC ≥ 270 + workspace 4 파일 존재 + `git rev-parse 4f63293` + `git status --porcelain` ⊆ enumerated stale set + `.tmp` 잔존 검사
-- 모두 PASS → Step 1 (Seed intake) 진입
-- 1개라도 FAIL → STOP, 사용자에게 보고
-
-S1 실행 전체 흐름: Step 0 → 1 → 2 (existing 6 step reuse) → 3-6 (5-stage research: Stage 1 baseline / Stage 2 shortlist / Stage 3 3-cycle / Stage 4 F2P filter / Stage 5 synthesis) → 7 (SKILL.md atomic write) → 8 (resume + HANDOFF + commit + push).
+진입 순서:
+1. **5-file read protocol** (concept + resume + research-distilled + detail-S1 + codex-review)
+2. **Step 0 Resume Verification 재실행** (P8 critical — 이 세션 산출 `v1.0-codex-S1-step3-review.md`도 검증 대상에 포함)
+3. **4 Codex fix 적용** — `v1.0-codex-S1-step3-review.md` §"다음 세션 진입 시 정확한 액션 sequence" 따름:
+   - `v1.0-detail-S1.md:142-147` Stage 1 query 2개 multi-term 교체
+   - `v1.0-detail-S1.md:148-153` Stage 2 quit signal에 dev-grade source-type 필터
+   - `v1.0-detail-S1.md` Stage 2 reference count `>= 3` → `== 3` hard cap
+   - `v1.0-detail-S1.md` §2에 새 Step 3.0 (Pre-flight) sub-step
+   - `v1.0-detail-S1.md` §6 cost cap 3-refs-만으로 재계산
+   - `_workspace/s1-test/seed.json`에 `target_family: "match3-with-meta"` 추가
+4. **Evaluator 1회 정합성 점검** (fix 회귀 확인 — §1 quit signal 표 / §6 cost / §5 fallback 정합)
+5. **Step 3.0 (Pre-flight) 실행** — research-notes.md 머리에 query/family/rule 박기
+6. **Step 3 Stage 1+2 실행** — 수정된 multi-term query로 WebSearch, ≥3 dev-grade references shortlist
+7. **이어서 Step 4 (Stage 3 3-cycle), Step 5 (Stage 4 filter), Step 6 (Stage 5 synthesis), Step 7 (SKILL.md atomic write), Step 8 (resume + HANDOFF + commit)**
 
 **완료 후 S1.5 detail 작성**으로 진입 — genre-decisions.json schema 정의 + gmk-genre-decide SKILL 신설.
+
+**사용자 결정 (이미 받음, 다시 묻지 말 것)**:
+- §9 confirmation 4가지 모두 받음 (Phase β)
+- Dogfood seed = Option A (merge3 / Royal Match)
+- target_family = `match3-with-meta` (Royal Match + Gardenscapes 패밀리)
 
 ---
 
@@ -149,14 +173,19 @@ S1 실행 전체 흐름: Step 0 → 1 → 2 (existing 6 step reuse) → 3-6 (5-s
 - `_workspace/v1.0-concept.md` LOCKED v3
 - `_workspace/v1.0-detail-backlog.md` (8 detail plan 큐)
 - `_workspace/v1.0-detail-S0.md` (✅ 실행 완료)
-- `_workspace/v1.0-detail-S1.md` (✅ 작성 완료, evaluator post-fix PASS, 452 LOC)
-- `_workspace/v1.0-resume.md` (status=detail_ready, current_step=S1)
-- `main` 깨끗함 (v0.10 코드 없음, ddbfb9b 반영)
+- `_workspace/v1.0-detail-S1.md` (✅ 작성 + evaluator PASS, 452 LOC; **Codex 4 fix 적용 대기**)
+- `_workspace/v1.0-codex-S1-step3-review.md` (✅ Phase γ 신규 — Codex verbatim + 4 fix 액션 sequence)
+- `_workspace/v1.0-resume.md` (status=**codex_validated_pending_apply**, current_step=S1)
+- `_workspace/s1-test/seed.json` (Phase β; **target_family 필드 추가 대기**)
+- `_workspace/s1-test/step-0-verify.md` (Phase β + γ 재검증 PASS)
+- `main` HEAD = `8d7296e` (Phase β commit S1 Step 0+1 PASS), Phase γ commit 대기
 - `archive/v0.10-auto-mode-wip` remote 보존됨
 
-**Pending (다음 세션 — 사용자 confirmation 후)**:
-- S1 실행 (Step 0 verification → ... → Step 8 commit)
-- 산출물: `skills/gmk-init/SKILL.md` (rewritten), `_workspace/s1-test/research-notes.md` (dogfood)
+**Pending (다음 세션)**:
+- 4 Codex fix 적용 (detail-S1.md + seed.json)
+- Evaluator 1회 정합성 점검
+- S1 Step 3.0 (Pre-flight) → Step 3-8 실행
+- 산출물: 수정된 `_workspace/v1.0-detail-S1.md`, `skills/gmk-init/SKILL.md` (rewritten), `_workspace/s1-test/research-notes.md` (dogfood)
 
 **Stale (touch 안 함, 우리 작업 무관)**:
 - `.bkit/*` (3 파일)
@@ -174,7 +203,8 @@ S1 실행 전체 흐름: Step 0 → 1 → 2 (existing 6 step reuse) → 3-6 (5-s
 | `_workspace/v1.0-research-distilled.md` | 외부 prior art 5 critical gap (S1 영향 거의 없음, S2~S5 영역) |
 | `_workspace/v1.0-detail-backlog.md` | Detail plan 큐 + 체크리스트 |
 | `_workspace/v1.0-detail-S0.md` | S0 실행 절차 (완료, 역사적 기록) |
-| `_workspace/v1.0-detail-S1.md` | **S1 실행 절차 (8 step + 4 결정 baked, evaluator PASS). 다음 세션 정독** |
+| `_workspace/v1.0-detail-S1.md` | **S1 실행 절차 (8 step + 4 결정 baked, evaluator PASS). 다음 세션 정독 + Codex 4 fix 적용 대상** |
+| `_workspace/v1.0-codex-S1-step3-review.md` | **Phase γ 신규 — Codex Step 3 검증 verbatim + 4 fix 액션 sequence + target_family 결정. 다음 세션 5번째 read 파일** |
 | `_workspace/v1.0-plan.md` | 초기 plan 349줄, 역사적 기록 |
 | `_workspace/v1.0-plan-comparison.md` | 3 plan 비교 (Plan A/B/C) |
 
@@ -218,8 +248,10 @@ LOCKED v1까지 *세션 한계*를 plan이 모르고 있었음. **방어: P8 + R
 ## Warnings
 
 - **`v1.0-concept.md` LOCKED v3 — 변경 금지**. 변경하려면 *concept-level 누락 발견* 명시 + RE-OPEN.
-- **3-file read protocol 지킬 것** (concept + resume + current detail).
-- **`v1.0-detail-S1.md`의 Step 0 (Resume Verification)을 *반드시* 설계 + 실행** — P8 critical rule.
+- **5-file read protocol 지킬 것** (concept + resume + research-distilled + detail-S1 + **codex-S1-step3-review** — Phase γ 갱신).
+- **`v1.0-detail-S1.md`의 Step 0 (Resume Verification)을 *반드시* 매 세션 첫 sub-step으로 재실행** — P8 critical rule. 이 세션 산출 파일들도 검증 대상.
+- **Codex 4 fix를 detail-S1.md에 적용한 후 evaluator 1회 정합성 점검** — fix가 §1 quit signal 표 / §6 cost cap / §5 fallback 깨뜨릴 수 있음.
+- **Codex 출력은 verbatim 저장하되 Claude가 1차 필터 후 적용** — Phase γ에서 false positive 1개 (seed.json JSON 손상) 잡음. Codex 결과를 trust source로 박지 말 것.
 - **Atomic write 지킬 것** — write-temp-then-rename. resume.md 갱신 시 특히.
 - **사용자가 Claude 구독 해지 + Codex 이탈 고민 중**. *"거의 됐어 한 phase 더만"* 금지. quit gate에서 *진짜로* 멈출 것.
 - **dogfood validity threat** — 사용자가 merge3 너무 잘 안다는 사실 *기억*. S2 unfamiliar genre가 *진짜 Layer 1 검증*.
@@ -230,15 +262,18 @@ LOCKED v1까지 *세션 한계*를 plan이 모르고 있었음. **방어: P8 + R
 
 ## End of Session Summary
 
-이번 세션 (Phase α + Phase β):
+세션 누적 (Phase α + β + γ):
 - Phase 1: S0 (v0.10 freeze) 완료
 - Phase 2: 외부 리서치 3-round
 - Phase 3: `v1.0-research-distilled.md` 동결 commit (`4f63293`)
 - Phase α: resume.md + HANDOFF.md pre_S1 갱신 (`174ada6`)
-- **Phase β** (이 변경 묶음): S1 detail 작성 (343 → 452 LOC), evaluator 1차 PASS-WITH-CHANGES → 6 fix 적용 → 2차 PASS. resume.md detail_ready 상태로 atomic 갱신. HANDOFF.md (이 파일) Phase β 갱신.
+- Phase β: S1 detail 작성 (343 → 452 LOC), evaluator 1차 PASS-WITH-CHANGES → 6 fix → 2차 PASS. Step 0 Resume Verification + Step 1 Seed intake 실행 PASS (`8d7296e`).
+- **Phase γ** (이 변경 묶음): Step 3 진입 직전 Codex 검증 1회 (`codex:rescue`). Verdict = SHIP-WITH-CHANGES. 4 진짜 fix + 1 false positive. 사용자 결정 = 다음 세션에서 fix 적용 + target_family = `match3-with-meta`. `v1.0-codex-S1-step3-review.md` 신규 작성, resume.md atomic 갱신 (status=codex_validated_pending_apply), HANDOFF.md (이 파일) Phase γ 갱신.
 
 다음 세션은:
-1. 4-file read protocol: concept + resume + research-distilled + **detail-S1**
-2. 사용자 §9 confirmation 4가지 받음 (특히 dogfood seed A/B)
-3. S1 Step 0 (Resume Verification) 실행 → ... → Step 8 commit + push
-4. S1 완료 후 S1.5 detail 작성으로 진입
+1. 5-file read protocol: concept + resume + research-distilled + detail-S1 + **codex-S1-step3-review**
+2. Step 0 Resume Verification 재실행 (P8 — 이 세션 산출 파일 포함)
+3. 4 Codex fix 적용 → detail-S1.md 편집 + seed.json target_family 추가
+4. Evaluator 1회 정합성 점검 (fix 회귀 확인)
+5. Step 3.0 Pre-flight → Step 3 Stage 1+2 → ... → Step 8 commit + push
+6. S1 완료 후 S1.5 detail 작성으로 진입
