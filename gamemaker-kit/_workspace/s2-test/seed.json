@@ -1,0 +1,13 @@
+{
+  "genre": "roguelike-deckbuilder",
+  "target_family": "single-character-roguelike-deckbuilder",
+  "reference_titles": ["Slay the Spire"],
+  "platform": "PC Steam",
+  "vibe": "tense-tactical",
+  "user_seed_raw": "deck-builder/roguelike. 전략적 선택의 자유, 리스크와 리턴, 운적인 요소, 선택에 대한 효능감.",
+  "_meta": {
+    "purpose": "S2 unfamiliar-genre dogfood — Layer 1 research validity test (concept P3)",
+    "dogfood_path": "_workspace/s2-test/ (production path = .gamemaker-kit/)",
+    "user_familiarity": "weak — user is merge3 senior, low deck-builder design experience"
+  }
+}
