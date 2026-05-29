@@ -1,10 +1,19 @@
-# Handoff: S1~S4 완료, S5 (merge3 M1 full dogfood) 진입 대기
+# Handoff: S1~S5 완료, S6 (Dispatch 통합) 진입 대기
 
-**Generated**: 2026-05-30 07:00 KST (Phase θ — S4 실행 완료)
+**Generated**: 2026-05-30 07:30 KST (Phase ι — S5 실행 완료)
 **Branch**: main
-**Status**: ✅ **S1 + S1.5 + S2 + S3 + S4 완료.** Layer 1 (gmk-init) + Layer 1.5 (gmk-genre-decide) + Layer 2 (gmk-module-build) + **P5 시각 컨펌 (gmk-confirm 신설)** 완료. **S4 = gmk-confirm SKILL + 새 검증 규약 도입.** gmk-confirm 신설(playable build의 .html 시각 컨펌 페이지 생성, paste-to-chat capture, milestones.json single source). **검증 규약 신설**([[feedback_eval_codex_opus_split]]): 자잘=Codex만 / 큰=Codex+Opus 둘 다. S4에 적용 — Opus 3회(82→93→88) + Codex가 *Opus가 grep으로 못 본* file:// 런타임 결함 발견(브라우저가 repo write 불가, localStorage 세션복구 불가) → 규약 가치 즉시 실증. merge3 M1 confirm dogfood PASS: 페이지 생성 + latency 4단계 + **시각 컨펌 C2=N이 S3 bot fidelity C2 FAIL과 독립 수렴**. **다음 = S5 (merge3 M1 full dogfood — 사용자 직접 플레이, local, dispatch 없이).**
+**Status**: ✅ **S1 + S1.5 + S2 + S3 + S4 + S5 완료.** Layer 1 + 1.5 + 2 + P5 시각 컨펌 빌드 완료 + **merge3 M1 full dogfood (사용자 실플레이) PASS**. **S5 = 사용자가 직접 M1 플레이.** 판정: 메커니즘 fidelity OK + juice 부재로 심심(dogfood라 고칠 필요 없음). **3-게이트 수렴 완성** — 봇 fidelity(숫자) + 시각컨펌(관측) + 실플레이(whole-experience: juice 부재는 사람만 잡음). concept P3 "사용자 직접 플레이" 실증. **검증 규약 정정**: S5는 자잘한 작업이라 Codex+Opus 생략 — 규약을 모든 S에 기계적 적용 말 것. **다음 = S6 (Dispatch 통합 — PC worker + Channel 알림). ⚠ 사용자 환경 의존 큼, 진입 시 셋업 범위 결정 필요.**
 
-> **진실의 원본은 `_workspace/v1.0-resume.md`** (status=s4_done_confirm_dogfood_pass). 이 HANDOFF는 맥락 요약. 충돌 시 resume + concept이 우선.
+> **진실의 원본은 `_workspace/v1.0-resume.md`** (status=s5_done_full_dogfood_pass). 이 HANDOFF는 맥락 요약. 충돌 시 resume + concept이 우선.
+
+## Phase ι (2026-05-30 ~07:30): S5 실행 완료 (사용자 실플레이 dogfood)
+
+- 사용자가 `_workspace/s3-test/prototypes/m1-match3-core.html`를 브라우저에서 직접 플레이 (~5-10분, quit cap 1-2h 안 넘김 — proxy 아닌 진짜 실플레이, concept P3).
+- 판정: **메커니즘 fidelity OK** (스왑/매치/파워업/move-limit이 Royal Match처럼 작동) + **juice/연출 부재로 심심** ("굳이 고칠 필요 없다", dogfood). S5 PASS = mechanism attest; juice는 별도 축(feel-engineer).
+- **3-게이트 수렴**: 봇(C9 PASS/C2 FAIL) + 시각컨펌(C2 N) + 실플레이(juice 부재). 실플레이가 봇·체크리스트 못 잡는 whole-experience 신호 잡음.
+- 얇은 detail 사후 기록(`v1.0-detail-S5.md`) — S5는 자잘한 작업이라 Codex+Opus 생략. verdict = `s3-test/s5-dogfood-verdict.md`.
+
+**S5 학습**: (1) kit은 mechanism fidelity 자동 검증, juice/완성도는 안 함(convention contract 밖, feel-engineer 축). (2) 실플레이는 봇+시각컨펌과 중복 아님 — whole-experience 신호 전담. (3) 검증 규약을 단계 성격에 맞게(자잘/큰) 적용, 기계적 일괄 적용 금지.
 
 ## Phase θ (2026-05-30 ~07:00): S4 실행 완료 (gmk-confirm + 검증 규약)
 
