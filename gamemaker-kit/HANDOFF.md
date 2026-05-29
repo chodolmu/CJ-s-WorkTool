@@ -1,10 +1,19 @@
-# Handoff: S1 + S1.5 + S2 완료, S3 (Layer 2) 진입 대기
+# Handoff: S1 + S1.5 + S2 + S3 완료, S4 (gmk-confirm) 진입 대기
 
-**Generated**: 2026-05-29 20:50 KST (Phase ζ — S2 실행 완료)
+**Generated**: 2026-05-30 01:05 KST (Phase η — S3 실행 완료)
 **Branch**: main
-**Status**: ✅ **S1 + S1.5 + S2 완료.** Layer 1 (gmk-init 재작성 364 LOC, 3 pillars) + Layer 1.5 (gmk-genre-decide 신설, genre-decisions.json) 빌드 완료. **S2 dogfood PASS** — roguelike-deckbuilder(unfamiliar 장르)로 Layer 1 research validity 검증: pre-registration(K1-K4=aesthetic만) 후 research가 mechanic-level convention 다수 surface, 5 artifact-mandatory SURFACED-UNKNOWN → artifact-pinned gate PASS. **P3 방어(unfamiliar genre dogfood) 작동 실증 — merge3는 expert라 workflow만 검증했지만 S2가 진짜 validity 검증.** 12 conv + 3 anti-tropes + 3 pillars + 3 draft modules, reject 12/12 PASS, cost 10/100. **다음 = S3 (gmk-module-build SKILL 신설 + merge3 M1 빌드 + 충돌 SKILL 재작성).**
+**Status**: ✅ **S1 + S1.5 + S2 + S3 완료.** Layer 1 (gmk-init) + Layer 1.5 (gmk-genre-decide) + **Layer 2 (gmk-module-build 신설)** 빌드 완료. **S3 = audit #7 충돌 해소 + fidelity gate 실증.** gmk-module-build 신설(reference-clone module을 fidelity로 게이트, mode-detection single source). 충돌 SKILL 3개(gmk-prototype/validate/port)를 **additive early-return guard**로 수정 — blank-page 경로 literal 불변, regression-0 검증(3 앵커 grep ALIVE + guard가 line-number로 앞). merge3 M1 dogfood: fidelity gate가 C9 PASS / C2 FAIL을 정확히 판정 — **FAIL=올바른 신호**(near-miss 미튜닝을 게이트가 잡음, 게이트 통과·빌드는 economy-balancer 영역). **reference-clone module이 fidelity만으로 verdict, hypothesis 경로 0회 — 9개월 미해소 충돌 코드로 해소 실증.** **다음 = S4 (gmk-confirm SKILL — .html 시각 컨펌, concept P5).**
 
-> **진실의 원본은 `_workspace/v1.0-resume.md`** (status=s2_done_dogfood_pass_next_s3). 이 HANDOFF는 맥락 요약. 충돌 시 resume + concept이 우선.
+> **진실의 원본은 `_workspace/v1.0-resume.md`** (status=s3_done_module_build_dogfood_pass). 이 HANDOFF는 맥락 요약. 충돌 시 resume + concept이 우선.
+
+## Phase η (2026-05-30 ~01:05): S3 실행 완료 (fidelity gate 실증)
+
+- **Step 0** disk+git 검증 PASS. **gmk-module-build 신설** (`skills/gmk-module-build/SKILL.md`, Step 0~6) — fidelity header, `collectSummary().custom.<metric>`→wrapped `summary().custom` seam, self_test 안 씀(null), per-convention Y/N confirm.
+- **충돌 SKILL 3 additive 수정**: gmk-prototype Step 0.5(mode redirect, Step1 앞) / gmk-validate `### Aggregate verdict — fidelity branch`(기존 블록 앞) / gmk-port precondition `0'` early-skip guard(self_test===null 분기, M2). 전부 grep+line-number로 regression-0 검증.
+- **merge3 M1 dogfood** (`_workspace/s3-test/`): build HTML + bot trial. C9 late_level_moves=15 ∈[12,18] PASS / C2 loss_margin_moves 졌을때 1/4만 ≤2 FAIL / C7 관측 Y. determinism PASS. fidelity-report.md + milestones.json(self_test=null).
+- **commit + push** (이 변경).
+
+**S3 학습**: (1) fidelity FAIL이 economy-balancer 라우팅으로 이어지는 게 자연스러움 — C2 near-miss = C1 win-rate와 같은 데이터 튜닝 lever. (2) reference-clone module은 self_test=null로 등록 → gmk-port가 관측값으로 self-test gate skip (M2 fix 실증). (3) gate가 verdict 차별(C9 PASS/C2 FAIL on same build) = 게이트가 진짜 게이트.
 
 ---
 

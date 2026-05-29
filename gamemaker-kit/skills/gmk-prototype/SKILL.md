@@ -27,6 +27,15 @@ _Standard preconditions (milestone-id resolution, empty/partial state, refuse-ch
 
 ## Flow
 
+### Step 0.5 — Detect project mode (early redirect guard)
+
+First, before naming a milestone, check which mode this project is in (the detection rule is defined canonically in `gmk-module-build` Step 1 — `genre-decisions.json` exists → `reference-clone`, else `blank-page`):
+
+- **`genre-decisions.json` exists (reference-clone mode):** this project has a researched reference contract. The primary build path is `/gmk-module-build <Mn>` (it clones an approved module, gated by reference-fidelity). A `/gmk-prototype` here means a **differentiation hypothesis** — your own idea that is *not* in the reference. Confirm: *"This project is reference-clone mode. To build an approved module, use /gmk-module-build. This prototype is for a differentiation idea (something the reference doesn't have) — is that what you want?"* If yes, fall through to Step 1 (the hypothesis path below is unchanged). If no, redirect to `/gmk-module-build` and stop.
+- **No `genre-decisions.json` (blank-page mode):** the standard hypothesis-driven path. Fall through to Step 1 with no change.
+
+This guard only *redirects*; it never alters Steps 1-7. Both blank-page and reference-clone-differentiation reach the unchanged hypothesis flow below.
+
 ### Step 1 — Get the milestone name
 
 Skill input is `<name>` — a short slug like `m1-merge-feel`. Convention: `m{N}-{kebab-slug}`. If the user gave a sentence ("test the merge satisfaction"), translate to a slug and confirm.

@@ -245,6 +245,19 @@ Aggregate-level interpretations the report should call out:
 - If `confidence` is set (0.80/0.90/0.95), apply a one-sided binomial / normal CI check sized by `sample_size` (default = `--runs`). The reported `actual` is the point estimate; the `passed` field is the CI-aware decision.
 - Compute pass/fail per row.
 
+### Aggregate verdict — fidelity branch (reference-clone mode)
+
+**Early-return guard, evaluated before the standard aggregate below.** If the milestone's `mode === "reference-clone"` (a `gmk-module-build` module — project mode detected per `gmk-module-build` Step 1, `genre-decisions.json` exists), compute the verdict from **convention fidelity** and *skip the standard Aggregate verdict block*:
+
+- For each of the milestone's `covers_conventions[]` whose contract entry has `acceptance != null` (numeric): read the bot-measured metric from the wrapped `summary().custom.<metric>` (the value the prototype's `collectSummary().custom.<metric>` produced — `gmk-prototype-rules` §4/§5) and compare against `acceptance.{op, value}`.
+- **PASS** — every numeric convention satisfies its `acceptance` AND `crash_rate < 0.01`.
+- **FAIL** — any numeric convention misses its `acceptance`, OR `crash_rate >= 0.01`.
+- **INCONCLUSIVE** — zero machine-measurable numeric conventions (all covered conventions are `needs_metric`). The user's per-convention `.html` confirmation (`gmk-module-build` Step 5) is then the sole gate; print that the fidelity verdict is observation-gated, not bot-gated.
+
+Then stop — do not fall into the standard block below. Print the per-convention pass/fail in the Step 7 report.
+
+Otherwise (`mode !== "reference-clone"` — blank-page or a differentiation hypothesis), fall through to the standard aggregate, unchanged:
+
 ### Aggregate verdict
 
 - **PASS** — every bot row passes (CI-aware) AND `crash_rate < 0.01` AND (`dominant_strategy_ratio < 0.6` or null) AND `stuck_rate < 0.05`.

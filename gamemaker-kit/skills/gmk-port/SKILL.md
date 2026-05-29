@@ -20,6 +20,15 @@ The 5-stage re-validation (Stages 2-6 below) is what makes this skill different 
 
 ## Preconditions
 
+**0'. (reference-clone modules only) — early-skip guard.** If the milestone's `mode === "reference-clone"` (a `gmk-module-build` module; project mode per `gmk-module-build` Step 1), check the two gates below **instead of** preconditions 2 and 3, then skip 2-3:
+   - **2-rc (fidelity gate):** `validation.verdict ∈ {PASS, INCONCLUSIVE}` AND `confirm.confirmed === true` (the user's per-convention `.html` confirmation from `gmk-module-build` Step 5). INCONCLUSIVE is allowed here because a fidelity verdict can be observation-gated (all conventions `needs_metric`) rather than bot-gated.
+   - **3-rc (self-test, branched on the observable field value):** read `self_test` —
+     - `self_test === null` → **SKIP** (reference-clone modules carry no self-test block; `gmk-module-build` Step 6 never writes one, so `null` is the expected default — not a missing gate). This is a field-value check, not a judgment.
+     - `self_test !== null` AND `latest_verdict === "PASS"` → OK.
+     - `self_test !== null` AND `latest_verdict ∈ {FAIL, INCONCLUSIVE}` → stop (the user ran a self-test and it didn't pass — treat as the existing hard gate).
+   - gmk-self-test itself is **unchanged** — this guard only *reads* the `self_test` field; it does not depend on any modified self-test behavior.
+   If `mode !== "reference-clone"`, fall through to preconditions 1-9 below, unchanged.
+
 1. **Milestone exists** in `.gamemaker-kit/milestones.json`.
 2. **Bot validation passed** — `validation.verdict === "PASS"`.
    - If FAIL or INCONCLUSIVE: stop. *"This milestone hasn't passed bot validation. The kit refuses to port — that's the whole reason it exists. Fix and re-validate, or kill the milestone. [Rule 14] /gmk-port → /gmk-validate OR /gmk-kill-milestone — verified target's preconditions can be satisfied from current state."*

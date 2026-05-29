@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--
+gamemaker-kit module: M1
+Mode: reference-clone
+Covers conventions: C2, C9 (numeric) | C7 (needs_metric)
+Covers pillars: instant-tactile-polish, honest-tension
+Acceptance gates (machine — gmk-validate reads collectSummary().custom.<metric>):
+  C2  loss_margin_moves <= 2          (source verified: true — naavik Royal Match deep-dive)
+  C9  late_level_moves  range [12,18] (source verified: true — gamigion Homescapes insights)
+Confirm-only (needs_metric — user .html observation, gmk-module-build Step 5):
+  C7  Generous, readable power-ups — big-radius/re-targeting; larger pieces with distinct color+shape for fast board reads.
+Reference: naavik.co/deep-dives/royal-match/ , gamigion.com/homescapes-level-design-insights/ , medium.com ironsource Royal Match design deep dive
+Created: 2026-05-30T00:55:00+09:00
+Shape: grid
+-->
+<head>
+<meta charset="utf-8">
+<title>M1 — Match-3 core board (reference-clone fidelity)</title>
+<style>
+  body { font-family: system-ui, sans-serif; background:#1a1d24; color:#e8e8ec; margin:0; padding:16px; }
+  #wrap { max-width:520px; margin:0 auto; }
+  h1 { font-size:16px; font-weight:600; color:#9fb4d4; }
+  #hud { display:flex; gap:18px; font-size:14px; margin:8px 0 12px; }
+  #hud b { color:#fff; }
+  #board { display:grid; gap:4px; background:#23262f; padding:8px; border-radius:8px; width:max-content; }
+  .cell { width:48px; height:48px; border-radius:8px; display:flex; align-items:center; justify-content:center;
+          font-size:24px; cursor:pointer; user-select:none; transition:transform .08s; }
+  .cell:active { transform:scale(.9); }
+  .sel { outline:3px solid #fff; }
+  /* C7: power-ups are LARGER + distinct shape, for fast board reads */
+  .pu { font-size:30px; border:2px dashed #ffd76b; }
+  #msg { margin-top:12px; font-size:14px; min-height:20px; }
+  .win { color:#7fe08a; } .lose { color:#ff9a8a; }
+  #legend { font-size:12px; color:#8a90a0; margin-top:10px; line-height:1.5; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <h1>M1 — Match-3 core board · reference-clone</h1>
+  <div id="hud">
+    <span>Moves left: <b id="moves">0</b></span>
+    <span>Target: <b id="target">0</b></span>
+    <span>Score: <b id="score">0</b></span>
+  </div>
+  <div id="board"></div>
+  <div id="msg"></div>
+  <div id="legend">
+    Swap two adjacent pieces to match 3+. Power-ups (larger, dashed gold border) clear a big radius —
+    C7's "generous, readable power-up". Move limit + target make losing-by-one reachable (C2).
+  </div>
+</div>
+
+<script src="_bot_hook_lib.js"></script>
+<script>
+// ---- Game constants -------------------------------------------------------
+const SIZE = 6;                 // 6x6 board
+const COLORS = ['🔴','🟢','🔵','🟡','🟣']; // 5 base colors (distinct hue)
+const POWERUP = '💎';           // C7: distinct color+shape, big-radius clear
+// C9 move-compression: this is a LATE level, tight move budget in [12,18].
+const LATE_MOVE_BUDGET = 15;    // within range [12,18]
+// Target tuned so the average bot wins-on-last or loses-by-one (C2 near-miss).
+const TARGET = 700;
+
+let state;
+
+function freshState(seed, rng) {
+  const board = [];
+  for (let i = 0; i < SIZE * SIZE; i++) board.push(COLORS[rng.nextInt(COLORS.length)]);
+  return {
+    board, rng,
+    moves: LATE_MOVE_BUDGET,
+    score: 0,
+    target: TARGET,
+    sel: null,
+    over: false,
+    won: false,
+    movesUsedAtEnd: null,
+  };
+}
+
+function idx(r, c) { return r * SIZE + c; }
+function inBounds(r, c) { return r >= 0 && r < SIZE && c >= 0 && c < SIZE; }
+function isPU(v) { return v === POWERUP; }
+
+// Find all matched cells (runs of 3+ same color, horiz+vert). Power-ups never match by color.
+function findMatches(board) {
+  const matched = new Set();
+  for (let r = 0; r < SIZE; r++) {
+    for (let c = 0; c < SIZE; c++) {
+      const v = board[idx(r, c)];
+      if (isPU(v)) continue;
+      // horizontal run
+      if (c <= SIZE - 3 && v === board[idx(r, c+1)] && v === board[idx(r, c+2)]) {
+        let cc = c; while (cc < SIZE && board[idx(r, cc)] === v) { matched.add(idx(r, cc)); cc++; }
+      }
+      // vertical run
+      if (r <= SIZE - 3 && v === board[idx(r+1, c)] && v === board[idx(r+2, c)]) {
+        let rr = r; while (rr < SIZE && board[idx(rr, c)] === v) { matched.add(idx(rr, c)); rr++; }
+      }
+    }
+  }
+  return matched;
+}
+
+// Resolve all cascades from a swap. Returns score gained.
+function resolve(s) {
+  let gained = 0;
+  while (true) {
+    const m = findMatches(s.board);
+    if (m.size === 0) break;
+    // C7: a match of 4+ spawns a power-up at the first matched cell.
+    const matchSize = m.size;
+    gained += matchSize * 10;
+    // big-radius clear if any power-up is adjacent to a match — generous (C7).
+    m.forEach(i => {
+      const r = Math.floor(i / SIZE), c = i % SIZE;
+      [[r-1,c],[r+1,c],[r,c-1],[r,c+1]].forEach(([nr,nc]) => {
+        if (inBounds(nr,nc) && isPU(s.board[idx(nr,nc)])) {
+          // clear the whole row+col around the power-up (big radius)
+          for (let k = 0; k < SIZE; k++) { m.add(idx(r,k)); m.add(idx(k,c)); }
+          gained += 50;
+        }
+      });
+    });
+    // clear matched
+    m.forEach(i => { s.board[i] = null; });
+    // spawn one power-up if a big match happened
+    if (matchSize >= 4) {
+      const first = [...m][0];
+      s.board[first] = POWERUP;
+    }
+    // gravity: pull down, refill from top
+    for (let c = 0; c < SIZE; c++) {
+      const col = [];
+      for (let r = SIZE - 1; r >= 0; r--) { const v = s.board[idx(r,c)]; if (v !== null) col.push(v); }
+      for (let r = SIZE - 1, k = 0; r >= 0; r--, k++) {
+        s.board[idx(r,c)] = (k < col.length) ? col[k] : COLORS[s.rng.nextInt(COLORS.length)];
+      }
+    }
+  }
+  return gained;
+}
+
+function applySwap(s, a, b) {
+  const t = s.board[a]; s.board[a] = s.board[b]; s.board[b] = t;
+  const before = findMatches(s.board);
+  if (before.size === 0 && !isPU(s.board[a]) && !isPU(s.board[b])) {
+    // illegal (no match) — swap back, no move consumed
+    const t2 = s.board[a]; s.board[a] = s.board[b]; s.board[b] = t2;
+    return false;
+  }
+  s.moves--;
+  s.score += resolve(s);
+  if (s.score >= s.target) { s.over = true; s.won = true; s.movesUsedAtEnd = LATE_MOVE_BUDGET - s.moves; }
+  else if (s.moves <= 0) { s.over = true; s.won = false; s.movesUsedAtEnd = LATE_MOVE_BUDGET; }
+  return true;
+}
+
+// adjacency pairs that currently form a match (for legalActions + rendering)
+function legalSwaps(s) {
+  const out = [];
+  for (let r = 0; r < SIZE; r++) for (let c = 0; c < SIZE; c++) {
+    for (const [dr,dc] of [[0,1],[1,0]]) {
+      const nr = r+dr, nc = c+dc;
+      if (!inBounds(nr,nc)) continue;
+      const a = idx(r,c), b = idx(nr,nc);
+      // simulate
+      const t = s.board[a]; s.board[a]=s.board[b]; s.board[b]=t;
+      const makes = findMatches(s.board).size > 0 || isPU(s.board[a]) || isPU(s.board[b]);
+      const t2 = s.board[a]; s.board[a]=s.board[b]; s.board[b]=t2;
+      if (makes) out.push({ type:'swap', a, b });
+    }
+  }
+  return out;
+}
+
+// ---- Rendering (visual only; bot drives state directly) -------------------
+const boardEl = document.getElementById('board');
+function render() {
+  if (!boardEl) return;
+  boardEl.style.gridTemplateColumns = `repeat(${SIZE}, 48px)`;
+  boardEl.innerHTML = '';
+  state.board.forEach((v, i) => {
+    const d = document.createElement('div');
+    d.className = 'cell' + (isPU(v) ? ' pu' : '') + (state.sel === i ? ' sel' : '');
+    d.textContent = v || '';
+    d.onclick = () => clickCell(i);
+    boardEl.appendChild(d);
+  });
+  document.getElementById('moves').textContent = state.moves;
+  document.getElementById('target').textContent = state.target;
+  document.getElementById('score').textContent = state.score;
+  const msg = document.getElementById('msg');
+  if (state.over) {
+    msg.className = state.won ? 'win' : 'lose';
+    msg.textContent = state.won
+      ? `Cleared! (used ${state.movesUsedAtEnd}/${LATE_MOVE_BUDGET} moves)`
+      : `Out of moves — short by ${state.target - state.score} pts. One more move?`;
+  } else { msg.className = ''; msg.textContent = ''; }
+}
+function clickCell(i) {
+  if (state.over) return;
+  if (state.sel === null) { state.sel = i; render(); return; }
+  const a = state.sel, b = i;
+  const ar = Math.floor(a/SIZE), ac = a%SIZE, br = Math.floor(b/SIZE), bc = b%SIZE;
+  if (Math.abs(ar-br) + Math.abs(ac-bc) === 1) { applySwap(state, a, b); }
+  state.sel = null; render();
+}
+
+// ---- Bot hook (the fidelity gate's measurement surface) -------------------
+window.__gmk_botHook__ = window.__gmk.makeHook({
+  reset(seed, rng) { state = freshState(seed, rng); },
+  isOver() { return state.over; },
+  legalActions() { return state.over ? [] : legalSwaps(state); },
+  apply(action) { if (action && action.type === 'swap') applySwap(state, action.a, action.b); },
+  collectSummary() {
+    // C2 loss_margin_moves: on a loss, how close to winning (in moves-equivalent).
+    // Proxy: pts short ÷ avg-pts-per-move → moves the player was short by. Win => 0.
+    const usedMoves = state.movesUsedAtEnd || (LATE_MOVE_BUDGET - state.moves) || 1;
+    const avgPtsPerMove = Math.max(1, state.score / Math.max(1, usedMoves));
+    const lossMarginMoves = state.won ? 0 : Math.ceil((state.target - state.score) / avgPtsPerMove);
+    return {
+      score: state.score,
+      build_used: null,
+      custom: {
+        loss_margin_moves: lossMarginMoves,   // C2 acceptance metric
+        late_level_moves: LATE_MOVE_BUDGET,   // C9 acceptance metric (this level's move budget)
+        won: state.won ? 1 : 0,
+      },
+    };
+  },
+});
+
+// initial visual state (seed 0) for human view
+window.__gmk_botHook__.startGame(0);
+render();
+</script>
+</body>
+</html>
