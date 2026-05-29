@@ -1,10 +1,19 @@
-# Handoff: S1 + S1.5 + S2 + S3 완료, S4 (gmk-confirm) 진입 대기
+# Handoff: S1~S4 완료, S5 (merge3 M1 full dogfood) 진입 대기
 
-**Generated**: 2026-05-30 01:05 KST (Phase η — S3 실행 완료)
+**Generated**: 2026-05-30 07:00 KST (Phase θ — S4 실행 완료)
 **Branch**: main
-**Status**: ✅ **S1 + S1.5 + S2 + S3 완료.** Layer 1 (gmk-init) + Layer 1.5 (gmk-genre-decide) + **Layer 2 (gmk-module-build 신설)** 빌드 완료. **S3 = audit #7 충돌 해소 + fidelity gate 실증.** gmk-module-build 신설(reference-clone module을 fidelity로 게이트, mode-detection single source). 충돌 SKILL 3개(gmk-prototype/validate/port)를 **additive early-return guard**로 수정 — blank-page 경로 literal 불변, regression-0 검증(3 앵커 grep ALIVE + guard가 line-number로 앞). merge3 M1 dogfood: fidelity gate가 C9 PASS / C2 FAIL을 정확히 판정 — **FAIL=올바른 신호**(near-miss 미튜닝을 게이트가 잡음, 게이트 통과·빌드는 economy-balancer 영역). **reference-clone module이 fidelity만으로 verdict, hypothesis 경로 0회 — 9개월 미해소 충돌 코드로 해소 실증.** **다음 = S4 (gmk-confirm SKILL — .html 시각 컨펌, concept P5).**
+**Status**: ✅ **S1 + S1.5 + S2 + S3 + S4 완료.** Layer 1 (gmk-init) + Layer 1.5 (gmk-genre-decide) + Layer 2 (gmk-module-build) + **P5 시각 컨펌 (gmk-confirm 신설)** 완료. **S4 = gmk-confirm SKILL + 새 검증 규약 도입.** gmk-confirm 신설(playable build의 .html 시각 컨펌 페이지 생성, paste-to-chat capture, milestones.json single source). **검증 규약 신설**([[feedback_eval_codex_opus_split]]): 자잘=Codex만 / 큰=Codex+Opus 둘 다. S4에 적용 — Opus 3회(82→93→88) + Codex가 *Opus가 grep으로 못 본* file:// 런타임 결함 발견(브라우저가 repo write 불가, localStorage 세션복구 불가) → 규약 가치 즉시 실증. merge3 M1 confirm dogfood PASS: 페이지 생성 + latency 4단계 + **시각 컨펌 C2=N이 S3 bot fidelity C2 FAIL과 독립 수렴**. **다음 = S5 (merge3 M1 full dogfood — 사용자 직접 플레이, local, dispatch 없이).**
 
-> **진실의 원본은 `_workspace/v1.0-resume.md`** (status=s3_done_module_build_dogfood_pass). 이 HANDOFF는 맥락 요약. 충돌 시 resume + concept이 우선.
+> **진실의 원본은 `_workspace/v1.0-resume.md`** (status=s4_done_confirm_dogfood_pass). 이 HANDOFF는 맥락 요약. 충돌 시 resume + concept이 우선.
+
+## Phase θ (2026-05-30 ~07:00): S4 실행 완료 (gmk-confirm + 검증 규약)
+
+- **검증 규약 신설** (사용자 지시): 자잘한 작업=Codex만, 큰 작업=Codex+Opus(evaluator) 둘 다. → `feedback_eval_codex_opus_split.md` 메모리.
+- **gmk-confirm 신설** (`skills/gmk-confirm/SKILL.md`, Step 0~5): P5 시각 컨펌. module-build Step 5(텍스트) 위 시각 계층. paste-to-chat 1차 capture(file:// write 우회), localStorage UI-only, milestones.json single source, port-gate는 confirm.confirmed.
+- **검토**: Opus 1차 PWC(82, M1 orphan status gate/M2 clobber)→fix→2차 PASS(93)→3차 PWC(88, MAJ-1 §8 모순). **Codex 1차 DO-NOT-SHIP**(F1 file:// write/F2 localStorage 복구불가/F3 3-source precedence/F4 row 미명세) → 재설계 → 3차 NF1=Opus MAJ-1 동일(두 모델 §8 독립 수렴) → 해소. verbatim = `v1.0-evaluator-S4-review.md`.
+- **merge3 M1 dogfood PASS**: confirm 페이지(3 select 행, new-tab 1차) + latency 4단계(pending→port BLOCKED→milestones.json 단독 복구→paste 검증 done). 시각 C2=N ↔ bot C2 FAIL 수렴.
+
+**S4 학습**: (1) 검증 규약의 즉효성 — Opus(grep 정합성)와 Codex(런타임 실행)가 *다른 결함 클래스*를 잡음. file:// 환경 가정 결함은 Codex만 잡았음. (2) 두 게이트(bot fidelity + 시각 컨펌)가 같은 미스(C2 near-miss)에 독립 수렴 = P5+fidelity 정합. (3) single source of truth = milestones.json (브라우저 state는 agent에 안 보임).
 
 ## Phase η (2026-05-30 ~01:05): S3 실행 완료 (fidelity gate 실증)
 

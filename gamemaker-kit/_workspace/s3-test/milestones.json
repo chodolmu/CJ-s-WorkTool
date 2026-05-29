@@ -6,23 +6,57 @@
       "name": "Match-3 core board",
       "mode": "reference-clone",
       "module_id": "M1",
-      "covers_pillars": ["instant-tactile-polish", "honest-tension"],
-      "covers_conventions": ["C2", "C7", "C9"],
+      "covers_pillars": [
+        "instant-tactile-polish",
+        "honest-tension"
+      ],
+      "covers_conventions": [
+        "C2",
+        "C7",
+        "C9"
+      ],
       "prototype": "prototypes/m1-match3-core.html",
       "shape": "grid",
       "confirm": {
-        "confirmed": true,
-        "per_convention": { "C7": true },
-        "notes": "C7 observed: 💎 power-up at 30px + dashed gold border (distinct), match-4+ spawn, adjacency row+col big-radius clear. D7 dogfood proxy confirm."
+        "method": "visual",
+        "confirmed": false,
+        "status": "done",
+        "per_convention": {
+          "C2": false,
+          "C7": true,
+          "C9": true
+        },
+        "confirm_html": "confirm/m1-match3-core-confirm.html",
+        "confirmed_at": "2026-05-30T01:30:00+09:00",
+        "notes": "C7 power-up 잘 보임; C2는 bot이 FAIL이라 인지"
       },
       "validation": {
         "verdict": "FAIL",
         "basis": "fidelity",
         "by_convention": {
-          "C9": { "acceptance": { "metric": "late_level_moves", "op": "range", "value": [12, 18] }, "measured": 15, "pass": true },
-          "C2": { "acceptance": { "metric": "loss_margin_moves", "op": "<=", "value": 2 }, "measured": "losses {41,2,19,5}; 1/4 <=2", "pass": false }
+          "C9": {
+            "acceptance": {
+              "metric": "late_level_moves",
+              "op": "range",
+              "value": [
+                12,
+                18
+              ]
+            },
+            "measured": 15,
+            "pass": true
+          },
+          "C2": {
+            "acceptance": {
+              "metric": "loss_margin_moves",
+              "op": "<=",
+              "value": 2
+            },
+            "measured": "losses {41,2,19,5}; 1/4 <=2",
+            "pass": false
+          }
         },
-        "crash_rate": 0.0,
+        "crash_rate": 0,
         "note": "Correct fidelity signal — C2 near-miss not yet tuned (TARGET too low → over-easy wins, big losses). Fix via economy-balancer, not a gate defect.",
         "trial_seeds": 30,
         "determinism": "PASS (seed=0 deep-equal excl duration_ms)"
