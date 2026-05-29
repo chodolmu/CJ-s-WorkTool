@@ -425,3 +425,13 @@ kit proposed 4 candidates; user ratified via explicit per-candidate response (P9
 ## §failures (per Step 4 — references that completed 3-cycle with 0 conventions)
 
 (empty)
+
+## §Layer1.5 — genre-decisions contract ratified (S1.5, 2026-05-29)
+
+`gmk-genre-decide` converted this synthesis → `_workspace/s1-test/genre-decisions.json` (dogfood path; production = `.gamemaker-kit/`). Validated against all reject rules (JSON.parse OK, 11 conventions, 7 numeric acceptance, 3 pillars slug+from_conventions+ratification_label PC1/PC2/PC3, anti-tropes flagged≥2, modules covers_pillars valid slugs).
+
+**Module candidates ratified by user**:
+- **M1 (Match-3 core board)** → `approved` — first build target (most independent, proves polish+tension pillars directly).
+- M2 (level progression) / M3 (star-gated meta, no decoration) / M4 (lives+session) → `draft` (revisit after M1 builds).
+
+Next = S3 `gmk-module-build` on M1, or `gmk-roadmap` to sequence all four.

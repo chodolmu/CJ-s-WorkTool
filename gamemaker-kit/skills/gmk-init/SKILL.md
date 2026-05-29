@@ -335,6 +335,19 @@ Pillars locked. Three files saved:
 Scope check: {N} of 3 gmk-friendly conditions met.
 
 Next:
+```
+
+**If a reference seed was used (research-notes.md exists)** — Layer 1.5 comes first, so the research becomes a machine-readable contract before any milestone planning:
+
+```
+Next:
+  /gmk-genre-decide — convert your reference research into genre-decisions.json (the contract every later step reads), and ratify the playable-module candidates
+```
+
+**If there was no reference (blank-page pillars)** — the pillars are already the contract, so go straight to planning:
+
+```
+Next:
   /gmk-roadmap   — break the vision into 3-8 milestones with priorities and dependencies
   /gmk-prototype — skip roadmap and go straight to a single milestone prototype
 ```

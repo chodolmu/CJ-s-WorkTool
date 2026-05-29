@@ -1,0 +1,209 @@
+{
+  "schema_version": "1.0",
+  "kit_version": "1.0.0",
+  "project_name": "merge3-dogfood",
+  "source_reference": {
+    "seed": "merge3 / cozy / PC Steam / Royal Match 비슷한 (target_family=match3-with-meta)",
+    "research_notes": "_workspace/s1-test/research-notes.md",
+    "synthesized_at": "2026-05-29T15:40:00+09:00",
+    "_note": "dogfood test path (s1-test/). production gmk-genre-decide writes to .gamemaker-kit/genre-decisions.json"
+  },
+  "_note_acceptance": "Q1=c: 숫자형 convention만 acceptance 객체. 정성형은 acceptance:null + needs_metric:true.",
+  "_note_pillar_id": "id = pillars.json slug 공유 (name lowercased+hyphen). ratification_label = research-notes PC{n} 원본.",
+  "conventions": [
+    {
+      "id": "C1",
+      "category": "failure",
+      "statement": "Data-driven difficulty tuning — designer sets projected curve, playtest actual win-rate reconciles it; tune via move-count toward a target vanilla win-rate.",
+      "source_urls": ["https://gameworldobserver.com/2019/09/27/playrix-levels-elements-match-3", "https://socialpoint-analytics.medium.com/tuning-level-difficulty-in-match-3-games-a-data-driven-framework-7b3cc07b2116"],
+      "cross_ref_strength": "genre-wide",
+      "verified": true,
+      "acceptance": { "metric": "vanilla_win_rate_pct", "op": "==", "value": 80 },
+      "needs_metric": false
+    },
+    {
+      "id": "C2",
+      "category": "failure",
+      "statement": "Near-miss engineering — give ~exactly the average moves so the player wins-on-last or loses-by-one, prompting a one-more-move purchase.",
+      "source_urls": ["https://naavik.co/deep-dives/royal-match/", "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5445157/"],
+      "cross_ref_strength": "genre-wide",
+      "verified": true,
+      "acceptance": { "metric": "loss_margin_moves", "op": "<=", "value": 2 },
+      "needs_metric": false
+    },
+    {
+      "id": "C3",
+      "category": "progression",
+      "statement": "Meta-narrative as retention engine — star-gated renovation/story; the story pull is what monetizes, not the decoration itself. Meta is NOT a saga-map.",
+      "source_urls": ["https://www.gamerefinery.com/casual-match3-meta-layer-new-winning-formula/", "https://www.gamedeveloper.com/game-platforms/part-2-are-casual-games-maturing-lessons-from-playrix-"],
+      "cross_ref_strength": "genre-wide",
+      "verified": true,
+      "acceptance": null,
+      "needs_metric": true
+    },
+    {
+      "id": "C4",
+      "category": "progression",
+      "statement": "Star = single bridge currency — 1 star per level beaten, spent on meta tasks. Can't buy progress, only earn it.",
+      "source_urls": ["https://playrix.helpshift.com/hc/en/5-gardenscapes/section/64-garden-decorations-and-stars/"],
+      "cross_ref_strength": "family",
+      "verified": true,
+      "acceptance": null,
+      "needs_metric": true
+    },
+    {
+      "id": "C5",
+      "category": "failure",
+      "statement": "Lives economy — 5 lives, 1 regenerated per 30 min (extendable to 8 via pass). Soft gate + urgency.",
+      "source_urls": ["https://naavik.co/deep-dives/royal-match/"],
+      "cross_ref_strength": "family",
+      "verified": true,
+      "acceptance": { "metric": "lives_max", "op": "==", "value": 5 },
+      "needs_metric": false
+    },
+    {
+      "id": "C6",
+      "category": "progression",
+      "statement": "Systematic mechanic drip — a new obstacle/element introduced about every 10 levels; never overwhelm.",
+      "source_urls": ["https://medium.com/@ekinmelissezer/game-analysis-for-royal-match-and-toon-blast-9c4bff8ef48b"],
+      "cross_ref_strength": "family",
+      "verified": true,
+      "acceptance": { "metric": "levels_between_new_mechanic", "op": "<=", "value": 10 },
+      "needs_metric": false
+    },
+    {
+      "id": "C7",
+      "category": "mechanics",
+      "statement": "Generous, readable power-ups — big-radius/re-targeting; larger pieces with distinct color+shape for fast board reads.",
+      "source_urls": ["https://medium.com/ironsource-levelup/design-deep-dive-02-royal-match-948f7af96f04"],
+      "cross_ref_strength": "single",
+      "verified": true,
+      "acceptance": null,
+      "needs_metric": true
+    },
+    {
+      "id": "C8",
+      "category": "session",
+      "statement": "Designed for return-frequency, not session-length — levels target ≤5 min, instant re-entry (no loading screens), event calendar drives dailies.",
+      "source_urls": ["https://www.cubix.co/blog/the-design-decisions-that-made-royal-match-a-top-grossing-game/"],
+      "cross_ref_strength": "family",
+      "verified": true,
+      "acceptance": { "metric": "level_duration_min", "op": "<=", "value": 5 },
+      "needs_metric": false
+    },
+    {
+      "id": "C9",
+      "category": "failure",
+      "statement": "Move-compression over progression — early levels generous (14-33 moves), late levels tight (12-18) to build tension gradually.",
+      "source_urls": ["https://www.gamigion.com/homescapes-level-design-insights/"],
+      "cross_ref_strength": "single",
+      "verified": true,
+      "acceptance": { "metric": "late_level_moves", "op": "range", "value": [12, 18] },
+      "needs_metric": false
+    },
+    {
+      "id": "C10",
+      "category": "failure",
+      "statement": "Difficulty tiers with reward multipliers — Normal / Hard (3x) / Super-Hard (5x) / Challenge (5x first-try-only).",
+      "source_urls": ["https://www.gamigion.com/homescapes-level-design-insights/"],
+      "cross_ref_strength": "family",
+      "verified": true,
+      "acceptance": { "metric": "difficulty_tier_count", "op": "==", "value": 4 },
+      "needs_metric": false
+    },
+    {
+      "id": "C11",
+      "category": "mechanics",
+      "statement": "Single-currency elegance — coins only, no hard/soft split, no video ads (Elovikov first-party intent).",
+      "source_urls": ["https://www.pocketgamer.biz/interview/67045/the-making-of-homescapes/"],
+      "cross_ref_strength": "single",
+      "verified": true,
+      "acceptance": null,
+      "needs_metric": true
+    }
+  ],
+  "anti_tropes": [
+    {
+      "id": "A1",
+      "statement": "Pure-merge confusion — match3-with-meta is NOT pure-merge (Merge Mansion/Dragons). Don't blend a merge-board into the match3 core.",
+      "flagged_by_refs": 2,
+      "source_urls": ["https://naavik.co/deep-dives/royal-match/", "https://www.deconstructoroffun.com/blog/2023/10/22/deconstructing-merge-garden"]
+    },
+    {
+      "id": "A2",
+      "statement": "Meta-as-afterthought — bolting decoration on without an emotional/narrative hook fails; the pull is what monetizes, not the decoration.",
+      "flagged_by_refs": 2,
+      "source_urls": ["https://www.gamerefinery.com/casual-match3-meta-layer-new-winning-formula/"]
+    },
+    {
+      "id": "A3",
+      "statement": "Intuition-tuned difficulty — tuning without playtest completion data produces churn spikes. Instrument completion from first playtest.",
+      "flagged_by_refs": 2,
+      "source_urls": ["https://socialpoint-analytics.medium.com/tuning-level-difficulty-in-match-3-games-a-data-driven-framework-7b3cc07b2116", "https://gameworldobserver.com/2019/09/27/playrix-levels-elements-match-3"]
+    }
+  ],
+  "pillars": [
+    {
+      "id": "honest-tension",
+      "ratification_label": "PC1",
+      "name": "정직한 긴장 (Honest tension)",
+      "kind": "decision-shape",
+      "from_conventions": ["C1", "C2"],
+      "anti_example": "A loss the player can't see coming, or a wall that feels arbitrary/random rather than one-move-away.",
+      "acceptance": { "metric": "loss_margin_moves", "op": "<=", "value": 2 }
+    },
+    {
+      "id": "instant-tactile-polish",
+      "ratification_label": "PC2",
+      "name": "켜자마자 손에 붙는 폴리시 (Instant tactile polish)",
+      "kind": "sensory",
+      "from_conventions": ["C7", "C8"],
+      "anti_example": "Small fiddly pieces, loading screens between levels, weightless/silent matches.",
+      "acceptance": null
+    },
+    {
+      "id": "progression-is-reward",
+      "ratification_label": "PC3",
+      "name": "진척 자체가 보상 (Progression IS the reward)",
+      "kind": "behavioral",
+      "from_conventions": ["C3", "C4", "C6"],
+      "anti_example": "Progress that's purchasable, or a meta that needs a narrative/decoration the user didn't choose (Royal-Match-style = pure progression, NOT scapes decoration meta).",
+      "acceptance": null
+    }
+  ],
+  "modules": [
+    {
+      "id": "M1",
+      "name": "Match-3 core board (swap-match-clear + readable power-ups)",
+      "covers_pillars": ["instant-tactile-polish", "honest-tension"],
+      "covers_conventions": ["C7", "C2", "C9"],
+      "playable_html": "HTML board where player swaps adjacent pieces, matches 3+ clear, power-ups spawn from formations; a level has a move limit and a target; losing-by-one-move is reachable. Bot can drive swaps via __gmk_botHook__.",
+      "status": "approved",
+      "_ratified": "user 2026-05-29 — first build target (most independent, proves polish+tension pillars directly)"
+    },
+    {
+      "id": "M2",
+      "name": "Level progression + difficulty curve (move-limit levels, mechanic drip)",
+      "covers_pillars": ["honest-tension", "progression-is-reward"],
+      "covers_conventions": ["C1", "C6", "C9", "C10"],
+      "playable_html": "A sequence of levels with tightening move budgets and a new obstacle ~every 10 levels; difficulty tiers visible; win/lose gates the next level.",
+      "status": "draft"
+    },
+    {
+      "id": "M3",
+      "name": "Star-gated progression meta (no decoration — pure forward progress)",
+      "covers_pillars": ["progression-is-reward"],
+      "covers_conventions": ["C3", "C4"],
+      "playable_html": "Win a level → earn 1 star → spend star to unlock the next progression node (Royal-Match-style: pure progress, NOT decoration). Visible forward map.",
+      "status": "draft"
+    },
+    {
+      "id": "M4",
+      "name": "Lives + session economy (5 lives / 30min, ≤5min levels)",
+      "covers_pillars": ["instant-tactile-polish"],
+      "covers_conventions": ["C5", "C8", "C11"],
+      "playable_html": "Lives counter (max 5, regen timer), instant level re-entry, single coin currency. Soft-gates replay without hard wall.",
+      "status": "draft"
+    }
+  ]
+}

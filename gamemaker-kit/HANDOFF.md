@@ -2,7 +2,7 @@
 
 **Generated**: 2026-05-29 13:45 KST (Phase δ)
 **Branch**: main
-**Status**: ✅ **S1 완료 (Phase ε, HEAD `77bad4d`).** 모델 교체 후 사용자 요청으로 실체 기반 전수조사(Codex 4축 + Claude 웹 진위) 실행 → `v1.0-audit-fresh.md`. 발견: 방법론 건강하나 (1) pillar 출처 미결, (2) S1 dogfood P3 함정, (3) RM-4 사실오류. 해소: concept **v4 LOCK** (P9 Research-Proposed-User-Ratified Pillars), RM-4 정정, 그리고 **S1을 Step 4→8까지 완주** (Stage 3 Cycle1+3 / F2P filter / synthesis 11 conv + 3 anti-trope / P9 첫 비준 = 3 pillars / gmk-init v1.0 재작성 351 LOC). 70% 슬로건 → 측정값 ~78% 교체. Cost 26/100. **다음 = S1.5 (genre-decisions.json + gmk-genre-decide).**
+**Status**: ✅ **S1 + S1.5 완료 (Phase ε).** 모델 교체 후 실체 기반 전수조사(Codex 4축 + Claude 웹) → `v1.0-audit-fresh.md`. concept **v4 LOCK** (P9). **S1 완주**(gmk-init v1.0 재작성 351 LOC, 3 pillars 비준, 70%→측정 78%). **S1.5 완주**(evaluator 1차 PWC→4 fix→2차 PASS, `genre-decisions.json` 생성 11 conv+3 pillars+4 module, **M1만 approved**, `gmk-genre-decide` SKILL 신설). Layer 1+1.5 = 완성. **다음 = S2 (모르는 장르 dogfood — P3 진짜 검증) 또는 S3 (gmk-module-build + 충돌 SKILL 재작성).**
 
 **이전 generation**:
 - 2026-05-29 00:30 KST (Phase α — pre_S1 상태)
