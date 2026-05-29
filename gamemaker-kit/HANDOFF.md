@@ -2,7 +2,7 @@
 
 **Generated**: 2026-05-29 13:45 KST (Phase δ)
 **Branch**: main
-**Status**: ⏳ **Phase δ 커밋 완료 (`1183998`). Phase γ Codex 4 fix + evaluator C1/M1/M2 적용 완료. Step 3.0 Pre-flight + Step 3 Stage 1+2 모두 PASS. 3 dev-grade references shortlisted (Royal Match / Gardenscapes / Homescapes, all match3-with-meta). Cost 5/100. 다음 = Step 4 (Stage 3 3-cycle convention extraction).**
+**Status**: ✅ **S1 완료 (Phase ε, HEAD `77bad4d`).** 모델 교체 후 사용자 요청으로 실체 기반 전수조사(Codex 4축 + Claude 웹 진위) 실행 → `v1.0-audit-fresh.md`. 발견: 방법론 건강하나 (1) pillar 출처 미결, (2) S1 dogfood P3 함정, (3) RM-4 사실오류. 해소: concept **v4 LOCK** (P9 Research-Proposed-User-Ratified Pillars), RM-4 정정, 그리고 **S1을 Step 4→8까지 완주** (Stage 3 Cycle1+3 / F2P filter / synthesis 11 conv + 3 anti-trope / P9 첫 비준 = 3 pillars / gmk-init v1.0 재작성 351 LOC). 70% 슬로건 → 측정값 ~78% 교체. Cost 26/100. **다음 = S1.5 (genre-decisions.json + gmk-genre-decide).**
 
 **이전 generation**:
 - 2026-05-29 00:30 KST (Phase α — pre_S1 상태)
