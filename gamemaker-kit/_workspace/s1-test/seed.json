@@ -1,5 +1,6 @@
 {
   "genre": "merge3",
+  "target_family": "match3-with-meta",
   "reference_titles": ["Royal Match"],
   "platform": "PC Steam",
   "vibe": "cozy",
@@ -7,8 +8,10 @@
   "_meta": {
     "source": "v1.0-concept.md §3 example, confirmed by user as S1 dogfood seed (Option A)",
     "captured_at": "2026-05-29T04:55:00+09:00",
-    "detail_ref": "v1.0-detail-S1.md §2 Step 1",
-    "decision_ref": "S1 §9 confirmation #4 = Option A (merge3 / Royal Match)",
+    "target_family_added_at": "2026-05-29T13:15:00+09:00",
+    "detail_ref": "v1.0-detail-S1.md §2 Step 1 + Step 3.0 Pre-flight",
+    "decision_ref": "S1 §9 confirmation #4 = Option A (merge3 / Royal Match); target_family decision per Phase γ Codex Fix 3 (see _workspace/v1.0-codex-S1-step3-review.md)",
+    "target_family_rationale": "Royal Match is match-3 with merge-style meta (out-game progression, decoration mechanic). Same family as Gardenscapes (Playrix). Distinct from pure-merge titles (Merge Mansion, Merge Dragons, Travel Town) where merge IS the in-game mechanic.",
     "p3_note": "P3 (unfamiliar genre) defense is S2 territory, NOT this dogfood. This seed tests SKILL mechanics, not Layer 1 research validity."
   }
 }
