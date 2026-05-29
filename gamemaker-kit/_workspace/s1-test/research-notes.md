@@ -313,13 +313,101 @@ Covered above in the cross-genre high-signal table (GS-9/GS-3/GS-5/HS-3 verified
 
 (execution pending)
 
-## §Stage4 (pending — F2P contamination filter)
+## §Stage4 — F2P contamination filter (strict + exception)
 
-(execution pending)
+Applied `filter_decision()` (detail §2 Step 5) to all 30 Stage 3 conventions. Since every convention already carries a `source_type` from Stage 3, the filter is mechanical.
 
-## §Synthesis (pending — Stage 5)
+**Pass/reject summary**:
 
-(execution pending)
+| convention | source_type | passed_filter | filter_reason / exception |
+|-----------|-------------|:-------------:|---------------------------|
+| RM-1,2,3,5,6,7,9,10 | dev-blog | ✅ | developer-grade source |
+| RM-4 | dev-blog (naavik, verified) | ✅ | dev-grade + Claude primary-source verified |
+| RM-8 | reference (fandom) → **cross-verified Cycle 3** | ✅ (exception) | exception_reason: weak origin but independently confirmed (1-life/30min) |
+| GS-1,2,4,5,6,7,10 | dev-blog | ✅ | developer-grade |
+| GS-3,9 | interview (Playrix dev) | ✅ | first-party dev material |
+| GS-8 | reference (wiki/guide) | ⚠️ kept (exception) | exception_reason: 4-tier difficulty corroborated by HS-9 tier structure (same studio system) |
+| HS-1,2,3 | interview (Elovikov first-party) | ✅ | first-party developer quotes |
+| HS-4,10 | reference (wiki) | HS-4 ✅ exception / HS-10 ⚠️ kept exception | HS-4: star-bridge confirmed across GS-4; HS-10: ~50 levels/Thu — low-stakes, kept with flag |
+| HS-5,6,7,8,9 | dev-blog | ✅ | developer-grade |
+
+**Filter result**: 30 conventions → **30 passed** (27 direct dev-grade + 3 via exception). 0 rejected — because Stage 1/2 already excluded listicle/marketing at source (the strict filter front-loaded into Stage 2 source-eligibility). Exceptions (3) all name a specific corroboration, none is "looked useful."
+
+**Across-genre quit signal** (`count(passed OR excepted) >= 5`): 30 ≥ 5 ✅ PASS.
+
+**Cost delta**: Stage 4 = 0 web calls (pure local filter on tracked source_type). Cumulative stays **26**.
+
+## §Synthesis — Stage 5
+
+**Strengthened gate (audit axis 3 Q5 action)**: not just "≥5 confirmed." Requires (a) dedup of the 30 raw → distinct conventions, (b) each confirmed convention tagged with cross-ref strength (how many refs / independent sources), (c) anti-tropes flagged by ≥2 refs, (d) explicit Playrix-bias bound.
+
+### Confirmed conventions (deduped 30 → 11 distinct, ranked by cross-ref strength)
+
+| # | category | convention | refs supporting | strength | verified |
+|---|----------|------------|:---------------:|----------|:--------:|
+| C1 | failure | **Data-driven difficulty tuning** — designer sets projected curve, playtest *actual* win-rate reconciles it; tune via move-count, target ~80% vanilla win-rate. | GS, (RM,HS implied) + Socialpoint + arxiv | **genre-wide** | ✅ |
+| C2 | failure | **Near-miss engineering** — give ~exactly the average moves so player wins-on-last or loses-by-one → buy 1 more move. | RM + NCBI + USPTO | **genre-wide** | ✅ |
+| C3 | progression | **Meta-narrative as retention engine** — star-gated renovation/story; "want to find out what happens." Meta ≠ saga-map. | GS, HS + GameRefinery + Playrix CD | **genre-wide** | ✅ |
+| C4 | progression | **Star = single bridge currency** — 1 star/level → spent on meta tasks. Can't buy progress, only earn. | GS, HS | family | ✅ |
+| C5 | failure | **Lives economy** — 5 lives, 1/30min regen (extendable). Soft gate + urgency. | RM + independent | family/genre | ✅ |
+| C6 | progression | **Systematic mechanic drip** — new obstacle/element every ~10 levels; never overwhelm. | RM, GS | family | ✅ |
+| C7 | mechanics | **Generous, readable power-ups** — big-radius, re-targeting; larger pieces + distinct color+shape for fast reads. | RM | single (RM signature) | ✅ |
+| C8 | session | **Designed for return-frequency, not session-length** — ≤5min levels, instant re-entry, event calendar drives dailies. | RM, GS, HS | family | ✅ |
+| C9 | progression | **Move-compression over progression** — early generous (14-33) → late tight (12-18) builds tension gradually. | HS (quantified) | single (HS, verbatim) | ✅ |
+| C10 | failure | **Difficulty tiers w/ reward multipliers** — Normal/Hard(3×)/Super-Hard(5×)/Challenge. | GS, HS | family | ✅ |
+| C11 | mechanics | **Single-currency elegance** (coins only, no hard/soft split, no ads). | HS (Elovikov first-party) | single (HS) | ✅ |
+
+**11 distinct ≥ 5 gate ✅.** Cross-ref distribution: 3 genre-wide / 5 family / 3 single-ref. The 3 genre-wide (C1/C2/C3) are the strongest pillar drivers — verified beyond Playrix.
+
+### Anti-tropes (flagged by ≥2 refs — things to AVOID)
+
+- **AT1**: Pure-merge mechanic confusion — match3-with-meta ≠ pure-merge (Merge Mansion/Dragons). Don't blend merge-board into match3 core. (naavik + deconstructoroffun)
+- **AT2**: Meta-as-afterthought — bolting decoration on without narrative emotional hook fails; the *story pull* is what monetizes, not the decoration itself. (GameRefinery + Playrix CD)
+- **AT3**: Intuition-tuned difficulty — tuning without playtest completion data → churn spikes. (Socialpoint + GS interview)
+
+### Royal Match DELTA vs Playrix scapes (key for the seed reference)
+
+Royal Match (the user's seed) **diverges** from Gardenscapes/Homescapes on one axis: **NO decoration/customization meta** (RM-4 corrected). Its meta is *purely progression* + light collection (Butler's Gift / Card Collection). So for a Royal-Match-like clone, C3 (meta-narrative) is *lighter* than the scapes — the pull is progression + events + polish, not story/decoration. **This delta is the single most important seed-specific finding.**
+
+### Playrix-bias bound (audit axis 3 Q4)
+
+2/3 refs are Playrix. Mitigation: the 3 pillar-driver conventions (C1/C2/C3) are verified genre-wide against non-Playrix sources. Family-level conventions (C4/C6/C8/C10) are real but scapes-flavored — flagged so the user can decide if a Royal-Match-like wants them. Single-ref (C7/C9/C11) are signatures, not requirements.
+
+### Source coverage
+
+- Total conventions extracted (raw): 30
+- Deduped distinct: 11
+- Passed strict filter: 27 direct + 3 exception = 30
+- Independent/cross-verified (Cycle 3): 4 high-signal claims, all genre-wide upgrades
+- Failed: 0
+
+### → Pillar candidates (P9 — to present to user for ratification)
+
+Derived from confirmed conventions. **kit proposes; user ratifies. kit does NOT judge "fun."** Each traces to source conventions:
+
+- **PC1 — "정직한 긴장" (Honest tension)** ← C1 + C2. Difficulty is data-tuned to the edge of the player's skill; the loss feels *earned and close* (one-move-away), never random or cheap. Anti-example: a loss the player can't see coming, or a wall that feels arbitrary.
+- **PC2 — "켜자마자 손에 붙는 폴리시" (Instant tactile polish)** ← C7 + C8. Big readable pieces, generous power-ups, ≤5min instant-re-entry. The *feel* of the board sells it before any meta. Anti-example: small fiddly pieces, loading screens, weightless matches.
+- **PC3 — "진척 자체가 보상" (Progression IS the reward)** ← C3-delta + C4 + C6. Per the Royal Match delta: the pull is *visible forward progress* (new mechanics every ~10 lvl, star-spend, polish) rather than story/decoration. Anti-example: progress that's purchasable, or a meta that needs a narrative the user doesn't have yet.
+- **PC4 (optional) — "복원의 보람" (Restoration warmth)** ← C3 full + cozy vibe from seed. IF the user wants the scapes-style story/decoration meta instead of Royal-Match-style pure-progression. Mutually somewhat exclusive with PC3's framing — user picks the meta-axis.
+
+### → User ratification (P9 — recorded 2026-05-29 14:50)
+
+kit proposed 4 candidates; user ratified via explicit per-candidate response (P9 Step 2.0 contract):
+
+| candidate | source conv | user response | final |
+|-----------|-------------|---------------|-------|
+| PC1 정직한 긴장 (honest tension) | C1+C2 | **채택** | ✅ pillar 1 |
+| PC2 손에 붙는 폴리시 (instant tactile polish) | C7+C8 | **채택** | ✅ pillar 2 |
+| PC3 진척 자체가 보상 (progression IS reward, Royal-Match-style) | C3-delta+C4+C6 | **채택** | ✅ pillar 3 |
+| PC4 복원의 보람 (restoration warmth, scapes-style) | C3-full+vibe | **거부** | ✗ — meta-axis decided as pure-progression |
+
+**Meta-axis decision**: user picked PC3 (pure-progression, no decoration/story meta) over PC4 (scapes-style story+decoration). This matches the Royal Match seed delta (RM-4: no customization meta). Confirms the seed-specific finding drove a real design fork — P9 working as intended (research surfaced the fork, user resolved it).
+
+**3 ratified pillars** (matches concept "3 is fine — Subnautica had 3"). Each traceable to verified conventions. These feed Step 7 gmk-init rewrite + S1.5 genre-decisions.json.
+
+**Quit signal (Step 6)**: §Synthesis parses, ≥5 confirmed conventions (11 ✅), ≥2 anti-tropes (3 ✅), pillar candidates traceable to conventions (4 candidates, each cites C-ids ✅), **user ratification recorded (P9 ✅)**. PASS.
+
+**Note (decision #4)**: This is markdown prose synthesis. S1.5 converts confirmed conventions + ratified pillars into `genre-decisions.json` (machine-parseable, P1).
 
 ## §Cost (running, mirrors §Pre-flight §Cost counter)
 

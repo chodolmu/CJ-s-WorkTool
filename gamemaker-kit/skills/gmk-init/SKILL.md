@@ -1,6 +1,6 @@
 ---
 name: gmk-init
-description: Initialize a new game project with gamemaker-kit — define 3-5 Design Pillars, run a supported-genres check (2D / deterministic input / ≤5 min sessions), choose target engine (Godot/Unity), and write pillars.json + milestones.json + _workspace/vision.md. Use whenever the user says "/gmk-init", "gamemaker-kit init", "start a new game project", "design pillar 정의", "게임 프로젝트 시작", or wants to define what their game is fundamentally about before coding. Run this FIRST for any new game — pillars are the lens through which every later milestone is judged.
+description: Initialize a new game project with gamemaker-kit (v1.0 reference-clone-first) — capture a reference seed, run autonomous Layer-1 reference research (WebSearch/WebFetch → genre conventions + anti-tropes), propose research-grounded Design Pillar candidates for the user to ratify, run a supported-genres check (2D / deterministic input / ≤5 min sessions), choose target engine (Godot/Unity), and write pillars.json + milestones.json + research-notes.md + _workspace/vision.md. Use whenever the user says "/gmk-init", "gamemaker-kit init", "start a new game project", "레퍼런스 비슷한 게임", "design pillar 정의", "게임 프로젝트 시작", or wants to define what their game is fundamentally about before coding. Run this FIRST for any new game — research-grounded pillars are the lens through which every later milestone is judged.
 model: opus
 ---
 
@@ -30,7 +30,50 @@ This is the lens. Without it, the kit is just a fancy code generator.
 
 ## Flow
 
-### Step 1 — Listen for the seed
+> **v1.0 reference-clone-first**: pillars are no longer pulled from a blank-page conversation. The kit first researches the user's *reference* (a proven game), extracts genre conventions, and **proposes pillar candidates grounded in that research** — the user ratifies. This is concept principle **P9 (Research-Proposed, User-Ratified Pillars)**. The kit proposes; it never judges "fun." The reference-research steps (0 / 0.5) run *before* the pillar dialogue so the proposal is grounded.
+
+### Step 0 — Capture the reference seed
+
+Before any pillar talk, capture what the user is cloning-and-differentiating from. Ask (one at a time, conversational):
+
+1. *"이 게임은 어떤 기존 게임이 떠오르게 해? (레퍼런스 1개 이상)"* — reference_titles
+2. *"장르를 한 단어로 하면? (merge3 / match-3 / roguelike deckbuilder …)"* — genre
+3. *"어디서 돌아갈 거야 — PC, 모바일, 브라우저?"* — platform
+4. *"한 단어 분위기는? (cozy / tense / chaotic …)"* — vibe
+
+Write `_workspace/<project>/.gamemaker-kit/seed.json` (atomic — write `.tmp` then rename):
+
+```json
+{
+  "genre": "merge3",
+  "target_family": "match3-with-meta",
+  "reference_titles": ["Royal Match"],
+  "platform": "PC Steam",
+  "vibe": "cozy",
+  "user_seed_raw": "<verbatim user phrasing>"
+}
+```
+
+`target_family` disambiguates adjacent genres that share a keyword but are *different families* (e.g. match-3-with-meta vs pure-merge). If the genre has no such ambiguity, set it equal to `genre`. **If the user names a genre with a known family split and you can't tell which they mean, ask** — family mismatch is a research *precondition*, not something to fix in synthesis later.
+
+**If the user has no reference** (pure original idea): skip to Step 1 (blank-page pillar dialogue, the pre-v1.0 path). Reference-clone-first is the *default*, not a requirement — gmk does not gatekeep.
+
+### Step 0.5 — Autonomous reference research (Layer 1)
+
+Research the reference(s) so the pillar proposal is grounded in proven genre conventions, not guesses. This is a 5-stage / 3-cycle procedure with a hard cost cap. The canonical step-by-step (queries, source-eligibility rules, cost counter, quit signals) lives in the kit's S1 detail plan — follow it exactly:
+
+- **Pre-flight** — before *any* web call, write the research-notes head: approved genre/site query alternations, `target_family`, dev-grade source-eligibility rule, cost counter (init 0; hard cap **100 calls OR 30 active-research minutes**). No WebSearch/WebFetch until this paperwork exists.
+- **Stage 1 — Genre baseline survey**: multi-term query (single keywords return near-zero) → collect non-listicle candidate URLs.
+- **Stage 2 — Reference shortlist**: exactly **3** dev-grade references (`source_type ∈ {dev-blog, postmortem, academic, gdc, interview}`; listicle/marketing/store-listing excluded). Prefer within-`target_family`.
+- **Stage 3 — Convention extraction (3-cycle per ref)**: 4 categories (mechanics / progression / session-length / failure-mode). Cycle 1 baseline → Cycle 2 gap-fill (only missing categories) → Cycle 3 cross-verify *high-signal* claims against sources **outside** the original domain. Qualitative claims need primary-source confirmation, not snippet capture.
+- **Stage 4 — F2P contamination filter** (strict + named-exception).
+- **Stage 5 — Synthesis**: dedup conventions → confirmed list ranked by cross-ref strength, anti-tropes (≥2 refs), and the reference's *delta* vs its family.
+
+Output: `_workspace/<project>/.gamemaker-kit/research-notes.md` (atomic). Every stage increments the cost counter and writes it back. **STOP** at 100 calls or 30 active minutes — surface partial results, don't blow the cap.
+
+**Watch for the dogfood-validity trap (concept P3)**: if the user is an *expert* in this genre, good research and bad research both "look right" to them — they fill gaps from memory. Step 2.0 (below) mitigates this by forcing research findings onto the table as explicit candidates, but be honest in the notes: a familiar-genre run tests the *workflow*, not research *validity*. Research validity is proven on an unfamiliar genre.
+
+### Step 1 — Listen for the pillar seed
 
 The user says something like "I want to make a merge dragon game" or "a Crossy Road clone." Don't jump to mechanics. Open with a question that fits the user — pick **one** of these (don't ask all):
 
@@ -44,9 +87,34 @@ Listen for any kind of seed — emotion words, behaviors, decision moments, refe
 
 If they answer with pure mechanics ("you merge dragons"), don't redirect to feelings — instead, ask: *"And when the merge lands well, what makes it land well? What separates a satisfying merge from a flat one?"* That question pulls a pillar shape out of the mechanic without forcing the user into emotion-talk.
 
+### Step 2.0 — Propose research-grounded pillar candidates (P9)
+
+**This is the bridge from Layer 1 research to pillars — the one place research output flows into the game's identity.** If you ran Step 0.5, do this *before* the open pillar conversation in Step 2.
+
+From `research-notes.md` §Synthesis (confirmed conventions + the reference's family-delta), derive **2-4 pillar candidates**. Present them to the user, each as:
+
+```
+PC{n} — "{short name}"
+  근거: {which confirmed convention(s) it comes from — cite the C-id / source_url}
+  한 줄: {what the player does/decides/experiences}
+  Anti-example: {what would violate it}
+```
+
+Then ask the user to respond to **each** candidate explicitly: **채택 / 수정 / 거부 / "차별화 대상"** (adopt / revise / reject / "this is what I'll differentiate on").
+
+Hard rules:
+- **The kit proposes; the user ratifies. Never judge "fun" yourself** (concept §1). A candidate is just a research-grounded hypothesis until the user adopts it.
+- **Every candidate must trace to a convention** (cite the source). If you can't cite where a candidate came from, you invented it — drop it. (Untraceable candidates = P9 violation = the kit hallucinating a pillar.)
+- Surface *forks* the research reveals (e.g. "this reference has no decoration meta, but its family does — do you want pure-progression or story+decoration?"). Forcing the fork onto the table is how research findings reach a genre-expert user who'd otherwise fill the gap silently (P3 mitigation).
+- The user's per-candidate responses become the **seed for the Step 2 conversation** below — adopted candidates are draft pillars to refine; rejected ones are differentiation notes.
+
+Record the candidates + the user's ratification in `research-notes.md` §Synthesis (a small table: candidate / source conv / user response / final).
+
+**If there was no reference (Step 0 skipped)**: skip Step 2.0 entirely and run Step 2 as the blank-page conversation.
+
 ### Step 2 — Propose pillars, refine through conversation
 
-Once you have one or two anchors from Step 1, propose 3-5 pillars. The rule (Charlie Cleveland): each pillar names **what the player does, decides, or experiences**, never **what the system contains**.
+Once you have one or two anchors from Step 1 (and the ratified candidates from Step 2.0, if any), propose 3-5 pillars. The rule (Charlie Cleveland): each pillar names **what the player does, decides, or experiences**, never **what the system contains**.
 
 **Bad pillars (system-named — these are features, not pillars):**
 - "Procedural dungeons" (← system)
@@ -146,6 +214,8 @@ The project's working directory is the user's current game folder (e.g. `C:/Game
 {project}/
 ├─ prototypes/                    # empty for now; /gmk-prototype fills it
 ├─ .gamemaker-kit/
+│  ├─ seed.json                   # this skill writes (Step 0 — reference seed; omit if no reference)
+│  ├─ research-notes.md           # this skill writes (Step 0.5 — Layer 1 research; omit if no reference)
 │  ├─ pillars.json                # this skill writes
 │  └─ milestones.json             # this skill writes (empty)
 └─ _workspace/
@@ -154,7 +224,9 @@ The project's working directory is the user's current game folder (e.g. `C:/Game
 
 If the user's current directory is ambiguous, ask: "Which folder is your game project? (I'll create `prototypes/`, `.gamemaker-kit/`, and `_workspace/` inside it.)"
 
-Full layout spec — see `_workspace/structure.md` in the kit itself. `gmk-init` only writes the three files above; later skills fill in the rest.
+Full layout spec — see `_workspace/structure.md` in the kit itself. With a reference seed, `gmk-init` writes five files (seed + research-notes + pillars + milestones + vision); with no reference, the original three (pillars + milestones + vision). Later skills fill in the rest.
+
+**research-notes.md is read downstream**: S1.5 (`gmk-genre-decide`) converts its confirmed conventions + the ratified pillars into machine-parseable `genre-decisions.json` (concept P1). Keep it well-structured — it is not a scratch file.
 
 ### pillars.json schema
 
