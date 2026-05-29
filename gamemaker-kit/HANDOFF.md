@@ -1,8 +1,23 @@
-# Handoff: S1 Step 3 (Stage 1+2) 실행 완료, Step 4 (Stage 3) 진입 대기
+# Handoff: S1 + S1.5 + S2 완료, S3 (Layer 2) 진입 대기
 
-**Generated**: 2026-05-29 13:45 KST (Phase δ)
+**Generated**: 2026-05-29 20:50 KST (Phase ζ — S2 실행 완료)
 **Branch**: main
-**Status**: ✅ **S1 + S1.5 완료 (Phase ε).** 모델 교체 후 실체 기반 전수조사(Codex 4축 + Claude 웹) → `v1.0-audit-fresh.md`. concept **v4 LOCK** (P9). **S1 완주**(gmk-init v1.0 재작성 351 LOC, 3 pillars 비준, 70%→측정 78%). **S1.5 완주**(evaluator 1차 PWC→4 fix→2차 PASS, `genre-decisions.json` 생성 11 conv+3 pillars+4 module, **M1만 approved**, `gmk-genre-decide` SKILL 신설). Layer 1+1.5 = 완성. **다음 = S2 (모르는 장르 dogfood — P3 진짜 검증) 또는 S3 (gmk-module-build + 충돌 SKILL 재작성).**
+**Status**: ✅ **S1 + S1.5 + S2 완료.** Layer 1 (gmk-init 재작성 364 LOC, 3 pillars) + Layer 1.5 (gmk-genre-decide 신설, genre-decisions.json) 빌드 완료. **S2 dogfood PASS** — roguelike-deckbuilder(unfamiliar 장르)로 Layer 1 research validity 검증: pre-registration(K1-K4=aesthetic만) 후 research가 mechanic-level convention 다수 surface, 5 artifact-mandatory SURFACED-UNKNOWN → artifact-pinned gate PASS. **P3 방어(unfamiliar genre dogfood) 작동 실증 — merge3는 expert라 workflow만 검증했지만 S2가 진짜 validity 검증.** 12 conv + 3 anti-tropes + 3 pillars + 3 draft modules, reject 12/12 PASS, cost 10/100. **다음 = S3 (gmk-module-build SKILL 신설 + merge3 M1 빌드 + 충돌 SKILL 재작성).**
+
+> **진실의 원본은 `_workspace/v1.0-resume.md`** (status=s2_done_dogfood_pass_next_s3). 이 HANDOFF는 맥락 요약. 충돌 시 resume + concept이 우선.
+
+---
+
+## Phase ζ (2026-05-29 ~20:50): S2 실행 완료 (dogfood PASS)
+
+- **Step 0 Resume Verification** (P8) — 6 sub-check. sub-check 4에서 발견: S1 dogfood는 gmk-init을 full 5-file 산출이 아니라 **§Synthesis-capture 방식**으로 돌렸음(pillars.json 없음). detail-S2를 이 선례에 맞게 정정(M1 가정 over-spec 수정). enumeration이 잡아낸 정정.
+- **Step 1 Pre-registration** (D5 ordering guard 강제) — 사용자가 research 전 K1-K4 적음 (전략적 선택 / 리스크리턴 / 운 / 효능감 — 전부 aesthetic, mechanic-level 0개).
+- **Step 2 Layer 1** (gmk-init verbatim, D7 path-substitution) — roguelike-deckbuilder research. Stage 1-5. 3 dev-grade refs (Slay the Spire / Dicey Dungeons / Monster Train). 12 conv (7 verified), 3 anti-tropes. P9 pillar 비준: PC1/PC2/PC3 전부 채택. supported-genres: session_under_5min=false(사용자 "좋은 신호로 기록, 계속" 결정). Step 2.7 intermediate commit `f2fac2c`.
+- **Step 3 Layer 1.5** (gmk-genre-decide verbatim, D7) — genre-decisions.json 생성, reject 규칙 12/12 PASS (node 검증).
+- **Step 4 Verdict** — pre-registration vs surfaced diff. 5 artifact-mandatory SURFACED-UNKNOWN (C5/C12 `acceptance!=null` + C2/C3/C6 anti-trope 대척점) → **PASS**. 사용자 C6/C2/C5C7C11 인정(evidence, gate 아님).
+- **Step 5 Finalize** — resume 갱신(s2_done), 이 HANDOFF, commit + push.
+
+**S2 학습** (resume §S2 학습 참조): Layer 1 unfamiliar 작동 확인 / GDC Vault 영상 뒤 숫자 convention 못 긁음(gmk-init patch 후보) / supported-genres gate 실전 작동 / D7 매끄럼 / artifact-pinned gate(M2) 정확.
 
 **이전 generation**:
 - 2026-05-29 00:30 KST (Phase α — pre_S1 상태)

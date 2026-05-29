@@ -1,0 +1,231 @@
+{
+  "schema_version": "1.0",
+  "kit_version": "1.0.0",
+  "project_name": "s2-dogfood-roguelike-deckbuilder",
+  "source_reference": {
+    "seed": "roguelike-deckbuilder / single-character-roguelike-deckbuilder / Slay the Spire / PC Steam / tense-tactical",
+    "research_notes": "_workspace/s2-test/research-notes.md",
+    "synthesized_at": "2026-05-29T11:30:00Z"
+  },
+  "conventions": [
+    {
+      "id": "C1",
+      "category": "mechanics",
+      "statement": "Player efficacy = planning + luck landing together. The genre is fun when deliberate plans meet bounded randomness — the player rolls luck, luck does not happen to the player.",
+      "source_urls": ["https://www.gamedeveloper.com/design/witch-craft-how-i-dicey-dungeons-i-balances-chance-and-predictability"],
+      "cross_ref_strength": "genre-wide",
+      "verified": true,
+      "acceptance": null,
+      "needs_metric": true
+    },
+    {
+      "id": "C2",
+      "category": "failure",
+      "statement": "Anti-dominant-strategy: encounter/enemy variety so no single deck always wins; balance buffs underpicked options toward diversity.",
+      "source_urls": [
+        "https://www.gamedeveloper.com/game-platforms/road-to-the-igf-mega-crit-games-i-slay-the-spire-i-",
+        "https://screenrant.com/inkbound-monster-train-mark-cooke-interview/"
+      ],
+      "cross_ref_strength": "genre-wide",
+      "verified": true,
+      "acceptance": null,
+      "needs_metric": true
+    },
+    {
+      "id": "C3",
+      "category": "mechanics",
+      "statement": "Bounded, transparent RNG — randomness is constrained and visible; the player allocates it (e.g. roll dice then place them) rather than being a victim of it.",
+      "source_urls": [
+        "https://www.gamedeveloper.com/design/witch-craft-how-i-dicey-dungeons-i-balances-chance-and-predictability",
+        "https://www.gamedeveloper.com/game-platforms/road-to-the-igf-mega-crit-games-i-slay-the-spire-i-"
+      ],
+      "cross_ref_strength": "genre-wide",
+      "verified": true,
+      "acceptance": null,
+      "needs_metric": true
+    },
+    {
+      "id": "C4",
+      "category": "mechanics",
+      "statement": "Cards-as-puzzle-pieces with combo/synergy payoff — the anticipated synergy landing is the core reward ('poggable moment' / well-oiled Rube Goldberg machine).",
+      "source_urls": [
+        "https://www.gamedeveloper.com/game-platforms/road-to-the-igf-mega-crit-games-i-slay-the-spire-i-",
+        "https://screenrant.com/inkbound-monster-train-mark-cooke-interview/"
+      ],
+      "cross_ref_strength": "family",
+      "verified": true,
+      "acceptance": null,
+      "needs_metric": true
+    },
+    {
+      "id": "C5",
+      "category": "mechanics",
+      "statement": "Energy economy — cards cost a limited per-turn resource forcing selection (commonly 3 energy/turn in StS lineage).",
+      "source_urls": ["https://en.wikipedia.org/wiki/Slay_the_Spire"],
+      "cross_ref_strength": "single",
+      "verified": false,
+      "acceptance": { "metric": "energy_per_turn", "op": "==", "value": 3 },
+      "needs_metric": false
+    },
+    {
+      "id": "C6",
+      "category": "progression",
+      "statement": "Deck-thinning / card-removal as a core lever — decks improve by removing weak cards, not only adding; prevents deck bloat diluting consistency.",
+      "source_urls": ["https://www.gamedeveloper.com/game-platforms/road-to-the-igf-mega-crit-games-i-slay-the-spire-i-"],
+      "cross_ref_strength": "family",
+      "verified": false,
+      "acceptance": null,
+      "needs_metric": true
+    },
+    {
+      "id": "C7",
+      "category": "progression",
+      "statement": "Relics / permanent run-modifiers that fundamentally reshape how the deck functions; deck strategy synergizes with relic effects.",
+      "source_urls": ["https://en.wikipedia.org/wiki/Roguelike_deck-building_game"],
+      "cross_ref_strength": "family",
+      "verified": false,
+      "acceptance": null,
+      "needs_metric": true
+    },
+    {
+      "id": "C8",
+      "category": "progression",
+      "statement": "Metrics/analytics-driven balance — measure card pick-rate, buff underpicked cards toward diversity so no card is dead or dominant.",
+      "source_urls": [
+        "https://www.gdcvault.com/play/1025731/-Slay-the-Spire-Metrics",
+        "https://screenrant.com/inkbound-monster-train-mark-cooke-interview/"
+      ],
+      "cross_ref_strength": "genre-wide",
+      "verified": true,
+      "acceptance": null,
+      "needs_metric": true
+    },
+    {
+      "id": "C9",
+      "category": "mechanics",
+      "statement": "Map/path node choice — semi-random map; the player charts their route, weighing risk vs reward per node (which encounters to seek/avoid). FTL lineage.",
+      "source_urls": ["https://www.gamedeveloper.com/game-platforms/road-to-the-igf-mega-crit-games-i-slay-the-spire-i-"],
+      "cross_ref_strength": "family",
+      "verified": true,
+      "acceptance": null,
+      "needs_metric": true
+    },
+    {
+      "id": "C10",
+      "category": "failure",
+      "statement": "Permadeath with a meta-progression cushion — a run ends on death, but cross-run unlocks (new cards/relics/characters) soften the loss so progress is felt.",
+      "source_urls": [
+        "https://en.wikipedia.org/wiki/Roguelike_deck-building_game",
+        "https://screenrant.com/inkbound-monster-train-mark-cooke-interview/"
+      ],
+      "cross_ref_strength": "family",
+      "verified": true,
+      "acceptance": null,
+      "needs_metric": true
+    },
+    {
+      "id": "C11",
+      "category": "mechanics",
+      "statement": "No wasted resources — every action/resource must feel positive; leftover unused resources feel bad, so design ensures each is spendable ('having dice left over is the worst feeling').",
+      "source_urls": ["https://www.gamedeveloper.com/design/witch-craft-how-i-dicey-dungeons-i-balances-chance-and-predictability"],
+      "cross_ref_strength": "single",
+      "verified": true,
+      "acceptance": null,
+      "needs_metric": true
+    },
+    {
+      "id": "C12",
+      "category": "session",
+      "statement": "One run is bounded and completable in a sitting (~30-60 min). NOT a ≤5min session genre — long-session by nature.",
+      "source_urls": ["https://screenrant.com/inkbound-monster-train-mark-cooke-interview/"],
+      "cross_ref_strength": "single",
+      "verified": true,
+      "acceptance": { "metric": "run_length_minutes", "op": "range", "value": [30, 60] },
+      "needs_metric": false
+    }
+  ],
+  "anti_tropes": [
+    {
+      "id": "A1",
+      "statement": "Dominant strategy / 'always pick the same thing' — a single optimal deck path that kills replayability.",
+      "flagged_by_refs": 2,
+      "source_urls": [
+        "https://www.gamedeveloper.com/game-platforms/road-to-the-igf-mega-crit-games-i-slay-the-spire-i-",
+        "https://screenrant.com/inkbound-monster-train-mark-cooke-interview/"
+      ]
+    },
+    {
+      "id": "A2",
+      "statement": "Unfair/opaque RNG — randomness the player cannot see, plan around, or mitigate; luck happens TO the player.",
+      "flagged_by_refs": 2,
+      "source_urls": [
+        "https://www.gamedeveloper.com/design/witch-craft-how-i-dicey-dungeons-i-balances-chance-and-predictability",
+        "https://www.gamedeveloper.com/game-platforms/road-to-the-igf-mega-crit-games-i-slay-the-spire-i-"
+      ]
+    },
+    {
+      "id": "A3",
+      "statement": "Deck bloat with no thinning — decks only grow, diluting consistency; no removal lever.",
+      "flagged_by_refs": 2,
+      "source_urls": [
+        "https://www.gamedeveloper.com/game-platforms/road-to-the-igf-mega-crit-games-i-slay-the-spire-i-",
+        "https://en.wikipedia.org/wiki/Roguelike_deck-building_game"
+      ]
+    }
+  ],
+  "pillars": [
+    {
+      "id": "plans-meeting-luck",
+      "ratification_label": "PC1",
+      "name": "계획과 운이 만나는 순간 (Plans meeting luck)",
+      "kind": "decision-shape",
+      "from_conventions": ["C1", "C3", "C11"],
+      "anti_example": "플레이어가 보지도 못하고 대비도 못하는 RNG — 운이 나한테 일어난다는 느낌 (A2).",
+      "acceptance": null
+    },
+    {
+      "id": "no-single-right-answer",
+      "ratification_label": "PC2",
+      "name": "언제나 다른 최적해 (No single right answer)",
+      "kind": "decision-shape",
+      "from_conventions": ["C2", "C8", "C9"],
+      "anti_example": "매번 같은 걸 고르는 게 최적 → 깨진 게임 (A1).",
+      "acceptance": null
+    },
+    {
+      "id": "synergy-buildup",
+      "ratification_label": "PC3",
+      "name": "시너지 빌드업 (Synergy build-up payoff)",
+      "kind": "decision-shape",
+      "from_conventions": ["C4", "C6"],
+      "anti_example": "덱이 불어나기만 하고 덜어낼 수단 없음 → 일관성 희석 (A3).",
+      "acceptance": null
+    }
+  ],
+  "modules": [
+    {
+      "id": "M1",
+      "name": "Single-combat encounter (one fight, draw-play-resolve loop)",
+      "covers_pillars": ["plans-meeting-luck", "synergy-buildup"],
+      "covers_conventions": ["C1", "C3", "C4", "C5", "C11"],
+      "playable_html": "A single turn-based combat: hand of cards, energy per turn, play cards vs one enemy with telegraphed intent, win/lose. Proves planning+luck and synergy in ≤5min — also the narrowing path for the session-length eligibility miss.",
+      "status": "draft"
+    },
+    {
+      "id": "M2",
+      "name": "Map-node run structure (chart a route through a semi-random map)",
+      "covers_pillars": ["no-single-right-answer"],
+      "covers_conventions": ["C9", "C10"],
+      "playable_html": "A node map; player picks path weighing risk/reward per node, chains combats, permadeath ends the run.",
+      "status": "draft"
+    },
+    {
+      "id": "M3",
+      "name": "Deck-thinning + relic economy (between-combat deck refinement)",
+      "covers_pillars": ["synergy-buildup", "no-single-right-answer"],
+      "covers_conventions": ["C6", "C7"],
+      "playable_html": "Post-combat reward screen: add a card OR remove a card OR take a relic; deck refines toward a synergy over a short run.",
+      "status": "draft"
+    }
+  ]
+}
